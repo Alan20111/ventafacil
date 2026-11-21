@@ -20,4 +20,12 @@
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" />
   </ItemGroup>
+  <!-- SQLite va también DENTRO del .exe: así el VentaFacil.exe suelto funciona sin los demás archivos -->
+  <PropertyGroup>
+    <SqliteStub>$(NuGetPackageRoot)stub.system.data.sqlite.core.netframework/1.0.118/</SqliteStub>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="$(SqliteStub)lib/net40/System.Data.SQLite.dll" LogicalName="lib.System.Data.SQLite.dll" Visible="false" />
+    <EmbeddedResource Include="$(SqliteStub)build/net40/x86/SQLite.Interop.dll" LogicalName="lib.x86.SQLite.Interop.dll" Visible="false" />
+  </ItemGroup>
 </Project>

@@ -14,6 +14,14 @@ namespace VentaFacil
         [STAThread]
         static void Main()
         {
+            // Primero: que se encuentre SQLite aunque se ejecute el .exe suelto
+            Bibliotecas.Preparar();
+            Arrancar();
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        static void Arrancar()
+        {
             bool unica;
             using (var mutex = new Mutex(true, "VentaFacil_PDV_Unico", out unica))
             {
@@ -70,6 +78,56 @@ namespace VentaFacil
                     catch (Exception ex) { Log.Error(ex, "Detección de impresora"); }
                 }
                 Application.Run(new FormVenta());
+            }
+        }
+    }
+
+    /// <summary>
+    /// Si System.Data.SQLite.dll no está junto al .exe (se descargó solo el .exe),
+    /// la saca de los recursos internos a una carpeta y la carga desde ahí.
+    /// </summary>
+    static class Bibliotecas
+    {
+        static string _carpeta;
+
+        public static void Preparar()
+        {
+            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            if (File.Exists(Path.Combine(baseDir, "System.Data.SQLite.dll")) && File.Exists(Path.Combine(baseDir, "x86", "SQLite.Interop.dll"))) return;
+            try
+            {
+                string version = typeof(Program).Assembly.GetName().Version.ToString();
+                foreach (var candidata in new[] {
+                    Path.Combine(baseDir, "lib"),
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VentaFacil", "lib-" + version) })
+                {
+                    try
+                    {
+                        Extraer("lib.System.Data.SQLite.dll", Path.Combine(candidata, "System.Data.SQLite.dll"));
+                        Extraer("lib.x86.SQLite.Interop.dll", Path.Combine(candidata, "x86", "SQLite.Interop.dll"));
+                        _carpeta = candidata;
+                        break;
+                    }
+                    catch (IOException) { }
+                    catch (UnauthorizedAccessException) { }
+                }
+                if (_carpeta != null)
+                    AppDomain.CurrentDomain.AssemblyResolve += (s, e) =>
+                        e.Name.StartsWith("System.Data.SQLite", StringComparison.OrdinalIgnoreCase)
+                            ? System.Reflection.Assembly.LoadFrom(Path.Combine(_carpeta, "System.Data.SQLite.dll"))
+                            : null;
+            }
+            catch (Exception ex) { Log.Error(ex, "Preparar bibliotecas"); }
+        }
+
+        static void Extraer(string recurso, string destino)
+        {
+            using (var s = typeof(Program).Assembly.GetManifestResourceStream(recurso))
+            {
+                if (s == null) throw new IOException("Falta el recurso " + recurso);
+                if (File.Exists(destino) && new FileInfo(destino).Length == s.Length) return;
+                Directory.CreateDirectory(Path.GetDirectoryName(destino));
+                using (var f = File.Create(destino)) s.CopyTo(f);
             }
         }
     }

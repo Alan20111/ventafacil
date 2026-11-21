@@ -9,6 +9,15 @@ Punto de venta sencillo para Windows 7 y Windows 10/11, inspirado en **Zafirah R
 - **Lector de código de barras**: cualquiera que funcione "como teclado" (USB HID), que son casi todos. No necesita configuración.
 - **Báscula**: captura del peso a mano, lectura por puerto serial (Torrey, Rhino y similares) o **etiquetas de báscula** (EAN-13 que empiezan con 2).
 
+## Descarga
+
+El programa listo para Windows está en el [último release](https://github.com/Alan20111/ventafacil/releases/latest):
+
+- **VentaFacil.exe**: un solo archivo (trae SQLite adentro). Cópielo a `C:\VentaFacil\` y ábralo.
+- **VentaFacil-vX.Y-win.zip**: la carpeta completa, con `instalar.bat` para el acceso directo y `LEEME.txt`.
+
+Cada cambio al proyecto publica un release nuevo.
+
 ## Instalación en la tienda
 
 1. **Requisito, solo en Windows 7**: .NET Framework 4.0 o superior (se recomienda el 4.8). Windows 8, 10 y 11 ya lo traen.
@@ -109,6 +118,14 @@ Para generar la carpeta lista para copiar a la tienda (`publish/VentaFacil` y `p
 ```bash
 ./scripts/publicar.sh
 ```
+
+Para publicar un release nuevo con el `.exe` (después de hacer commit y push):
+
+```bash
+scripts/publicar_release.sh "Qué cambió"
+```
+
+Sube la versión sola (v1.0 → v1.1 → …) y adjunta `VentaFacil.exe` y el zip.
 
 Estructura:
 

@@ -4,7 +4,7 @@ set -e
 cd "$(dirname "$0")/.."
 RAIZ=$(pwd)
 rm -rf publish && mkdir -p publish/VentaFacil
-dotnet build src/VentaFacil/VentaFacil.csproj -c Release -o publish/VentaFacil
+dotnet build src/VentaFacil/VentaFacil.csproj -c Release -o publish/VentaFacil -nologo -v q ${VERSION_NUM:+-p:Version=$VERSION_NUM}
 cd publish/VentaFacil
 rm -f *.pdb
 rm -rf x64            # el programa corre en 32 bits (x86): funciona igual en Windows de 32 y 64 bits
