@@ -6,3 +6,9 @@ node_modules/
 dist/
 build/
 *.log
+bin/
+obj/
+*.user
+.vs/
+publish/
+*.db
