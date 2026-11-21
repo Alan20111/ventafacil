@@ -232,7 +232,7 @@ namespace VentaFacil.Forms.Admin
                 Controls.Add(_grid);
                 var arriba = new Panel { Dock = DockStyle.Top, Height = 54 };
                 arriba.Controls.Add(Ui.Boton("Elegir producto…", 10, 10, 160, 36, (s, e) => Elegir()));
-                arriba.Controls.Add(Ui.Boton("Exportar CSV", 176, 10, 130, 36, (s, e) => AdminUtil.ExportarCsv(_dt, "kardex")));
+                arriba.Controls.Add(Ui.Boton("Exportar a Excel", 176, 10, 130, 36, (s, e) => ExcelSemillera.ExportarTabla(_dt, "kardex")));
                 _titulo = Ui.Etiqueta("", 320, 18, Tema.Negrita, Tema.Azul);
                 arriba.Controls.Add(_titulo);
                 Controls.Add(arriba);
@@ -270,7 +270,7 @@ namespace VentaFacil.Forms.Admin
             Controls.Add(_grid);
             var arriba = new Panel { Dock = DockStyle.Top, Height = 54 };
             arriba.Controls.Add(Ui.Boton("Actualizar", 10, 10, 120, 36, (s, e) => Cargar()));
-            arriba.Controls.Add(Ui.Boton("Exportar CSV", 136, 10, 130, 36, (s, e) => AdminUtil.ExportarCsv(_dt, _nombre)));
+            arriba.Controls.Add(Ui.Boton("Exportar a Excel", 136, 10, 130, 36, (s, e) => ExcelSemillera.ExportarTabla(_dt, _nombre)));
             _resumen = Ui.Etiqueta("", 280, 18, Tema.Negrita, Tema.Azul);
             arriba.Controls.Add(_resumen);
             Controls.Add(arriba);

@@ -57,7 +57,7 @@ namespace VentaFacil.Forms.Admin
             consultar.ForeColor = Tema.Azul;
             filtro.Controls.Add(consultar);
             filtro.Controls.Add(Ui.Boton("Imprimir en ticket", 476, 46, 160, 36, (s, e) => ImprimirTicket()));
-            filtro.Controls.Add(Ui.Boton("Exportar CSV", 642, 46, 130, 36, (s, e) => AdminUtil.ExportarCsv(_dt, _rep != null ? _rep.Archivo : "reporte")));
+            filtro.Controls.Add(Ui.Boton("Exportar a Excel", 642, 46, 130, 36, (s, e) => ExcelSemillera.ExportarTabla(_dt, _rep != null ? _rep.Archivo : "reporte")));
             _ayuda = Ui.Etiqueta("", 790, 54, null, Color.Gray);
             filtro.Controls.Add(_ayuda);
             Controls.Add(filtro);

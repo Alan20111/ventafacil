@@ -38,6 +38,12 @@ namespace VentaFacil.Data
         public decimal Costo;
         public decimal PrecioMayoreo;
         public decimal MayoreoDesde;
+        public decimal PrecioMedio;       // medio mayoreo
+        public decimal MedioDesde;
+        public string Proveedor = "";
+        public decimal CostoBulto;        // lo que cuesta el bulto/caja
+        public decimal CantBulto;         // kg o piezas que trae el bulto
+        public long Orden;                // orden en la lista de precios
         public bool Granel;
         public bool UsaInventario = true;
         public decimal Existencia;
@@ -48,6 +54,7 @@ namespace VentaFacil.Data
         public decimal PrecioPara(decimal cantidad)
         {
             if (PrecioMayoreo > 0 && MayoreoDesde > 0 && cantidad >= MayoreoDesde) return PrecioMayoreo;
+            if (PrecioMedio > 0 && MedioDesde > 0 && cantidad >= MedioDesde) return PrecioMedio;
             return Precio;
         }
 
@@ -58,7 +65,9 @@ namespace VentaFacil.Data
                 Id = Db.L(r, "id"), Codigo = Db.S(r, "codigo"), Codigo2 = Db.S(r, "codigo2"), Descripcion = Db.S(r, "descripcion"),
                 DepartamentoId = Db.L(r, "departamento_id"), Precio = Db.D(r, "precio"), Costo = Db.D(r, "costo"),
                 PrecioMayoreo = Db.D(r, "precio_mayoreo"), MayoreoDesde = Db.D(r, "mayoreo_desde"), Granel = Db.B(r, "granel"),
-                UsaInventario = Db.B(r, "usa_inventario"), Existencia = Db.D(r, "existencia"), Minimo = Db.D(r, "minimo"), Activo = Db.B(r, "activo")
+                UsaInventario = Db.B(r, "usa_inventario"), Existencia = Db.D(r, "existencia"), Minimo = Db.D(r, "minimo"), Activo = Db.B(r, "activo"),
+                PrecioMedio = Db.D(r, "precio_medio"), MedioDesde = Db.D(r, "medio_desde"), Proveedor = Db.S(r, "proveedor"),
+                CostoBulto = Db.D(r, "costo_bulto"), CantBulto = Db.D(r, "cant_bulto"), Orden = Db.L(r, "orden")
             };
             try { p.Departamento = Db.S(r, "departamento"); } catch (IndexOutOfRangeException) { }
             return p;

@@ -69,6 +69,21 @@ VentaFácil **no usa puertos**: imprime por la cola de Windows. Si Windows impri
 
 **Artículos a granel** (semillas, botanas, dulces): en el producto marque *se vende por kilo*. Al escanearlo, el programa pide el peso: puede escribirlo en kilos (`0.750`) o en gramos (`750`). Con F2 se cambia a importe en pesos ("deme $50 de cacahuate") y con F3 se lee la báscula.
 
+### Lista de costos estilo semillera (Excel)
+
+En *F11 → Productos*:
+
+- **Importar Excel semillera**: lee el archivo de costos tal cual se usa hoy (hojas con columnas NO, STOCK, PRODUCTO, BTO, CANT, COSTO, MAYOREO, CANT, MED. MAY., CANT, MENUDEO). Antes de importar muestra una vista previa:
+  - Cada renglón de proveedor o grupo (JUANJO, SAMY, DURAN…) se vuelve el proveedor y grupo de los productos que le siguen.
+  - El costo por kg es el precio del bulto ÷ lo que trae.
+  - Los tres precios se aplican **solos en caja** según la cantidad: menudeo, medio mayoreo (desde 1 kg, 6 kg…) y mayoreo (desde 3 kg, 25 kg…).
+  - Detecta qué se vende por kilo y qué por pieza (empacados, desechables, sobres…). Se puede corregir en cada producto.
+  - Usted decide si la columna STOCK es el **stock mínimo** o la **existencia actual**.
+  - Los productos nuevos reciben un código corto (1, 2, 3…) para teclearlo en caja. Si se vuelve a importar, actualiza costos y precios.
+- **Lista de costos (Excel)**: genera un `.xlsx` con el mismo formato (agrupado por proveedor, con la fórmula de costo = BTO/CANT y las columnas L M M J V S D para las marcas de la semana), más una hoja de **precios para mostrador** sin costos.
+- El formulario de producto calcula igual que la hoja: costo del bulto ÷ lo que trae = costo; a cada precio se le ve su % de ganancia. Con *mantener el %*, al cambiar el costo del bulto se actualizan solos los tres precios.
+- Todos los reportes (ventas, cortes, inventario, kardex…) se exportan a Excel con el mismo estilo, con totales.
+
 ### Turnos y cortes
 
 - Al abrir la caja se captura el **fondo** inicial.

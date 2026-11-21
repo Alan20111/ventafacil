@@ -137,6 +137,18 @@ CREATE TABLE IF NOT EXISTS suspendidas (
             var ver = Db.Scalar(cn, null, "PRAGMA user_version");
             long v = ver == null ? 0 : System.Convert.ToInt64(ver);
             if (v < 1) Db.Exec(cn, null, "PRAGMA user_version = 1");
+            if (v < 2)
+            {
+                // v2: estilo semillera — proveedor, costo por bulto, medio mayoreo y orden de la lista
+                foreach (var col in new[] {
+                    "proveedor TEXT NOT NULL DEFAULT ''", "costo_bulto REAL NOT NULL DEFAULT 0", "cant_bulto REAL NOT NULL DEFAULT 0",
+                    "precio_medio REAL NOT NULL DEFAULT 0", "medio_desde REAL NOT NULL DEFAULT 0", "orden INTEGER NOT NULL DEFAULT 0" })
+                {
+                    try { Db.Exec(cn, null, "ALTER TABLE productos ADD COLUMN " + col); }
+                    catch (System.Data.SQLite.SQLiteException) { /* ya existe */ }
+                }
+                Db.Exec(cn, null, "PRAGMA user_version = 2");
+            }
         }
     }
 }

@@ -24,14 +24,15 @@ namespace VentaFacil.Forms.Admin
             BackColor = Color.White;
 
             _grid = AdminUtil.Grid();
-            _grid.Columns.Add(Ui.Columna("codigo", "Código", 18));
-            _grid.Columns.Add(Ui.Columna("descripcion", "Descripción", 40));
-            _grid.Columns.Add(Ui.Columna("departamento", "Departamento", 16));
-            _grid.Columns.Add(Ui.Columna("precio", "Precio", 12, true));
-            _grid.Columns.Add(Ui.Columna("costo", "Costo", 12, true));
-            _grid.Columns.Add(Ui.Columna("existencia", "Existencia", 11, true));
-            _grid.Columns.Add(Ui.Columna("minimo", "Mínimo", 9, true));
-            _grid.Columns.Add(Ui.Columna("granel", "Granel", 8));
+            _grid.Columns.Add(Ui.Columna("codigo", "Código", 10));
+            _grid.Columns.Add(Ui.Columna("descripcion", "Producto", 34));
+            _grid.Columns.Add(Ui.Columna("proveedor", "Proveedor", 13));
+            _grid.Columns.Add(Ui.Columna("costo", "Costo", 10, true));
+            _grid.Columns.Add(Ui.Columna("mayoreo", "Mayoreo", 13, true));
+            _grid.Columns.Add(Ui.Columna("medio", "Med. may.", 13, true));
+            _grid.Columns.Add(Ui.Columna("precio", "Menudeo", 10, true));
+            _grid.Columns.Add(Ui.Columna("existencia", "Stock", 8, true));
+            _grid.Columns.Add(Ui.Columna("minimo", "Mín.", 6, true));
             _grid.CellDoubleClick += (s, e) => { if (e.RowIndex >= 0) Modificar(); };
             _grid.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; Modificar(); } };
             Controls.Add(_grid);
@@ -50,6 +51,10 @@ namespace VentaFacil.Forms.Admin
             barra.Controls.Add(AdminUtil.BotonBarra("F3 Nuevo", (s, e) => Nuevo()));
             barra.Controls.Add(AdminUtil.BotonBarra("F4 Modificar", (s, e) => Modificar()));
             barra.Controls.Add(AdminUtil.BotonBarra("F5 Eliminar", (s, e) => Eliminar()));
+            var impXls = AdminUtil.BotonBarra("Importar Excel semillera", (s, e) => { if (ExcelSemillera.Importar(FindForm())) Cargar(); }, 200);
+            impXls.ForeColor = Tema.Verde;
+            barra.Controls.Add(impXls);
+            barra.Controls.Add(AdminUtil.BotonBarra("Lista de costos (Excel)", (s, e) => ExcelSemillera.ExportarLista(FindForm()), 190));
             barra.Controls.Add(AdminUtil.BotonBarra("Importar CSV", (s, e) => Importar()));
             barra.Controls.Add(AdminUtil.BotonBarra("Exportar CSV", (s, e) => Exportar()));
             Controls.Add(barra);
@@ -86,8 +91,12 @@ namespace VentaFacil.Forms.Admin
                 _grid.Rows.Clear();
                 foreach (var p in _lista)
                 {
-                    int i = _grid.Rows.Add(p.Codigo, p.Descripcion, p.Departamento, Fmt.Dinero(p.Precio), Fmt.Dinero(p.Costo),
-                        p.UsaInventario ? Fmt.Cant(p.Existencia, p.Granel) : "-", p.UsaInventario ? Fmt.Dec(p.Minimo) : "", p.Granel ? "Kg" : "");
+                    string u = p.Granel ? "kg" : "pz";
+                    int i = _grid.Rows.Add(p.Codigo, p.Descripcion + (p.Granel ? "" : "  (pz)"), p.Proveedor, Fmt.Dinero(p.Costo),
+                        p.PrecioMayoreo > 0 ? Fmt.Dinero(p.PrecioMayoreo) + " ≥" + Fmt.Dec(p.MayoreoDesde) + u : "",
+                        p.PrecioMedio > 0 ? Fmt.Dinero(p.PrecioMedio) + " ≥" + Fmt.Dec(p.MedioDesde) + u : "",
+                        Fmt.Dinero(p.Precio),
+                        p.UsaInventario ? Fmt.Dec(p.Existencia) : "-", p.UsaInventario ? Fmt.Dec(p.Minimo) : "");
                     _grid.Rows[i].Tag = p;
                     if (!p.Activo) _grid.Rows[i].DefaultCellStyle.ForeColor = Color.Gray;
                     else if (p.UsaInventario && p.Existencia <= p.Minimo) _grid.Rows[i].Cells["existencia"].Style.ForeColor = Tema.Rojo;

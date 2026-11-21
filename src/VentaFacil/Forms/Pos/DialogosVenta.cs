@@ -43,7 +43,7 @@ namespace VentaFacil.Forms.Pos
             _grid.Columns.Add(Ui.Columna("precio", "Precio", 14, true));
             _grid.Columns.Add(Ui.Columna("existencia", "Existencia", 14, true));
             Controls.Add(_grid);
-            _detalle = new Label { Left = 12, Top = 386, Width = 796, Height = 100, Font = Tema.Grande, ForeColor = Tema.Azul, Visible = consulta };
+            _detalle = new Label { Left = 12, Top = 386, Width = 796, Height = 100, Font = Tema.Mediana, ForeColor = Tema.Azul, Visible = consulta };
             Controls.Add(_detalle);
             Controls.Add(Ui.Etiqueta(consulta ? "Enter = vender   ·   Esc = solo consultar / salir" : "↑↓ = moverse   ·   Enter = vender   ·   Esc = salir", 12, ClientSize.Height - 34, Tema.Negrita, Color.Gray));
 
@@ -112,8 +112,10 @@ namespace VentaFacil.Forms.Pos
             if (!_consulta) return;
             if (_grid.CurrentRow == null || _grid.CurrentRow.Index >= _datos.Count) { _detalle.Text = ""; return; }
             var p = _datos[_grid.CurrentRow.Index];
-            _detalle.Text = p.Descripcion + "\n" + Fmt.Dinero(p.Precio) + (p.Granel ? " por kg" : "") +
-                (p.PrecioMayoreo > 0 && p.MayoreoDesde > 0 ? "    Mayoreo: " + Fmt.Dinero(p.PrecioMayoreo) + " desde " + Fmt.Dec(p.MayoreoDesde) : "");
+            string u = p.Granel ? " kg" : " pz";
+            _detalle.Text = p.Descripcion + "\nMenudeo: " + Fmt.Dinero(p.Precio) + (p.Granel ? " /kg" : "") +
+                (p.PrecioMedio > 0 && p.MedioDesde > 0 ? "   Medio: " + Fmt.Dinero(p.PrecioMedio) + " (" + Fmt.Dec(p.MedioDesde) + u + "+)" : "") +
+                (p.PrecioMayoreo > 0 && p.MayoreoDesde > 0 ? "   Mayoreo: " + Fmt.Dinero(p.PrecioMayoreo) + " (" + Fmt.Dec(p.MayoreoDesde) + u + "+)" : "");
         }
 
         void Aceptar()

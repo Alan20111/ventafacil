@@ -108,11 +108,16 @@ namespace VentaFacil.Data
             var args = new List<object>();
             foreach (var w in palabras)
             {
-                sql.AppendFormat("AND (p.descripcion LIKE @p{0} OR p.codigo LIKE @p{0} OR p.codigo2 LIKE @p{0}) ", args.Count);
+                sql.AppendFormat("AND (p.descripcion LIKE @p{0} OR p.codigo LIKE @p{0} OR p.codigo2 LIKE @p{0} OR p.proveedor LIKE @p{0}) ", args.Count);
                 args.Add("%" + w + "%");
             }
             sql.Append("ORDER BY p.descripcion LIMIT " + limite);
             return Db.Lista(sql.ToString(), Producto.De, args.ToArray());
+        }
+
+        public static List<string> Proveedores()
+        {
+            return Db.Lista("SELECT DISTINCT proveedor FROM productos WHERE proveedor<>'' ORDER BY proveedor", r => Db.S(r, "proveedor"));
         }
 
         public static bool CodigoExiste(string codigo, long excluirId)
@@ -135,10 +140,13 @@ namespace VentaFacil.Data
             object dep = p.DepartamentoId > 0 ? (object)p.DepartamentoId : null;
             if (p.Id == 0)
             {
-                p.Id = Db.InsertId(cn, tx, @"INSERT INTO productos(codigo,codigo2,descripcion,departamento_id,precio,costo,precio_mayoreo,mayoreo_desde,granel,usa_inventario,existencia,minimo,activo,actualizado)
-                    VALUES(@p0,@p1,@p2,@p3,@p4,@p5,@p6,@p7,@p8,@p9,@p10,@p11,@p12,@p13)",
+                if (p.Orden == 0) p.Orden = Convert.ToInt64(Db.Scalar(cn, tx, "SELECT IFNULL(MAX(orden),0)+1 FROM productos"));
+                p.Id = Db.InsertId(cn, tx, @"INSERT INTO productos(codigo,codigo2,descripcion,departamento_id,precio,costo,precio_mayoreo,mayoreo_desde,granel,usa_inventario,existencia,minimo,activo,actualizado,
+                        precio_medio,medio_desde,proveedor,costo_bulto,cant_bulto,orden)
+                    VALUES(@p0,@p1,@p2,@p3,@p4,@p5,@p6,@p7,@p8,@p9,@p10,@p11,@p12,@p13,@p14,@p15,@p16,@p17,@p18,@p19)",
                     p.Codigo.Trim(), (p.Codigo2 ?? "").Trim(), p.Descripcion.Trim(), dep, p.Precio, p.Costo, p.PrecioMayoreo, p.MayoreoDesde,
-                    p.Granel ? 1 : 0, p.UsaInventario ? 1 : 0, p.Existencia, p.Minimo, p.Activo ? 1 : 0, Db.Ahora());
+                    p.Granel ? 1 : 0, p.UsaInventario ? 1 : 0, p.Existencia, p.Minimo, p.Activo ? 1 : 0, Db.Ahora(),
+                    p.PrecioMedio, p.MedioDesde, (p.Proveedor ?? "").Trim(), p.CostoBulto, p.CantBulto, p.Orden);
                 if (p.Existencia != 0)
                     Db.Exec(cn, tx, "INSERT INTO movimientos_inv(producto_id,fecha,tipo,cantidad,existencia,referencia,usuario_id) VALUES(@p0,@p1,'ENTRADA',@p2,@p2,'Alta de producto',@p3)",
                         p.Id, Db.Ahora(), p.Existencia, usuarioId);
@@ -147,9 +155,11 @@ namespace VentaFacil.Data
             {
                 // La existencia NO se modifica aquí: se cambia con movimientos de inventario.
                 Db.Exec(cn, tx, @"UPDATE productos SET codigo=@p0,codigo2=@p1,descripcion=@p2,departamento_id=@p3,precio=@p4,costo=@p5,precio_mayoreo=@p6,
-                    mayoreo_desde=@p7,granel=@p8,usa_inventario=@p9,minimo=@p10,activo=@p11,actualizado=@p12 WHERE id=@p13",
+                    mayoreo_desde=@p7,granel=@p8,usa_inventario=@p9,minimo=@p10,activo=@p11,actualizado=@p12,
+                    precio_medio=@p14,medio_desde=@p15,proveedor=@p16,costo_bulto=@p17,cant_bulto=@p18,orden=CASE WHEN @p19>0 THEN @p19 ELSE orden END WHERE id=@p13",
                     p.Codigo.Trim(), (p.Codigo2 ?? "").Trim(), p.Descripcion.Trim(), dep, p.Precio, p.Costo, p.PrecioMayoreo, p.MayoreoDesde,
-                    p.Granel ? 1 : 0, p.UsaInventario ? 1 : 0, p.Minimo, p.Activo ? 1 : 0, Db.Ahora(), p.Id);
+                    p.Granel ? 1 : 0, p.UsaInventario ? 1 : 0, p.Minimo, p.Activo ? 1 : 0, Db.Ahora(), p.Id,
+                    p.PrecioMedio, p.MedioDesde, (p.Proveedor ?? "").Trim(), p.CostoBulto, p.CantBulto, p.Orden);
             }
         }
 
