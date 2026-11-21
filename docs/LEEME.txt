@@ -20,6 +20,7 @@ TECLAS
   F9 ............... CORTES (X y Z)             F10 .. cambiar usuario
   F11 .............. administracion             F12 .. cancelar ticket
   Ctrl+P ........... reimprimir ultimo ticket   Ctrl+D abrir cajon
+  Ctrl+I ........... elegir / detectar impresora
 
 DATOS Y RESPALDOS
   Los datos estan en la carpeta "datos". Se respalda solo cada dia y en

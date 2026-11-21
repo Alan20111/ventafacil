@@ -112,8 +112,14 @@ namespace VentaFacil.Forms.Admin
         TabPage TabImpresora()
         {
             var p = Pagina("Impresora de tickets");
-            int y = 16;
+            int y = 12;
+            var asistente = new Button { Text = "Elegir o detectar impresora…", Left = 16, Top = y, Width = 300, Height = 40, Font = Tema.Mediana, BackColor = Tema.Verde, ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+            asistente.Click += (s, e) => AsistenteImpresora();
+            p.Controls.Add(asistente);
+            p.Controls.Add(Ui.Etiqueta("Recomendado: detecta la impresora de tickets y la prueba.", 326, y + 12, null, Color.Gray));
+            y += 54;
             _impresora = Combo(p, "Impresora:", ref y, 380);
+            _impresora.Items.Add(Automatica);
             try { foreach (var i in Impresora.Instaladas()) _impresora.Items.Add(i); } catch { }
             _modo = Combo(p, "Forma de imprimir:", ref y, 380);
             _modo.Items.Add("Usar controlador de Windows (cualquier impresora)");
@@ -206,7 +212,7 @@ namespace VentaFacil.Forms.Admin
             _nombre.Text = _c.NegocioNombre; _direccion.Text = _c.NegocioDireccion; _telefono.Text = _c.NegocioTelefono; _rfc.Text = _c.NegocioRfc;
             _encabezado.Text = _c.TicketEncabezado; _pie.Text = _c.TicketPie; _banner.Text = _c.Banner; _caja.Value = Limitar(_caja, _c.Caja);
 
-            Elegir(_impresora, string.IsNullOrEmpty(_c.Impresora) ? Impresora.Predeterminada() : _c.Impresora);
+            Elegir(_impresora, string.IsNullOrEmpty(_c.Impresora) ? Automatica : _c.Impresora);
             _modo.SelectedIndex = _c.ModoImpresion == "ESCPOS" ? 1 : 0;
             _ancho.SelectedIndex = _c.AnchoTicket <= 58 ? 0 : 1;
             _columnas.Value = Limitar(_columnas, _c.Columnas);
@@ -238,7 +244,7 @@ namespace VentaFacil.Forms.Admin
             _c.NegocioRfc = _rfc.Text.Trim(); _c.TicketEncabezado = _encabezado.Text.Trim(); _c.TicketPie = _pie.Text.Trim(); _c.Banner = _banner.Text.Trim();
             _c.Caja = (int)_caja.Value;
 
-            _c.Impresora = _impresora.SelectedItem != null ? _impresora.SelectedItem.ToString() : "";
+            _c.Impresora = _impresora.SelectedItem != null && _impresora.SelectedItem.ToString() != Automatica ? _impresora.SelectedItem.ToString() : "";
             _c.ModoImpresion = _modo.SelectedIndex == 1 ? "ESCPOS" : "WINDOWS";
             _c.AnchoTicket = _ancho.SelectedIndex == 0 ? 58 : 80;
             _c.Columnas = (int)_columnas.Value;
@@ -312,6 +318,20 @@ namespace VentaFacil.Forms.Admin
                 Cajon.Abrir(_c);
             }
             catch (Exception ex) { Ui.Error(ex, "No se pudo abrir el cajón"); }
+        }
+
+        const string Automatica = "(Automática: la predeterminada de Windows)";
+
+        /// <summary>Abre el asistente de impresoras y trae lo que se guardó, sin perder lo capturado en otras pestañas.</summary>
+        void AsistenteImpresora()
+        {
+            if (!Leer()) return;
+            if (!FormImpresoras.Configurar(FindForm())) return;
+            var g = Config.Actual;
+            _c.Impresora = g.Impresora; _c.ModoImpresion = g.ModoImpresion; _c.AnchoTicket = g.AnchoTicket; _c.Columnas = g.Columnas;
+            _c.TamanoFuente = g.TamanoFuente; _c.Cortar = g.Cortar; _c.CajonPin = g.CajonPin; _c.ImpresoraRevisada = true;
+            Llenar();
+            Ui.Info("Impresora guardada.");
         }
 
         void LeerPeso()

@@ -230,6 +230,7 @@ namespace VentaFacil.Printing
         public static void Abrir(Config c)
         {
             if (c.CajonModo == "NINGUNO") return;
+            if (c.CajonModo != "SERIAL") c = Impresora.Resuelta(c);
             if (c.CajonModo == "SERIAL")
             {
                 using (var sp = new SerialPort(c.CajonPuerto, 9600))
@@ -247,9 +248,23 @@ namespace VentaFacil.Printing
     /// <summary>Impresión de un ticket según la configuración (Windows o ESC/POS).</summary>
     public static class Impresora
     {
+        /// <summary>Copia de la configuración con el nombre real de impresora a usar.</summary>
+        public static Config Resuelta(Config c)
+        {
+            var r = c.Copia();
+            string aviso;
+            r.Impresora = Detector.Resolver(c.Impresora, out aviso);
+            if (aviso != null) Log.Error(null, aviso);
+            if (string.IsNullOrEmpty(r.Impresora))
+                throw new InvalidOperationException("No hay ninguna impresora instalada en Windows.\nInstale la impresora (que imprima la página de prueba de Windows) y elíjala en F11 > Configuración > Impresora.");
+            return r;
+        }
+
         public static void Imprimir(Ticket t, Config c = null)
         {
-            c = c ?? Config.Actual;
+            c = Resuelta(c ?? Config.Actual);
+            if (Detector.EstaDesconectada(c.Impresora))
+                throw new InvalidOperationException("Windows marca la impresora \"" + c.Impresora + "\" como SIN CONEXIÓN.\nRevise el cable y que esté encendida. En Windows: Dispositivos e impresoras > clic derecho > Ver lo que se imprime > menú Impresora > quite \"Usar impresora sin conexión\".");
             for (int i = 0; i < Math.Max(1, c.Copias); i++)
             {
                 bool cajonEsteVez = t.AbrirCajon && i == 0;

@@ -71,6 +71,7 @@ namespace VentaFacil.Forms.Pos
             boton("F12", "Cancelar ticket", (s, e) => CancelarTicket());
             boton("Ctrl+P", "Reimprimir último", (s, e) => ReimprimirUltimo());
             boton("Ctrl+D", "Abrir cajón", (s, e) => AbrirCajon());
+            boton("Ctrl+I", "Impresora", (s, e) => ConfigurarImpresora());
 
             // ---- Zona inferior: captura + total ----
             var abajo = new Panel { Dock = DockStyle.Bottom, Height = 150, BackColor = Tema.AzulFondo, Padding = new Padding(8) };
@@ -174,6 +175,7 @@ namespace VentaFacil.Forms.Pos
                 case Keys.F12: CancelarTicket(); return true;
                 case Keys.Control | Keys.P: ReimprimirUltimo(); return true;
                 case Keys.Control | Keys.D: AbrirCajon(); return true;
+                case Keys.Control | Keys.I: ConfigurarImpresora(); return true;
                 case Keys.Shift | Keys.Subtract: AbrirCajon(); return true;
                 case Keys.Shift | Keys.OemMinus: AbrirCajon(); return true;
                 case Keys.Control | Keys.Delete: CancelarVentaActual(); return true;
@@ -595,7 +597,22 @@ namespace VentaFacil.Forms.Pos
                 Impresora.Imprimir(Tickets.Venta(VentaRepo.Obtener(id), Config.Actual, true));
                 Mensaje("Se reimprimió el ticket " + id + ".");
             }
-            catch (Exception ex) { Ui.Error(ex, "No se pudo reimprimir"); }
+            catch (Exception ex) { ErrorImpresion(ex, "No se pudo reimprimir."); }
+        }
+
+        void ConfigurarImpresora()
+        {
+            if (Ui.AutorizarAdmin("Impresora: se requiere un administrador") == null) { _captura.Focus(); return; }
+            if (FormImpresoras.Configurar(this)) { Config.Cargar(); Mensaje("Impresora guardada."); }
+            _captura.Focus();
+        }
+
+        /// <summary>Si falla la impresión, ofrece arreglarlo en ese momento.</summary>
+        void ErrorImpresion(Exception ex, string contexto)
+        {
+            Log.Error(ex, contexto);
+            if (Ui.Confirmar(contexto + "\n\n" + ex.Message + "\n\n¿Quiere revisar o cambiar la impresora ahora?", "Problema con la impresora"))
+                ConfigurarImpresora();
         }
 
         void AbrirCajon()
@@ -661,7 +678,7 @@ namespace VentaFacil.Forms.Pos
                 }
                 catch (Exception ex)
                 {
-                    Ui.Error(ex, "La venta SÍ se guardó, pero falló la impresora/cajón. Puede reimprimir con Ctrl+P");
+                    ErrorImpresion(ex, "La venta SÍ se guardó, pero falló la impresora/cajón. Puede reimprimir con Ctrl+P.");
                 }
             }
             _captura.Focus();

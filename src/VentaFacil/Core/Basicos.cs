@@ -64,7 +64,8 @@ namespace VentaFacil.Core
         public int Caja = 1;
 
         // Impresión
-        public string Impresora = "";              // nombre de la impresora de Windows
+        public string Impresora = "";              // nombre de la impresora de Windows ("" = automático: la predeterminada)
+        public bool ImpresoraRevisada = false;     // ya se hizo la detección del primer arranque
         public string ModoImpresion = "WINDOWS";   // WINDOWS (controlador) | ESCPOS (directo RAW)
         public int AnchoTicket = 80;               // 58 u 80 mm
         public int Columnas = 42;                  // caracteres por renglón

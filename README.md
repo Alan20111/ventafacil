@@ -17,11 +17,22 @@ Punto de venta sencillo para Windows 7 y Windows 10/11, inspirado en **Zafirah R
 2. Copie la carpeta `VentaFacil` a `C:\VentaFacil` (no a *Archivos de programa*, para que pueda guardar los datos ahí mismo).
 3. Haga doble clic en `instalar.bat` para crear el acceso directo en el escritorio, o abra `VentaFacil.exe` directamente.
 4. Entre con el usuario **admin** y la contraseña **admin**. **Cámbiela de inmediato** en *F11 Administración → Usuarios*.
-5. En *F11 → Configuración*, capture los datos del negocio, elija la impresora y pulse **Imprimir ticket de prueba** y **Probar cajón**.
+5. La primera vez se abre sola la ventana **Impresora de tickets**: detecta las impresoras instaladas en Windows, marca las de tickets y recomienda una. Pulse **F3 Imprimir prueba** y **Guardar**. Se puede volver a abrir en cualquier momento con **Ctrl+I** o en *F11 → Configuración → Impresora*.
+6. En *F11 → Configuración*, capture los datos del negocio.
 
 Los datos quedan en `C:\VentaFacil\datos\ventafacil.db`. Cada día, y después de cada corte Z, se hace un respaldo automático en `datos\respaldos\` (se guardan los últimos 30).
 
-### Impresora de tickets: ¿qué modo elegir?
+### Impresora de tickets
+
+VentaFácil **no usa puertos**: imprime por la cola de Windows. Si Windows imprime su página de prueba, VentaFácil también.
+
+- **Detectar automáticamente**: busca una térmica de tickets por su nombre, su controlador y sus tamaños de papel (58/80 mm). Si no hay, usa la predeterminada. Ajusta solo el ancho y la forma de imprimir.
+- **Automático**: usa siempre la impresora **predeterminada de Windows**.
+- **Manual**: se elige de la lista, que muestra el tipo (tickets, normal o virtual), la conexión (USB, red, serial) y si está desconectada.
+- Si la impresora elegida desaparece (por ejemplo, Windows la reinstala como "… (Copia 1)" al cambiar de puerto USB), VentaFácil busca la parecida o usa la predeterminada, en lugar de no imprimir.
+- Si falla la impresión al cobrar, ofrece abrir la ventana de impresora en ese momento.
+
+#### ¿Qué forma de imprimir elegir?
 
 | Modo | Cuándo usarlo |
 |---|---|
@@ -52,6 +63,7 @@ Los datos quedan en `C:\VentaFacil\datos\ventafacil.db`. Cada día, y después d
 | **F12** | Cancelar un ticket ya cobrado (regresa la mercancía al inventario) |
 | **Ctrl+P** | Reimprimir el último ticket |
 | **Ctrl+D** o **Shift+−** | Abrir el cajón |
+| **Ctrl+I** | Elegir o detectar la impresora |
 | **Ctrl+Supr** | Cancelar toda la venta en curso |
 | **Esc** | Limpiar la captura o cerrar una ventana |
 

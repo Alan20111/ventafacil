@@ -58,6 +58,17 @@ namespace VentaFacil
                     if (login.ShowDialog() != DialogResult.OK) return;
                     Sesion.Usuario = login.UsuarioValido;
                 }
+                // Primer arranque: detectar la impresora y probarla
+                if (!Config.Actual.ImpresoraRevisada && Sesion.Usuario.EsAdmin)
+                {
+                    try
+                    {
+                        FormImpresoras.Configurar(null, true);
+                        if (!Config.Actual.ImpresoraRevisada) { var c = Config.Actual.Copia(); c.ImpresoraRevisada = true; c.Guardar(); }
+                        Config.Cargar();
+                    }
+                    catch (Exception ex) { Log.Error(ex, "Detección de impresora"); }
+                }
                 Application.Run(new FormVenta());
             }
         }
