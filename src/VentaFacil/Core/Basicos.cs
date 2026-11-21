@@ -162,6 +162,7 @@ namespace VentaFacil.Core
             long entero = (long)Math.Floor(importe);
             int centavos = (int)Math.Round((importe - entero) * 100);
             string letras = entero == 0 ? "CERO" : Convertir(entero);
+            if (entero >= 1000000 && entero % 1000000 == 0) letras += " DE";
             return letras + (entero == 1 ? " PESO " : " PESOS ") + centavos.ToString("00") + "/100 M.N.";
         }
 

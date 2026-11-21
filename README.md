@@ -1,7 +1,93 @@
 # VentaFácil
 
-Proyecto VentaFácil.
+Punto de venta sencillo para Windows 7 y Windows 10/11, inspirado en **Zafirah Retail System 2008**: las mismas teclas de función, pantallas simples, casi sin configuración, y cortes de caja claros para el administrador.
 
-## Estado
+- **Ligero**: un `.exe` de menos de 1 MB más SQLite (unos 2 MB en total). Sin servidor de base de datos (Zafirah necesitaba SQL Server).
+- **Compatible**: .NET Framework 4.0, que corre en Windows 7, 8, 10 y 11, en 32 y 64 bits.
+- **Impresoras**: cualquier impresora instalada en Windows (por controlador) o térmicas de tickets en modo directo **ESC/POS** (Epson, 3nStar, EC Line, Bixolon, genéricas de 58 y 80 mm).
+- **Cajón de dinero**: se abre con el pulso de la impresora (RJ11) o por puerto serial.
+- **Lector de código de barras**: cualquiera que funcione "como teclado" (USB HID), que son casi todos. No necesita configuración.
+- **Báscula**: captura del peso a mano, lectura por puerto serial (Torrey, Rhino y similares) o **etiquetas de báscula** (EAN-13 que empiezan con 2).
 
-Proyecto recién creado.
+## Instalación en la tienda
+
+1. **Requisito, solo en Windows 7**: .NET Framework 4.0 o superior (se recomienda el 4.8). Windows 8, 10 y 11 ya lo traen.
+   Para saber si ya está instalado: *Panel de control → Programas y características*, busque "Microsoft .NET Framework 4".
+   Si no aparece, instale el instalador sin conexión de .NET Framework 4.8 (`ndp48-x86-x64-allos-enu.exe`, de microsoft.com). En Windows 7 necesita el Service Pack 1.
+2. Copie la carpeta `VentaFacil` a `C:\VentaFacil` (no a *Archivos de programa*, para que pueda guardar los datos ahí mismo).
+3. Haga doble clic en `instalar.bat` para crear el acceso directo en el escritorio, o abra `VentaFacil.exe` directamente.
+4. Entre con el usuario **admin** y la contraseña **admin**. **Cámbiela de inmediato** en *F11 Administración → Usuarios*.
+5. En *F11 → Configuración*, capture los datos del negocio, elija la impresora y pulse **Imprimir ticket de prueba** y **Probar cajón**.
+
+Los datos quedan en `C:\VentaFacil\datos\ventafacil.db`. Cada día, y después de cada corte Z, se hace un respaldo automático en `datos\respaldos\` (se guardan los últimos 30).
+
+### Impresora de tickets: ¿qué modo elegir?
+
+| Modo | Cuándo usarlo |
+|---|---|
+| **Controlador de Windows** (predeterminado) | Funciona con cualquier impresora que tenga su controlador instalado: térmica, de inyección o láser. Ajuste el ancho (58 u 80 mm) y el tamaño de letra. |
+| **Directo ESC/POS** | Para impresoras térmicas de tickets. Es más rápido, corta el papel y abre el cajón en el mismo envío. Funciona aunque la impresora esté instalada con el controlador **"Generic / Text Only"**. |
+
+- Papel de 80 mm: 42 columnas (48 en algunas impresoras). Papel de 58 mm: 32 columnas.
+- Si el cajón no abre, cambie en Configuración el *pin del cajón* (pin 2 o pin 5).
+
+## Uso diario: teclas del punto de venta
+
+| Tecla | Función |
+|---|---|
+| Escanear o escribir el código + **Enter** | Agrega el artículo |
+| `3*` y luego escanear | Vende 3 piezas del artículo (multiplicar) |
+| Escribir parte del nombre + **Enter** | Busca el artículo por nombre |
+| **+** o **F1** | **Cobrar** (F2 efectivo, F3 tarjeta, F4 transferencia, F5 vales) |
+| **F2** | Buscar artículo |
+| **F3** o **Supr** | Quitar el artículo seleccionado (↑↓ para elegir) |
+| **F4** | Consultar precio (Enter otra vez para venderlo) |
+| **F5** | Venta en espera: guardar la venta actual o recuperar una |
+| **F6** | Descuento por artículo (% o $), cambio de precio, o % a toda la venta |
+| **F7** | Entradas y salidas de efectivo (retiros, pagos a proveedores, cambio) |
+| **F8** | Artículo varios: venta sin código, con precio libre |
+| **F9** | Cortes: X de cajero, X de caja (parciales) y **Z** (cierre del día) |
+| **F10** | Cambiar de usuario sin cerrar el programa |
+| **F11** | Administración (productos, inventario, reportes, usuarios, configuración) |
+| **F12** | Cancelar un ticket ya cobrado (regresa la mercancía al inventario) |
+| **Ctrl+P** | Reimprimir el último ticket |
+| **Ctrl+D** o **Shift+−** | Abrir el cajón |
+| **Ctrl+Supr** | Cancelar toda la venta en curso |
+| **Esc** | Limpiar la captura o cerrar una ventana |
+
+**Artículos a granel** (semillas, botanas, dulces): en el producto marque *se vende por kilo*. Al escanearlo, el programa pide el peso: puede escribirlo en kilos (`0.750`) o en gramos (`750`). Con F2 se cambia a importe en pesos ("deme $50 de cacahuate") y con F3 se lee la báscula.
+
+### Turnos y cortes
+
+- Al abrir la caja se captura el **fondo** inicial.
+- **Corte X**: solo informa. Se puede sacar las veces que sea, por cajero o de toda la caja.
+- **Corte Z**: cierra el turno. Pide contar el efectivo y muestra si hay **sobrante o faltante** (fondo + ventas en efectivo + entradas − salidas − devoluciones). Imprime el ticket del corte, hace un respaldo y abre el siguiente turno.
+- El corte muestra las ventas brutas, las cancelaciones, las ventas netas, el desglose por forma de pago y por departamento, y la ganancia estimada (venta − costo).
+
+### Permisos
+
+- **Administrador**: todo.
+- **Cajero**: vende, cobra, hace entradas y salidas, y saca su corte X. Para descuentos, cancelar tickets, el corte Z y Administración se pide la clave de un administrador (se puede permitir al cajero en Configuración).
+
+## Desarrollo
+
+Código en C# (WinForms, .NET Framework 4.0), en `src/VentaFacil`. Se compila desde Windows, macOS o Linux con el SDK de .NET:
+
+```bash
+cd src/VentaFacil && dotnet build -c Release
+```
+
+Para generar la carpeta lista para copiar a la tienda (`publish/VentaFacil` y `publish/VentaFacil.zip`):
+
+```bash
+./scripts/publicar.sh
+```
+
+Estructura:
+
+- `Data/`: SQLite (esquema, modelos, consultas)
+- `Core/`: configuración, sesión, formatos, importe con letra
+- `Printing/`: tickets, ESC/POS directo, impresión por Windows, cajón, báscula
+- `Forms/Pos/`: pantalla de venta y sus ventanas (cobro, búsqueda, cortes…)
+- `Forms/Admin/`: administración
+- `docs/ANALISIS_ZAFIRAH.md`: análisis del sistema original y qué se tomó de él

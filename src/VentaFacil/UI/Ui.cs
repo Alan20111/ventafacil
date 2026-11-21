@@ -166,6 +166,8 @@ namespace VentaFacil.UI
     {
         public Dialogo(string titulo, int ancho, int alto)
         {
+            AutoScaleDimensions = new SizeF(96F, 96F);
+            AutoScaleMode = AutoScaleMode.Dpi;
             Text = titulo;
             FormBorderStyle = FormBorderStyle.FixedDialog;
             StartPosition = FormStartPosition.CenterParent;

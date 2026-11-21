@@ -12,6 +12,8 @@ namespace VentaFacil.UI
 
         public FormLogin(bool autorizacion, string motivo)
         {
+            AutoScaleDimensions = new SizeF(96F, 96F);
+            AutoScaleMode = AutoScaleMode.Dpi;
             Text = autorizacion ? "Autorización" : "VentaFácil - Entrar";
             FormBorderStyle = FormBorderStyle.FixedDialog;
             StartPosition = autorizacion ? FormStartPosition.CenterParent : FormStartPosition.CenterScreen;
@@ -49,7 +51,7 @@ namespace VentaFacil.UI
             AcceptButton = ok; CancelButton = no;
 
             _usuario.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; _clave.Focus(); } };
-            if (!autorizacion)
+            if (!autorizacion && UsuarioRepo.Validar("admin", "admin") != null)
                 Controls.Add(Ui.Etiqueta("Primera vez: usuario admin, contraseña admin", 24, ClientSize.Height - 26, null, Color.Gray));
             Shown += (s, e) => _usuario.Focus();
         }

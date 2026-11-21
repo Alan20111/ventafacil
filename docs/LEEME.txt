@@ -1,0 +1,26 @@
+VENTAFACIL - PUNTO DE VENTA
+===========================
+
+INSTALAR
+1. Copie esta carpeta a C:\VentaFacil
+2. Windows 7: necesita .NET Framework 4.0 o superior (se recomienda 4.8).
+   Windows 8, 10 y 11 ya lo traen.
+3. Doble clic en instalar.bat para crear el acceso directo en el escritorio.
+4. Abra VentaFacil. Usuario: admin   Contraseña: admin
+   (CAMBIELA en F11 Administracion > Usuarios)
+5. F11 > Configuracion: datos del negocio, impresora, "Imprimir ticket de prueba"
+   y "Probar cajon".
+
+TECLAS
+  Codigo + Enter ... agregar articulo          3*  ... cantidad 3
+  + o F1 ........... COBRAR                     F2 ... buscar
+  F3 / Supr ........ quitar articulo            F4 ... consultar precio
+  F5 ............... venta en espera            F6 ... descuento
+  F7 ............... entradas/salidas de dinero F8 ... articulo varios
+  F9 ............... CORTES (X y Z)             F10 .. cambiar usuario
+  F11 .............. administracion             F12 .. cancelar ticket
+  Ctrl+P ........... reimprimir ultimo ticket   Ctrl+D abrir cajon
+
+DATOS Y RESPALDOS
+  Los datos estan en la carpeta "datos". Se respalda solo cada dia y en
+  cada corte Z (carpeta datos\respaldos). Copie esa carpeta a una USB seguido.
