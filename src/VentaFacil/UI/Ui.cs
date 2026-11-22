@@ -13,32 +13,34 @@ namespace VentaFacil.UI
     /// </summary>
     public static class Tema
     {
-        // Paleta (de la guía de estilo)
-        public static readonly Color Crema = Color.FromArgb(253, 252, 252);   // fondo de página
-        public static readonly Color Taupe = Color.FromArgb(245, 243, 241);   // bandas y encabezados
-        public static readonly Color Piedra = Color.FromArgb(235, 232, 228);  // bordes finos
-        public static readonly Color Grafito = Color.FromArgb(68, 64, 59);
-        public static readonly Color Humo = Color.FromArgb(119, 113, 105);    // texto secundario
-        public static readonly Color Ceniza = Color.FromArgb(165, 159, 151);  // notas al pie
-
-        public static readonly Color Azul = Color.Black;          // tinta principal y botón principal
-        public static readonly Color Texto = Color.Black;
-        public static readonly Color Rojo = Color.FromArgb(176, 32, 32);      // solo para alertas y errores
-        public static readonly Color Verde = Color.FromArgb(38, 112, 64);     // solo para confirmaciones
+        // Paleta: azul del icono como color dominante, con fondos claros y negro para el texto
+        public static readonly Color Azul = Color.FromArgb(0, 70, 160);
+        public static readonly Color AzulOscuro = Color.FromArgb(0, 46, 112);
+        public static readonly Color AzulClaro2 = Color.FromArgb(200, 218, 242);
+        public static readonly Color Crema = Color.FromArgb(253, 252, 252);
+        public static readonly Color Taupe = Color.FromArgb(240, 244, 250);
+        public static readonly Color Piedra = Color.FromArgb(190, 206, 230);
+        public static readonly Color Grafito = AzulOscuro;
+        public static readonly Color Humo = Color.FromArgb(70, 80, 96);
+        public static readonly Color Ceniza = Color.FromArgb(120, 130, 145);
+        public static readonly Color Texto = Color.FromArgb(10, 12, 18);
+        public static readonly Color Rojo = Color.FromArgb(190, 20, 20);
+        public static readonly Color Verde = Color.FromArgb(20, 120, 50);
         public static readonly Color Gris = Taupe;
 
-        // Alias para no tocar todo el código: significan lo mismo que arriba
+        // Alias para no tocar todo el código
         public static readonly Color AzulClaro = Piedra;
         public static readonly Color AzulFondo = Taupe;
 
         const string Fuente = "Segoe UI";
-        public static readonly Font Normal = new Font(Fuente, 9.5f);
-        public static readonly Font Negrita = new Font(Fuente, 9.5f, FontStyle.Bold);
-        public static readonly Font Mediana = new Font(Fuente, 12f, FontStyle.Bold);
-        public static readonly Font Grande = new Font("Segoe UI Light", 20f);
-        public static readonly Font Enorme = new Font("Segoe UI Light", 34f);
-        public static readonly Font Captura = new Font(Fuente, 16f);
-        public static readonly Font Mono = new Font("Consolas", 10.5f);
+        // Letras grandes y gruesas para que se lean de lejos
+        public static readonly Font Normal = new Font(Fuente, 11f, FontStyle.Bold);
+        public static readonly Font Negrita = new Font(Fuente, 11f, FontStyle.Bold);
+        public static readonly Font Mediana = new Font(Fuente, 14f, FontStyle.Bold);
+        public static readonly Font Grande = new Font(Fuente, 22f, FontStyle.Bold);
+        public static readonly Font Enorme = new Font(Fuente, 42f, FontStyle.Bold);
+        public static readonly Font Captura = new Font(Fuente, 20f, FontStyle.Bold);
+        public static readonly Font Mono = new Font("Consolas", 12f, FontStyle.Bold);
 
         /// <summary>
         /// Botón en píldora. El borde de Windows es rectangular y se veía "cuadrado" alrededor del botón redondo,
@@ -48,10 +50,10 @@ namespace VentaFacil.UI
         {
             b.FlatStyle = FlatStyle.Flat;
             b.FlatAppearance.BorderSize = 0;
-            b.FlatAppearance.MouseOverBackColor = principal ? Grafito : Taupe;
-            b.FlatAppearance.MouseDownBackColor = principal ? Grafito : Piedra;
-            b.BackColor = principal ? Color.Black : Crema;
-            b.ForeColor = principal ? Color.White : Color.Black;
+            b.FlatAppearance.MouseOverBackColor = principal ? AzulOscuro : AzulClaro2;
+            b.FlatAppearance.MouseDownBackColor = principal ? AzulOscuro : Piedra;
+            b.BackColor = principal ? Azul : Crema;
+            b.ForeColor = principal ? Color.White : Azul;
             b.UseVisualStyleBackColor = false;
             b.Cursor = Cursors.Hand;
             b.Paint -= DibujarContorno;
@@ -69,7 +71,7 @@ namespace VentaFacil.UI
             var b = (Control)sender;
             if (b.Width < 4 || b.Height < 4 || b.BackColor.GetBrightness() < 0.4f) return;
             e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            using (var pluma = new Pen(Piedra, 1f))
+            using (var pluma = new Pen(Azul, 1.5f))
             using (var forma = Forma(b.Width - 1, b.Height - 1))
                 e.Graphics.DrawPath(pluma, forma);
         }
@@ -93,23 +95,22 @@ namespace VentaFacil.UI
         }
     }
 
-    /// <summary>Encabezado: banda taupe con título ligero y una línea fina abajo.</summary>
+    /// <summary>Encabezado azul con título blanco y grueso.</summary>
     public class PanelTitulo : Panel
     {
         public string Titulo = "";
         public string Subtitulo = "";
-        public PanelTitulo() { DoubleBuffered = true; Height = 56; Dock = DockStyle.Top; BackColor = Tema.Taupe; }
+        public PanelTitulo() { DoubleBuffered = true; Height = 64; Dock = DockStyle.Top; BackColor = Tema.Azul; }
         protected override void OnPaint(PaintEventArgs e)
         {
             if (Width <= 0 || Height <= 0) return;
-            e.Graphics.Clear(Tema.Taupe);
-            using (var lapiz = new Pen(Tema.Piedra)) e.Graphics.DrawLine(lapiz, 0, Height - 1, Width, Height - 1);
+            e.Graphics.Clear(Tema.Azul);
             e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
-            TextRenderer.DrawText(e.Graphics, Titulo, Tema.Grande, new Point(16, 6), Color.Black);
+            TextRenderer.DrawText(e.Graphics, Titulo, Tema.Grande, new Point(16, 8), Color.White);
             if (!string.IsNullOrEmpty(Subtitulo))
             {
                 var tam = TextRenderer.MeasureText(Titulo, Tema.Grande);
-                TextRenderer.DrawText(e.Graphics, Subtitulo, Tema.Normal, new Point(22 + tam.Width, 22), Tema.Humo);
+                TextRenderer.DrawText(e.Graphics, Subtitulo, Tema.Mediana, new Point(24 + tam.Width, 24), Tema.AzulClaro2);
             }
         }
         protected override void OnResize(EventArgs e) { base.OnResize(e); Invalidate(); }
@@ -123,7 +124,7 @@ namespace VentaFacil.UI
         {
             Tecla = tecla;
             Text = (string.IsNullOrEmpty(tecla) ? "" : tecla + "\n") + texto;
-            Font = new Font("Segoe UI", 9f, FontStyle.Bold);
+            Font = new Font("Segoe UI", 11f, FontStyle.Bold);
             Tema.Pastilla(this);
             TabStop = false;
             if (click != null) Click += click;
@@ -208,10 +209,11 @@ namespace VentaFacil.UI
             g.Font = Tema.Normal;
             g.RowTemplate.Height = 26;
             g.ColumnHeadersDefaultCellStyle.Font = Tema.Negrita;
-            g.ColumnHeadersDefaultCellStyle.BackColor = Tema.Taupe;
-            g.ColumnHeadersDefaultCellStyle.ForeColor = Tema.Humo;
+            g.ColumnHeadersDefaultCellStyle.BackColor = Tema.Azul;
+            g.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
             g.EnableHeadersVisualStyles = false;
             g.AlternatingRowsDefaultCellStyle.BackColor = Tema.Taupe;
+            g.ColumnHeadersHeight = 36;
             g.DefaultCellStyle.BackColor = Tema.Crema;
             g.DefaultCellStyle.ForeColor = Color.Black;
             g.DefaultCellStyle.SelectionBackColor = Tema.Piedra;
