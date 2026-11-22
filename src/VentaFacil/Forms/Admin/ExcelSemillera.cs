@@ -108,7 +108,7 @@ namespace VentaFacil.Forms.Admin
                             ProductoRepo.Guardar(cn, tx, p, usuario);
                             if (!esNuevo && stockEsExistencia && x.Stock.HasValue)
                             {
-                                decimal actual = Convert.ToDecimal(Db.Scalar(cn, tx, "SELECT existencia FROM productos WHERE id=@p0", p.Id));
+                                decimal actual = Db.Dec(Db.Scalar(cn, tx, "SELECT existencia FROM productos WHERE id=@p0", p.Id));
                                 if (actual != x.Stock.Value)
                                     ProductoRepo.MoverExistencia(cn, tx, p.Id, x.Stock.Value - actual, "AJUSTE", "Importación lista de costos", usuario);
                             }
@@ -253,7 +253,7 @@ namespace VentaFacil.Forms.Admin
                     for (int i = 0; i < dt.Columns.Count; i++)
                     {
                         object v = r[i] == DBNull.Value ? null : r[i];
-                        if (numerica[i] && v != null) totales[i] += Convert.ToDecimal(v);
+                        if (numerica[i] && v != null) totales[i] += Db.Dec(v);
                         if (v is string && ((string)v).Length + 2 > h.AnchosColumna[i]) h.AnchosColumna[i] = Math.Min(50, ((string)v).Length + 2);
                         fila.Add(C(v, dinero[i] ? Xlsx.Estilo.Dinero : numerica[i] ? Xlsx.Estilo.Numero : Xlsx.Estilo.Normal));
                     }

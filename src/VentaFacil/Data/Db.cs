@@ -150,7 +150,9 @@ namespace VentaFacil.Data
         // ---------- lectura segura de columnas ----------
         public static string S(IDataRecord r, string col) { var v = r[col]; return v == DBNull.Value ? "" : Convert.ToString(v); }
         public static long L(IDataRecord r, string col) { var v = r[col]; return v == DBNull.Value ? 0 : Convert.ToInt64(v); }
-        public static decimal D(IDataRecord r, string col) { var v = r[col]; return v == DBNull.Value ? 0m : Convert.ToDecimal(v); }
+        public static decimal D(IDataRecord r, string col) { return Core.Dinero.Leer(r[col]); }
+        /// <summary>Convierte un valor leído de la base (REAL) a decimal sin ruido de decimales.</summary>
+        public static decimal Dec(object v) { return Core.Dinero.Leer(v); }
         public static bool B(IDataRecord r, string col) { var v = r[col]; return v != DBNull.Value && Convert.ToInt64(v) != 0; }
         public static DateTime F(IDataRecord r, string col) { var v = r[col]; return v == DBNull.Value ? DateTime.MinValue : Fecha(Convert.ToString(v)); }
 

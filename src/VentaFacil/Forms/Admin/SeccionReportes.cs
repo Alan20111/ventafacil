@@ -187,7 +187,7 @@ namespace VentaFacil.Forms.Admin
         static string Texto(object v)
         {
             if (v == null || v == DBNull.Value) return "";
-            if (v is double || v is decimal) return Convert.ToDecimal(v).ToString("0.###", CultureInfo.InvariantCulture);
+            if (v is double || v is decimal) return Data.Db.Dec(v).ToString("0.###", CultureInfo.InvariantCulture);
             return Convert.ToString(v);
         }
     }

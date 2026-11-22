@@ -184,7 +184,7 @@ namespace VentaFacil.Data
         {
             Db.Exec(cn, tx, "UPDATE productos SET existencia = ROUND(existencia + @p0, 3) WHERE id=@p1 AND usa_inventario=1", cantidad, productoId);
             var ex = Db.Scalar(cn, tx, "SELECT existencia FROM productos WHERE id=@p0", productoId);
-            decimal existencia = ex == null ? 0 : Convert.ToDecimal(ex);
+            decimal existencia = Db.Dec(ex);
             Db.Exec(cn, tx, "INSERT INTO movimientos_inv(producto_id,fecha,tipo,cantidad,existencia,referencia,usuario_id) VALUES(@p0,@p1,@p2,@p3,@p4,@p5,@p6)",
                 productoId, Db.Ahora(), tipo, cantidad, existencia, referencia, usuarioId);
             return existencia;
@@ -208,12 +208,34 @@ namespace VentaFacil.Data
             using (var tx = cn.BeginTransaction())
             {
                 var ex = Db.Scalar(cn, tx, "SELECT existencia FROM productos WHERE id=@p0", productoId);
-                decimal actual = ex == null ? 0 : Convert.ToDecimal(ex);
+                decimal actual = Db.Dec(ex);
                 decimal dif = nuevaExistencia - actual;
                 if (dif != 0) MoverExistencia(cn, tx, productoId, dif, "AJUSTE", referencia, usuarioId);
                 tx.Commit();
             }
             Respaldo.Pedir();
+        }
+
+        /// <summary>
+        /// Fija la existencia de varios productos en UNA sola operación (conteo físico por Excel):
+        /// si algo falla no se cambia ninguno. Devuelve cuántos cambiaron.
+        /// </summary>
+        public static int AjustarVarios(List<KeyValuePair<long, decimal>> nuevas, string referencia, long usuarioId)
+        {
+            int n = 0;
+            using (var cn = Db.Abrir())
+            using (var tx = cn.BeginTransaction())
+            {
+                foreach (var kv in nuevas)
+                {
+                    decimal actual = Db.Dec(Db.Scalar(cn, tx, "SELECT existencia FROM productos WHERE id=@p0", kv.Key));
+                    decimal dif = kv.Value - actual;
+                    if (dif != 0) { MoverExistencia(cn, tx, kv.Key, dif, "AJUSTE", referencia, usuarioId); n++; }
+                }
+                tx.Commit();
+            }
+            Respaldo.Pedir();
+            return n;
         }
     }
 
@@ -281,10 +303,10 @@ namespace VentaFacil.Data
                 }
                 r.VentasNetas = r.VentasBrutas - r.Canceladas;
 
-                r.Entradas = Convert.ToDecimal(Db.Scalar(cn, null, "SELECT IFNULL(ROUND(SUM(monto),2),0) FROM movimientos_caja WHERE tipo='ENTRADA' AND turno_id=@p0" + fU, turnoId));
-                r.Salidas = Convert.ToDecimal(Db.Scalar(cn, null, "SELECT IFNULL(ROUND(SUM(monto),2),0) FROM movimientos_caja WHERE tipo='SALIDA' AND turno_id=@p0" + fU, turnoId));
+                r.Entradas = Db.Dec(Db.Scalar(cn, null, "SELECT IFNULL(ROUND(SUM(monto),2),0) FROM movimientos_caja WHERE tipo='ENTRADA' AND turno_id=@p0" + fU, turnoId));
+                r.Salidas = Db.Dec(Db.Scalar(cn, null, "SELECT IFNULL(ROUND(SUM(monto),2),0) FROM movimientos_caja WHERE tipo='SALIDA' AND turno_id=@p0" + fU, turnoId));
 
-                r.Costo = Convert.ToDecimal(Db.Scalar(cn, null, "SELECT IFNULL(ROUND(SUM(d.cantidad*d.costo),2),0) FROM venta_detalle d JOIN ventas v ON v.id=d.venta_id WHERE v.estado='PAGADA' AND v.turno_id=@p0" + fU.Replace("usuario_id", "v.usuario_id"), turnoId));
+                r.Costo = Db.Dec(Db.Scalar(cn, null, "SELECT IFNULL(ROUND(SUM(d.cantidad*d.costo),2),0) FROM venta_detalle d JOIN ventas v ON v.id=d.venta_id WHERE v.estado='PAGADA' AND v.turno_id=@p0" + fU.Replace("usuario_id", "v.usuario_id"), turnoId));
 
                 var min = Db.Scalar(cn, null, "SELECT MIN(id) FROM ventas WHERE turno_id=@p0" + fU, turnoId);
                 var max = Db.Scalar(cn, null, "SELECT MAX(id) FROM ventas WHERE turno_id=@p0" + fU, turnoId);

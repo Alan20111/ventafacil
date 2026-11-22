@@ -18,7 +18,8 @@ namespace VentaFacil.Forms.Admin
             BackColor = Tema.Crema;
             var tabs = new TabControl { Dock = DockStyle.Fill, Font = Tema.Negrita, Padding = new Point(14, 6) };
             tabs.TabPages.Add(Pagina("Entrada de mercancía", new PanelEntrada()));
-            tabs.TabPages.Add(Pagina("Ajuste / conteo físico", new PanelAjuste()));
+            tabs.TabPages.Add(Pagina("Conteo con Excel", new PanelConteo()));
+            tabs.TabPages.Add(Pagina("Ajuste de un producto", new PanelAjuste()));
             tabs.TabPages.Add(Pagina("Bajos de existencia", new PanelReporte(() => AdminConsultas.BajosDeExistencia(), "faltantes")));
             tabs.TabPages.Add(Pagina("Kardex de un producto", new PanelKardex()));
             tabs.TabPages.Add(Pagina("Valor del inventario", new PanelReporte(() => AdminConsultas.ValorInventario(), "valor_inventario", "ValorCosto", "ValorVenta")));
@@ -161,6 +162,35 @@ namespace VentaFacil.Forms.Admin
         }
 
         // ------------------------------------------------------------------
+        /// <summary>Ciclo de inventario: hoja de conteo en Excel, contar, importar y ver diferencias.</summary>
+        class PanelConteo : UserControl
+        {
+            readonly ComboBox _grupo;
+
+            public PanelConteo()
+            {
+                BackColor = Tema.Crema;
+                Controls.Add(Ui.Etiqueta("Conteo de inventario con Excel", 16, 14, Tema.Mediana, Tema.Azul));
+
+                Controls.Add(Ui.Etiqueta("1.  Genere la hoja de conteo (de todo, o de un solo proveedor/grupo para ir por partes):", 16, 62, Tema.Negrita));
+                _grupo = new ComboBox { Left = 40, Top = 96, Width = 320, DropDownStyle = ComboBoxStyle.DropDownList, Font = Tema.Normal };
+                _grupo.Items.Add("(Todos los productos)");
+                foreach (var g in ConteoFisico.ProductosConteo().Select(ConteoFisico.Grupo).Distinct().OrderBy(x => x)) _grupo.Items.Add(g);
+                _grupo.SelectedIndex = 0;
+                Controls.Add(_grupo);
+                Controls.Add(Ui.Boton("Exportar hoja de conteo", 376, 92, 260, 40, (s, e) => ConteoFisico.Exportar(FindForm(), _grupo.SelectedIndex <= 0 ? null : _grupo.SelectedItem.ToString())));
+
+                Controls.Add(Ui.Etiqueta("2.  Cuente en el negocio y escriba lo contado en la columna CONTADO. Lo que deje en blanco no se toca.", 16, 156, Tema.Negrita));
+                Controls.Add(Ui.Etiqueta("3.  Importe el Excel: verá las diferencias (faltantes y sobrantes, con su valor) y solo entonces se aplican.", 16, 200, Tema.Negrita));
+                var importar = Ui.Boton("Importar conteo", 40, 240, 260, 48, (s, e) => ConteoFisico.Importar(FindForm()));
+                Tema.Pastilla(importar, true);
+                Controls.Add(importar);
+
+                Controls.Add(Ui.Etiqueta("Solo se cuentan los productos con control de existencia. Cada ajuste queda en el kardex del producto como \"Conteo físico\".", 16, 316, null, Tema.Humo));
+                Controls.Add(Ui.Etiqueta("Consejo: cuente con el negocio cerrado, o genere la hoja por partes (un proveedor por vez).", 16, 342, null, Tema.Humo));
+            }
+        }
+
         class PanelAjuste : UserControl
         {
             readonly TextBox _codigo, _contado, _motivo;

@@ -377,7 +377,7 @@ namespace VentaFacil.Core
         {
             if (v == null) return null;
             if (v is decimal) return ((decimal)v).ToString(Inv);
-            if (v is double) { double d = (double)v; return double.IsNaN(d) || double.IsInfinity(d) ? null : d.ToString("R", Inv); }
+            if (v is double) { double d = (double)v; return double.IsNaN(d) || double.IsInfinity(d) ? null : Math.Round(d, 6, MidpointRounding.AwayFromZero).ToString("R", Inv); }
             if (v is float) return ((float)v).ToString("R", Inv);
             if (v is int || v is long || v is short || v is byte || v is uint || v is ulong) return Convert.ToString(v, Inv);
             return null;

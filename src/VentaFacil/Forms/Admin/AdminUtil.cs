@@ -121,7 +121,7 @@ namespace VentaFacil.Forms.Admin
         public static decimal ValorDec(object v)
         {
             if (v == null || v == DBNull.Value) return 0m;
-            try { return Convert.ToDecimal(v); } catch { return 0m; }
+            try { return Data.Db.Dec(v); } catch { return 0m; }
         }
     }
 }

@@ -105,6 +105,22 @@ En *F11 → Productos*:
 - **Administrador**: todo.
 - **Cajero**: vende, cobra, hace entradas y salidas, y saca su corte X. Para descuentos, cancelar tickets, el corte Z y Administración se pide la clave de un administrador (se puede permitir al cajero en Configuración).
 
+### Si se va la luz o algo se daña
+- La base usa escritura completa: una venta ya cobrada no se pierde por un corte de energía.
+- Después de cada venta o cambio se guarda una copia en `respaldos\ultimo.db` y otra en la carpeta que se eligió en el primer arranque (por defecto el escritorio). Además hay un respaldo diario (los últimos 30).
+- Si la base se daña, el programa lo detecta al abrir y ofrece restaurar el último respaldo bueno. La base dañada se guarda aparte, no se borra.
+- El acceso **VentaFácil - Reparar** del escritorio revisa el programa, la base, los respaldos y los accesos sin borrar datos.
+
+### Conteo de inventario con Excel
+Inventario → **Conteo con Excel**: se exporta la hoja (todo o por proveedor), se llena la columna CONTADO en el negocio y se importa; antes de aplicar se ven los faltantes y sobrantes con su valor.
+
+### Licencia
+30 días de prueba; después una clave por computadora (permanente). Se genera con `herramientas/licencias` (ver [docs/LICENCIAS.md](docs/LICENCIAS.md)).
+
+### Pruebas
+- [docs/PRUEBAS_WINDOWS.md](docs/PRUEBAS_WINDOWS.md): 32 pasos para la laptop.
+- `dotnet run` en `herramientas/licencias -- --probar`, `herramientas/pruebas-dinero` y `herramientas/pruebas-conteo`: pruebas automáticas (se corren en Mac o Windows).
+
 ## Desarrollo
 
 Código en C# (WinForms, .NET Framework 4.0), en `src/VentaFacil`. Se compila desde Windows, macOS o Linux con el SDK de .NET:
