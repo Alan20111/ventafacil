@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VentaFácil — Licencias</title>
+<style>
+  :root{ --azul:#0046a0; --azul-osc:#002e70; --verde:#14783a; --rojo:#be1414; --gris:#46505f; --borde:#bececc; --fondo:#f0f4fa; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--fondo);color:#0a0c12;font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  header{background:var(--azul);color:#fff;padding:22px 28px}
+  header h1{margin:0;font-size:24px;font-weight:700}
+  header p{margin:4px 0 0;opacity:.9}
+  main{max-width:1000px;margin:0 auto;padding:24px 20px 60px}
+  .tarjeta{background:#fff;border:1px solid var(--borde);border-radius:14px;padding:22px;margin-bottom:20px}
+  h2{margin:0 0 4px;font-size:19px}
+  .ayuda{margin:0 0 16px;color:var(--gris)}
+  label{display:block;font-size:14px;font-weight:700;color:var(--gris);margin:0 0 5px}
+  input,textarea{width:100%;padding:11px 12px;border:1px solid var(--borde);border-radius:10px;font:inherit;background:#fff}
+  input:focus,textarea:focus{outline:2px solid var(--azul);border-color:var(--azul)}
+  .fila{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+  .fila>div{flex:1;min-width:200px}
+  button{padding:11px 22px;border:0;border-radius:999px;font:inherit;font-weight:700;cursor:pointer;background:var(--azul);color:#fff}
+  button:hover{background:var(--azul-osc)}
+  button.sec{background:#fff;color:var(--azul);border:2px solid var(--azul)}
+  button.mini{padding:6px 14px;font-size:14px}
+  button.peligro{background:#fff;color:var(--rojo);border:2px solid var(--rojo)}
+  .resultado{margin-top:18px;padding:18px;border-radius:12px;background:#e8f5e9;border:2px solid var(--verde)}
+  .resultado textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;height:130px;margin:8px 0 12px}
+  .error{margin-top:14px;padding:12px 14px;border-radius:10px;background:#fdeeee;border:2px solid var(--rojo);color:#7a1b1b}
+  table{width:100%;border-collapse:collapse;font-size:15px}
+  th{text-align:left;font-size:13px;text-transform:uppercase;color:var(--gris);border-bottom:2px solid var(--borde);padding:9px 8px}
+  td{padding:10px 8px;border-bottom:1px solid var(--borde);vertical-align:middle}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700}
+  .vacio{text-align:center;color:var(--gris);padding:26px}
+</style>
+</head>
+<body>
+<header>
+  <h1>VentaFácil — Licencias</h1>
+  <p>Licencia permanente por computadora. Se genera con el código que muestra el programa en esa computadora.</p>
+</header>
+<main>
+  <section class="tarjeta">
+    <h2>Generar clave de activación</h2>
+    <p class="ayuda">Pida al cliente el <b>código del equipo</b> (aparece en la pantalla de licencia del programa) y péguelo aquí.</p>
+    <div class="fila">
+      <div><label for="cliente">Cliente / negocio</label><input id="cliente" autocomplete="off"></div>
+      <div><label for="telefono">Teléfono (opcional)</label><input id="telefono" autocomplete="off"></div>
+    </div>
+    <div class="fila">
+      <div><label for="codigo">Código del equipo</label><input id="codigo" placeholder="XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" style="font-family:ui-monospace,Menlo,monospace;font-size:20px;text-transform:uppercase"></div>
+      <div><label for="vence">Vence el (vacío = nunca)</label><input id="vence" type="date"></div>
+    </div>
+    <div class="fila"><div><label for="notas">Notas (opcional)</label><input id="notas" autocomplete="off"></div></div>
+    <button id="generar">Generar clave</button>
+    <div id="mensaje"></div>
+  </section>
+
+  <section class="tarjeta">
+    <h2>Claves emitidas</h2>
+    <p class="ayuda">Si el cliente reinstala el programa, vuelve a pegar la misma clave. No hace falta generar otra.</p>
+    <div id="tabla"></div>
+  </section>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+async function cargar(){
+  const r = await fetch('/api/registro'); const lista = await r.json();
+  if(!lista.length){ $('tabla').innerHTML = '<div class="vacio">Todavía no hay claves emitidas.</div>'; return; }
+  lista.reverse();
+  $('tabla').innerHTML = '<table><tr><th>Cliente</th><th>Equipo</th><th>Vence</th><th>Fecha</th><th></th></tr>' +
+    lista.map(e => `<tr><td><b>${esc(e.cliente)}</b><br><small>${esc(e.telefono)} ${esc(e.notas)}</small></td>
+      <td><code>${esc(e.codigoInstalacion)}</code></td><td>${e.vence ? esc(e.vence.replace(/(\d{4})(\d\d)(\d\d)/,'$3/$2/$1')) : 'Nunca'}</td>
+      <td>${new Date(e.fecha).toLocaleDateString('es-MX')}</td>
+      <td style="text-align:right;white-space:nowrap"><button class="mini sec" onclick="copiar(${e.id})">Copiar clave</button>
+      <button class="mini peligro" onclick="borrar(${e.id})">Quitar</button></td></tr>`).join('') + '</table>';
+  window._lista = lista;
+}
+async function copiar(id){ const e = window._lista.find(x => x.id === id); await navigator.clipboard.writeText(e.clave); alert('Clave copiada.'); }
+async function borrar(id){ if(!confirm('¿Quitar este registro? La clave que ya se entregó seguirá funcionando.')) return; await fetch('/api/registro/'+id,{method:'DELETE'}); cargar(); }
+
+$('generar').onclick = async () => {
+  $('mensaje').innerHTML = '';
+  const r = await fetch('/api/generar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+    cliente:$('cliente').value, telefono:$('telefono').value, notas:$('notas').value, codigoInstalacion:$('codigo').value, vence:$('vence').value })});
+  const d = await r.json();
+  if(!r.ok){ $('mensaje').innerHTML = '<div class="error">'+esc(d.error||'No se pudo generar')+'</div>'; return; }
+  $('mensaje').innerHTML = '<div class="resultado"><b>Clave para '+esc(d.cliente)+'</b> (equipo <code>'+esc(d.codigoInstalacion)+'</code>)'+
+    '<textarea id="clave" readonly>'+esc(d.clave)+'</textarea><button id="copiarNueva">Copiar clave</button></div>';
+  $('copiarNueva').onclick = async () => { await navigator.clipboard.writeText(d.clave); alert('Clave copiada. Envíela al cliente.'); };
+  $('codigo').value=''; $('cliente').value=''; $('telefono').value=''; $('notas').value=''; $('vence').value='';
+  cargar();
+};
+cargar();
+</script>
+</body>
+</html>

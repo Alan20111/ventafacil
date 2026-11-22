@@ -4,6 +4,7 @@ using System.Threading;
 using System.Windows.Forms;
 using VentaFacil.Core;
 using VentaFacil.Data;
+using VentaFacil.Forms.Licenciamiento;
 using VentaFacil.Forms.Pos;
 using VentaFacil.Forms.Reparar;
 using VentaFacil.UI;
@@ -82,6 +83,9 @@ namespace VentaFacil
                     MessageBox.Show("No se pudo abrir la base de datos:\n\n" + ex.Message + "\n\nAbra 'Reparar VentaFácil' en el escritorio.", "VentaFácil", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
+
+                // Licencia: 30 días de prueba, después clave de activación atada al equipo
+                if (!FormLicencia.Comprobar()) return;
 
                 // Copia continua después de cada cambio (venta, cobro, movimiento, producto)
                 Respaldo.Iniciar();

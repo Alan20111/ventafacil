@@ -50,6 +50,7 @@ namespace VentaFacil.Forms.Admin
             barra.Controls.Add(guardar);
             barra.Controls.Add(AdminUtil.BotonBarra("Imprimir ticket de prueba", (s, e) => Prueba(), 220));
             barra.Controls.Add(AdminUtil.BotonBarra("Probar cajón", (s, e) => ProbarCajon(), 140));
+            barra.Controls.Add(AdminUtil.BotonBarra("Licencia…", (s, e) => VentaFacil.Forms.Licenciamiento.FormLicencia.Mostrar(Licencia.Evaluar(), true), 130));
             Controls.Add(barra);
             Controls.Add(AdminUtil.TituloSeccion("Configuración"));
             Llenar();

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <RootNamespace>VentaFacil.Licencias</RootNamespace>
+    <AssemblyName>Licencias</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Se enlaza el código real del programa (no una copia): la verificación y la generación
+         de claves son forzosamente las mismas. -->
+    <Compile Include="..\..\src\VentaFacil\Core\LicenciaNucleo.cs" Link="Compartido\LicenciaNucleo.cs" />
+  </ItemGroup>
+
+</Project>
