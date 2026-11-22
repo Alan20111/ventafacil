@@ -39,8 +39,9 @@ namespace VentaFacil.UI
             _actual = Ui.Etiqueta("", 16, 58, Tema.Mediana, Tema.Azul);
             Controls.Add(_actual);
 
-            var detectar = new Button { Text = "DETECTAR AUTOMÁTICAMENTE  (F2)", Left = 16, Top = 92, Width = 400, Height = 50, Font = Tema.Mediana, BackColor = Tema.Verde, ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+            var detectar = new Button { Text = "DETECTAR AUTOMÁTICAMENTE  (F2)", Left = 16, Top = 92, Width = 400, Height = 50, Font = Tema.Mediana, BackColor = Tema.Azul, ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
             detectar.Click += (s, e) => DetectarAuto();
+            Tema.Pastilla(detectar, true);
             Controls.Add(detectar);
             _resultado = new Label { Left = 428, Top = 92, Width = 416, Height = 50, Font = Tema.Negrita, ForeColor = Tema.Verde, TextAlign = ContentAlignment.MiddleLeft };
             Controls.Add(_resultado);
@@ -76,10 +77,10 @@ namespace VentaFacil.UI
             Controls.Add(Ui.Boton("F5  Actualizar lista", 348, y, 160, 42, (s, e) => Cargar()));
             Controls.Add(Ui.Boton("Impresoras de Windows…", 514, y, 190, 42, (s, e) => AbrirPanelWindows()));
             var guardar = Ui.Boton("Guardar", 16, y + 52, 170, 40, (s, e) => Guardar());
-            guardar.BackColor = Tema.Azul; guardar.ForeColor = Color.White;
+            Tema.Pastilla(guardar, true);
             Controls.Add(guardar);
             Controls.Add(Ui.Boton("Cancelar (Esc)", 192, y + 52, 150, 40, (s, e) => { DialogResult = DialogResult.Cancel; }));
-            Controls.Add(Ui.Etiqueta("Si Windows imprime su página de prueba, aquí también funcionará. No hace falta configurar puertos.", 350, y + 62, null, Color.Gray));
+            Controls.Add(Ui.Etiqueta("Si Windows imprime su página de prueba, aquí también funcionará. No hace falta configurar puertos.", 350, y + 62, null, Tema.Humo));
 
             _grid.CellDoubleClick += (s, e) => { if (e.RowIndex >= 0) ElegirSeleccionada(); };
             _grid.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; ElegirSeleccionada(); } };
@@ -116,7 +117,7 @@ namespace VentaFacil.UI
                 {
                     int r = _grid.Rows.Add(i.Nombre, i.Tipo, i.Conexion, i.Estado, i.Predeterminada ? "✔" : "");
                     var fila = _grid.Rows[r];
-                    if (i.EsVirtual) fila.DefaultCellStyle.ForeColor = Color.Gray;
+                    if (i.EsVirtual) fila.DefaultCellStyle.ForeColor = Tema.Humo;
                     else if (i.Desconectada) fila.DefaultCellStyle.ForeColor = Tema.Rojo;
                     else if (i.EsTicket) fila.DefaultCellStyle.Font = Tema.Negrita;
                 }

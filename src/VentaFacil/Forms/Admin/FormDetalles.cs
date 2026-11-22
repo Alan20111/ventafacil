@@ -19,7 +19,7 @@ namespace VentaFacil.Forms.Admin
             if (_v == null) throw new InvalidOperationException("No existe el ticket " + folio + ".");
             var texto = new TextBox
             {
-                Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, Font = Tema.Mono, BackColor = Color.White,
+                Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, Font = Tema.Mono, BackColor = Tema.Crema,
                 Left = 12, Top = 12, Width = 456, Height = 520, Text = Tickets.Venta(_v, Config.Actual).ComoTexto()
             };
             Controls.Add(texto);
@@ -85,7 +85,7 @@ namespace VentaFacil.Forms.Admin
             _ticket = Tickets.Corte(r, Config.Actual, t.EfectivoDeclarado);
             var texto = new TextBox
             {
-                Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, Font = Tema.Mono, BackColor = Color.White,
+                Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, Font = Tema.Mono, BackColor = Tema.Crema,
                 Left = 12, Top = 12, Width = 456, Height = 560, Text = _ticket.ComoTexto()
             };
             Controls.Add(texto);

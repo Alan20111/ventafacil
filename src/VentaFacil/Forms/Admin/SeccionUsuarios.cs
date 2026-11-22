@@ -14,7 +14,7 @@ namespace VentaFacil.Forms.Admin
 
         public SeccionUsuarios()
         {
-            BackColor = Color.White;
+            BackColor = Tema.Crema;
             _grid = AdminUtil.Grid();
             _grid.Columns.Add(Ui.Columna("usuario", "Usuario", 25));
             _grid.Columns.Add(Ui.Columna("nombre", "Nombre", 45));
@@ -49,7 +49,7 @@ namespace VentaFacil.Forms.Admin
                 {
                     int i = _grid.Rows.Add(u.Login, u.Nombre, u.EsAdmin ? "Administrador" : "Cajero", u.Activo ? "Sí" : "No");
                     _grid.Rows[i].Tag = u;
-                    if (!u.Activo) _grid.Rows[i].DefaultCellStyle.ForeColor = Color.Gray;
+                    if (!u.Activo) _grid.Rows[i].DefaultCellStyle.ForeColor = Tema.Humo;
                 }
             }
             catch (Exception ex) { Ui.Error(ex, "Cargar usuarios"); }
@@ -118,7 +118,7 @@ namespace VentaFacil.Forms.Admin
             Controls.Add(Ui.Etiqueta("Repetir contraseña:", 16, y + 4));
             _clave2 = Ui.Caja(x, y, 260); _clave2.UseSystemPasswordChar = true; Controls.Add(_clave2);
             y += 36;
-            if (_u.Id != 0) Controls.Add(Ui.Etiqueta("(deje vacío para no cambiarla)", x, y - 6, null, Color.Gray));
+            if (_u.Id != 0) Controls.Add(Ui.Etiqueta("(deje vacío para no cambiarla)", x, y - 6, null, Tema.Humo));
             _activo = new CheckBox { Text = "Activo", Left = 16, Top = y + 12, AutoSize = true, Checked = _u.Id == 0 || _u.Activo };
             Controls.Add(_activo);
 

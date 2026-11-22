@@ -13,7 +13,7 @@ namespace VentaFacil.Forms.Admin
 
         public SeccionDepartamentos()
         {
-            BackColor = Color.White;
+            BackColor = Tema.Crema;
             _grid = AdminUtil.Grid();
             _grid.Dock = DockStyle.Left;
             _grid.Width = 480;

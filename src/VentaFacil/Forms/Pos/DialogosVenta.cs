@@ -45,7 +45,7 @@ namespace VentaFacil.Forms.Pos
             Controls.Add(_grid);
             _detalle = new Label { Left = 12, Top = 386, Width = 796, Height = 100, Font = Tema.Mediana, ForeColor = Tema.Azul, Visible = consulta };
             Controls.Add(_detalle);
-            Controls.Add(Ui.Etiqueta(consulta ? "Enter = vender   ·   Esc = solo consultar / salir" : "↑↓ = moverse   ·   Enter = vender   ·   Esc = salir", 12, ClientSize.Height - 34, Tema.Negrita, Color.Gray));
+            Controls.Add(Ui.Etiqueta(consulta ? "Enter = vender   ·   Esc = solo consultar / salir" : "↑↓ = moverse   ·   Enter = vender   ·   Esc = salir", 12, ClientSize.Height - 34, Tema.Negrita, Tema.Humo));
 
             _demora.Tick += (s, e) => { _demora.Stop(); Llenar(); };
             _txt.TextChanged += (s, e) => { _demora.Stop(); _demora.Start(); };
@@ -154,7 +154,7 @@ namespace VentaFacil.Forms.Pos
             Controls.Add(_txt);
             _importe = Ui.Etiqueta("Importe: $0.00", 16, 122, Tema.Grande, Tema.Verde);
             Controls.Add(_importe);
-            Controls.Add(Ui.Etiqueta("F2 = cambiar a importe en $  ·  F3 = leer báscula", 16, 166, null, Color.Gray));
+            Controls.Add(Ui.Etiqueta("F2 = cambiar a importe en $  ·  F3 = leer báscula", 16, 166, null, Tema.Humo));
             var ok = Ui.Boton("Aceptar (Enter)", 196, 196, 130, 40, (s, e) => Aceptar());
             var no = Ui.Boton("Cancelar (Esc)", 332, 196, 130, 40, (s, e) => { DialogResult = DialogResult.Cancel; });
             Controls.Add(ok); Controls.Add(no);
@@ -225,14 +225,14 @@ namespace VentaFacil.Forms.Pos
             Controls.Add(cab);
             Controls.Add(new Label { Text = Fmt.Dinero(total), Font = Tema.Enorme, ForeColor = Tema.Azul, Left = 16, Top = 52, Width = 528, Height = 64, TextAlign = ContentAlignment.MiddleRight });
             Controls.Add(Ui.Etiqueta("Paga con:", 16, 134, Tema.Grande));
-            _paga = Ui.Caja(200, 128, 344, new Font("Tahoma", 24f, FontStyle.Bold));
+            _paga = Ui.Caja(200, 128, 344, new Font("Segoe UI", 24f, FontStyle.Bold));
             _paga.TextAlign = HorizontalAlignment.Right;
             _paga.Text = Fmt.Dec(total);
             Controls.Add(_paga);
             Controls.Add(Ui.Etiqueta("Cambio:", 16, 190, Tema.Grande, Tema.Verde));
             _cambio = new Label { Text = "$0.00", Font = Tema.Enorme, ForeColor = Tema.Verde, Left = 200, Top = 178, Width = 344, Height = 60, TextAlign = ContentAlignment.MiddleRight };
             Controls.Add(_cambio);
-            Controls.Add(Ui.Etiqueta("Referencia / autorización (tarjeta o transferencia):", 16, 244, null, Color.Gray));
+            Controls.Add(Ui.Etiqueta("Referencia / autorización (tarjeta o transferencia):", 16, 244, null, Tema.Humo));
             _ref = Ui.Caja(16, 266, 528);
             Controls.Add(_ref);
 
@@ -245,11 +245,11 @@ namespace VentaFacil.Forms.Pos
                 return bt;
             };
             var efectivo = b("F2 / Enter\nEfectivo", "EFECTIVO");
-            efectivo.BackColor = Tema.Verde; efectivo.ForeColor = Color.White;
+            efectivo.BackColor = Tema.Azul; efectivo.ForeColor = Color.White;
             b("F3\nTarjeta", "TARJETA");
             b("F4\nTransferencia", "TRANSFERENCIA");
             b("F5\nVales", "VALES");
-            Controls.Add(Ui.Etiqueta("Esc = regresar a la venta", 16, 386, null, Color.Gray));
+            Controls.Add(Ui.Etiqueta("Esc = regresar a la venta", 16, 386, null, Tema.Humo));
 
             _paga.TextChanged += (s, e) => Calcular();
             _paga.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; Cobrar("EFECTIVO"); } };
@@ -321,7 +321,7 @@ namespace VentaFacil.Forms.Pos
             _valor = Ui.Caja(100, 194, 200, Tema.Captura);
             _valor.TextAlign = HorizontalAlignment.Right;
             Controls.Add(_valor);
-            Controls.Add(Ui.Etiqueta("Valor 0 = quitar descuento", 310, 204, null, Color.Gray));
+            Controls.Add(Ui.Etiqueta("Valor 0 = quitar descuento", 310, 204, null, Tema.Humo));
             var ok = Ui.Boton("Aplicar (Enter)", 196, 270, 130, 40, (s, e) => Aceptar());
             var no = Ui.Boton("Cancelar (Esc)", 332, 270, 130, 40, (s, e) => { DialogResult = DialogResult.Cancel; });
             Controls.Add(ok); Controls.Add(no);
@@ -415,7 +415,7 @@ namespace VentaFacil.Forms.Pos
             Controls.Add(_grid);
             _items = SuspendidaRepo.Todas();
             foreach (var i in _items) _grid.Rows.Add(i.Id, i.Fecha.ToString("dd/MM HH:mm"), i.Nota + (i.Usuario != "" ? " (" + i.Usuario + ")" : ""), Fmt.Dinero(i.Total));
-            Controls.Add(Ui.Etiqueta("Esc = salir", 16, 376, null, Color.Gray));
+            Controls.Add(Ui.Etiqueta("Esc = salir", 16, 376, null, Tema.Humo));
             _grid.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; Recuperar(); } };
             _grid.CellDoubleClick += (s, e) => Recuperar();
             KeyDown += (s, e) => { if (e.KeyCode == Keys.F3 && hayVenta) { e.Handled = true; Poner(); } };

@@ -13,7 +13,7 @@ namespace VentaFacil.Forms.Admin
     {
         public SeccionRespaldos()
         {
-            BackColor = Color.White;
+            BackColor = Tema.Crema;
             var p = new Panel { Dock = DockStyle.Fill, AutoScroll = true };
             Controls.Add(p);
             Controls.Add(AdminUtil.TituloSeccion("Respaldos"));
@@ -26,7 +26,7 @@ namespace VentaFacil.Forms.Admin
             p.Controls.Add(ruta);
             y += 64;
             p.Controls.Add(Ui.Etiqueta("El sistema hace un respaldo automático al iniciar cada día y guarda los últimos 30 en la carpeta \"respaldos\".\n" +
-                "Recomendación: una vez por semana respalde también a una memoria USB.", 16, y, null, Color.Gray));
+                "Recomendación: una vez por semana respalde también a una memoria USB.", 16, y, null, Tema.Humo));
             y += 50;
 
             p.Controls.Add(Ui.Boton("Respaldar ahora", 16, y, 220, 44, (s, e) => Respaldar(null)));
@@ -36,7 +36,7 @@ namespace VentaFacil.Forms.Admin
 
             p.Controls.Add(Ui.Etiqueta("Restaurar", 16, y, Tema.Mediana, Tema.Rojo));
             y += 30;
-            p.Controls.Add(Ui.Etiqueta("Reemplaza TODOS los datos actuales por los de un respaldo. Úselo sólo si se dañó la información o cambió de computadora.", 16, y, null, Color.Gray));
+            p.Controls.Add(Ui.Etiqueta("Reemplaza TODOS los datos actuales por los de un respaldo. Úselo sólo si se dañó la información o cambió de computadora.", 16, y, null, Tema.Humo));
             y += 28;
             var restaurar = Ui.Boton("Restaurar respaldo…", 16, y, 220, 44, (s, e) => Restaurar());
             restaurar.ForeColor = Tema.Rojo;

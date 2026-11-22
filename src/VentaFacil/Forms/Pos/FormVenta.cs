@@ -48,8 +48,8 @@ namespace VentaFacil.Forms.Pos
         void ConstruirPantalla()
         {
             _titulo = new PanelTitulo { Titulo = "Punto de Venta", Height = 60 };
-            _lblUsuario = new Label { AutoSize = true, ForeColor = Color.White, BackColor = Color.Transparent, Font = Tema.Negrita, Anchor = AnchorStyles.Top | AnchorStyles.Right };
-            _lblReloj = new Label { AutoSize = true, ForeColor = Color.White, BackColor = Color.Transparent, Font = Tema.Normal, Anchor = AnchorStyles.Top | AnchorStyles.Right };
+            _lblUsuario = new Label { AutoSize = true, ForeColor = Color.Black, BackColor = Color.Transparent, Font = Tema.Negrita, Anchor = AnchorStyles.Top | AnchorStyles.Right };
+            _lblReloj = new Label { AutoSize = true, ForeColor = Tema.Humo, BackColor = Color.Transparent, Font = Tema.Normal, Anchor = AnchorStyles.Top | AnchorStyles.Right };
             _titulo.Controls.Add(_lblUsuario);
             _titulo.Controls.Add(_lblReloj);
             _titulo.Resize += (s, e) => UbicarEncabezado();
@@ -76,16 +76,17 @@ namespace VentaFacil.Forms.Pos
             // ---- Zona inferior: captura + total ----
             var abajo = new Panel { Dock = DockStyle.Bottom, Height = 150, BackColor = Tema.AzulFondo, Padding = new Padding(8) };
 
-            var panelTotal = new Panel { Dock = DockStyle.Right, Width = 430, BackColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
+            var panelTotal = new Panel { Dock = DockStyle.Right, Width = 430, BackColor = Tema.Crema, BorderStyle = BorderStyle.FixedSingle };
             panelTotal.Controls.Add(Ui.Etiqueta("TOTAL:", 12, 14, Tema.Grande, Tema.Azul));
             _lblTotal = new Label { Text = "$0.00", Font = Tema.Enorme, ForeColor = Tema.Azul, AutoSize = false, TextAlign = ContentAlignment.MiddleRight, Left = 120, Top = 2, Width = 296, Height = 60, Anchor = AnchorStyles.Top | AnchorStyles.Right };
             panelTotal.Controls.Add(_lblTotal);
-            var btnCobrar = new Button { Text = "COBRAR  ( + )", Font = Tema.Grande, BackColor = Tema.Verde, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Left = 12, Top = 72, Width = 404, Height = 58, TabStop = false, Cursor = Cursors.Hand };
+            var btnCobrar = new Button { Text = "COBRAR  ( + )", Font = Tema.Mediana, BackColor = Tema.Azul, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Left = 12, Top = 72, Width = 404, Height = 58, TabStop = false, Cursor = Cursors.Hand };
             btnCobrar.Click += (s, e) => Cobrar();
+            Tema.Pastilla(btnCobrar, true);
             panelTotal.Controls.Add(btnCobrar);
             abajo.Controls.Add(panelTotal);
 
-            var panelCaptura = new Panel { Dock = DockStyle.Fill, BackColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
+            var panelCaptura = new Panel { Dock = DockStyle.Fill, BackColor = Tema.Crema, BorderStyle = BorderStyle.FixedSingle };
             panelCaptura.Controls.Add(Ui.Etiqueta("Código de barras, cantidad* o nombre del artículo:", 10, 8, Tema.Negrita, Tema.Azul));
             _captura = new TextBox { Left = 10, Top = 32, Width = 420, Font = Tema.Captura, CharacterCasing = CharacterCasing.Normal, Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right };
             _captura.KeyDown += CapturaKeyDown;
@@ -102,13 +103,13 @@ namespace VentaFacil.Forms.Pos
             panelCaptura.Resize += (s, e) => { _lblUltimo.Left = panelCaptura.ClientSize.Width - _lblUltimo.Width - 8; };
             abajo.Controls.Add(panelCaptura);
 
-            _lblBanner = new Label { Dock = DockStyle.Bottom, Height = 24, TextAlign = ContentAlignment.MiddleCenter, ForeColor = Color.White, BackColor = Tema.Azul, Font = Tema.Negrita };
+            _lblBanner = new Label { Dock = DockStyle.Bottom, Height = 24, TextAlign = ContentAlignment.MiddleCenter, ForeColor = Tema.Grafito, BackColor = Tema.Taupe, Font = Tema.Negrita };
 
             // ---- Centro: el ticket en pantalla ----
             var centro = new Panel { Dock = DockStyle.Fill, Padding = new Padding(8, 8, 0, 0), BackColor = Tema.AzulFondo };
             _grid = new DataGridView { Dock = DockStyle.Fill };
             Ui.EstiloGrid(_grid);
-            _grid.Font = new Font("Tahoma", 12f);
+            _grid.Font = new Font("Segoe UI", 12f);
             _grid.RowTemplate.Height = 30;
             _grid.ColumnHeadersHeight = 32;
             _grid.Columns.Add(Ui.Columna("codigo", "Código", 18));

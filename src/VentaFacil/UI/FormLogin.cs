@@ -20,7 +20,7 @@ namespace VentaFacil.UI
             MaximizeBox = false; MinimizeBox = !autorizacion;
             ShowInTaskbar = !autorizacion;
             ClientSize = new Size(420, 290);
-            BackColor = Color.White;
+            BackColor = Tema.Crema;
             Font = Tema.Normal;
             KeyPreview = true;
 
@@ -52,7 +52,7 @@ namespace VentaFacil.UI
 
             _usuario.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; _clave.Focus(); } };
             if (!autorizacion && UsuarioRepo.Validar("admin", "admin") != null)
-                Controls.Add(Ui.Etiqueta("Primera vez: usuario admin, contraseña admin", 24, ClientSize.Height - 26, null, Color.Gray));
+                Controls.Add(Ui.Etiqueta("Primera vez: usuario admin, contraseña admin", 24, ClientSize.Height - 26, null, Tema.Humo));
             Shown += (s, e) => _usuario.Focus();
         }
 

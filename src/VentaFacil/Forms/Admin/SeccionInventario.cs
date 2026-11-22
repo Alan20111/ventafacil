@@ -15,7 +15,7 @@ namespace VentaFacil.Forms.Admin
     {
         public SeccionInventario()
         {
-            BackColor = Color.White;
+            BackColor = Tema.Crema;
             var tabs = new TabControl { Dock = DockStyle.Fill, Font = Tema.Negrita, Padding = new Point(14, 6) };
             tabs.TabPages.Add(Pagina("Entrada de mercancía", new PanelEntrada()));
             tabs.TabPages.Add(Pagina("Ajuste / conteo físico", new PanelAjuste()));
@@ -28,7 +28,7 @@ namespace VentaFacil.Forms.Admin
 
         static TabPage Pagina(string titulo, Control c)
         {
-            var p = new TabPage(titulo) { BackColor = Color.White };
+            var p = new TabPage(titulo) { BackColor = Tema.Crema };
             c.Dock = DockStyle.Fill;
             c.Font = Tema.Normal;
             p.Controls.Add(c);
@@ -55,7 +55,7 @@ namespace VentaFacil.Forms.Admin
                 _costo = Ui.Caja(350, 32, 120, Tema.Mediana); _costo.TextAlign = HorizontalAlignment.Right; arriba.Controls.Add(_costo);
                 arriba.Controls.Add(Ui.Boton("Agregar (Enter)", 480, 30, 140, 34, (s, e) => Agregar()));
                 arriba.Controls.Add(Ui.Boton("Buscar (F2)", 626, 30, 110, 34, (s, e) => Buscar()));
-                arriba.Controls.Add(Ui.Etiqueta("Escanee el código, escriba la cantidad y presione Enter. Al terminar presione \"Aplicar entrada\".", 10, 70, null, Color.Gray));
+                arriba.Controls.Add(Ui.Etiqueta("Escanee el código, escriba la cantidad y presione Enter. Al terminar presione \"Aplicar entrada\".", 10, 70, null, Tema.Humo));
                 Controls.Add(arriba);
 
                 _grid = AdminUtil.Grid();

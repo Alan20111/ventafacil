@@ -33,7 +33,7 @@ namespace VentaFacil.Forms.Admin
 
         public SeccionConfig()
         {
-            BackColor = Color.White;
+            BackColor = Tema.Crema;
             _c = Config.Actual.Copia();
 
             var tabs = new TabControl { Dock = DockStyle.Fill, Font = Tema.Negrita, Padding = new Point(14, 6) };
@@ -46,7 +46,7 @@ namespace VentaFacil.Forms.Admin
 
             var barra = AdminUtil.Barra();
             var guardar = AdminUtil.BotonBarra("Guardar cambios", (s, e) => Guardar(), 170);
-            guardar.ForeColor = Tema.Verde;
+            Tema.Pastilla(guardar, true);
             barra.Controls.Add(guardar);
             barra.Controls.Add(AdminUtil.BotonBarra("Imprimir ticket de prueba", (s, e) => Prueba(), 220));
             barra.Controls.Add(AdminUtil.BotonBarra("Probar cajón", (s, e) => ProbarCajon(), 140));
@@ -56,7 +56,7 @@ namespace VentaFacil.Forms.Admin
         }
 
         // ---------------- construcción de pestañas ----------------
-        static TabPage Pagina(string t) { return new TabPage(t) { BackColor = Color.White, Font = Tema.Normal, AutoScroll = true }; }
+        static TabPage Pagina(string t) { return new TabPage(t) { BackColor = Tema.Crema, Font = Tema.Normal, AutoScroll = true }; }
 
         static TextBox Texto(TabPage p, string etiqueta, ref int y, int ancho = 420)
         {
@@ -105,7 +105,7 @@ namespace VentaFacil.Forms.Admin
             _pie = Texto(p, "Mensaje al pie del ticket:", ref y);
             _banner = Texto(p, "Mensaje en pantalla de venta:", ref y);
             _caja = Numero(p, "Número de esta caja:", ref y, 1, 99);
-            p.Controls.Add(Ui.Etiqueta("Si tiene varias computadoras, cada una debe tener un número de caja distinto.", 16, y, null, Color.Gray));
+            p.Controls.Add(Ui.Etiqueta("Si tiene varias computadoras, cada una debe tener un número de caja distinto.", 16, y, null, Tema.Humo));
             return p;
         }
 
@@ -113,10 +113,11 @@ namespace VentaFacil.Forms.Admin
         {
             var p = Pagina("Impresora de tickets");
             int y = 12;
-            var asistente = new Button { Text = "Elegir o detectar impresora…", Left = 16, Top = y, Width = 300, Height = 40, Font = Tema.Mediana, BackColor = Tema.Verde, ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+            var asistente = new Button { Text = "Elegir o detectar impresora…", Left = 16, Top = y, Width = 300, Height = 40, Font = Tema.Mediana, BackColor = Tema.Azul, ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
             asistente.Click += (s, e) => AsistenteImpresora();
+            Tema.Pastilla(asistente, true);
             p.Controls.Add(asistente);
-            p.Controls.Add(Ui.Etiqueta("Recomendado: detecta la impresora de tickets y la prueba.", 326, y + 12, null, Color.Gray));
+            p.Controls.Add(Ui.Etiqueta("Recomendado: detecta la impresora de tickets y la prueba.", 326, y + 12, null, Tema.Humo));
             y += 54;
             _impresora = Combo(p, "Impresora:", ref y, 380);
             _impresora.Items.Add(Automatica);
@@ -128,7 +129,7 @@ namespace VentaFacil.Forms.Admin
             _ancho.Items.Add("58 mm"); _ancho.Items.Add("80 mm");
             _ancho.SelectedIndexChanged += (s, e) => { if (_ancho.Focused) _columnas.Value = _ancho.SelectedIndex == 0 ? 32 : 42; };
             _columnas = Numero(p, "Letras por renglón:", ref y, 24, 64);
-            p.Controls.Add(Ui.Etiqueta("58 mm ≈ 32   ·   80 mm ≈ 42 (48 en algunas)", 330, y - 34, null, Color.Gray));
+            p.Controls.Add(Ui.Etiqueta("58 mm ≈ 32   ·   80 mm ≈ 42 (48 en algunas)", 330, y - 34, null, Tema.Humo));
             _fuente = Combo(p, "Letra (modo Windows):", ref y, 200, true);
             foreach (var f in new[] { "Consolas", "Courier New", "Lucida Console", "Arial" }) _fuente.Items.Add(f);
             _tamano = Numero(p, "Tamaño de letra:", ref y, 5, 16, 1);
@@ -138,7 +139,7 @@ namespace VentaFacil.Forms.Admin
             _preguntar = Casilla(p, "Preguntar antes de imprimir cada ticket", ref y);
             _cortar = Casilla(p, "Cortar el papel al terminar (modo ESC/POS)", ref y);
             _letra = Casilla(p, "Imprimir importe con letra", ref y);
-            p.Controls.Add(Ui.Etiqueta("Consejo: si el ticket sale con símbolos raros o en blanco, use \"Controlador de Windows\".", 16, y + 4, null, Color.Gray));
+            p.Controls.Add(Ui.Etiqueta("Consejo: si el ticket sale con símbolos raros o en blanco, use \"Controlador de Windows\".", 16, y + 4, null, Tema.Humo));
             return p;
         }
 
@@ -155,7 +156,7 @@ namespace VentaFacil.Forms.Admin
             LlenarPuertos(_cajonPuerto);
             _cajonPin = Combo(p, "Pin del cajón:", ref y, 140);
             _cajonPin.Items.Add("Pin 2 (normal)"); _cajonPin.Items.Add("Pin 5");
-            p.Controls.Add(Ui.Etiqueta("Use \"Probar cajón\" (arriba) para verificar. Si no abre, cambie a Pin 5.", 16, y + 4, null, Color.Gray));
+            p.Controls.Add(Ui.Etiqueta("Use \"Probar cajón\" (arriba) para verificar. Si no abre, cambie a Pin 5.", 16, y + 4, null, Tema.Humo));
             return p;
         }
 
@@ -169,12 +170,12 @@ namespace VentaFacil.Forms.Admin
             _basBaudios = Combo(p, "Velocidad (baudios):", ref y, 140, true);
             foreach (var b in new[] { "1200", "2400", "4800", "9600", "19200" }) _basBaudios.Items.Add(b);
             _basComando = Texto(p, "Comando para pedir peso:", ref y, 120);
-            p.Controls.Add(Ui.Etiqueta("Torrey / Rhino: P   ·   Otras: W  o  vacío si la báscula transmite sola", 350, y - 34, null, Color.Gray));
+            p.Controls.Add(Ui.Etiqueta("Torrey / Rhino: P   ·   Otras: W  o  vacío si la báscula transmite sola", 350, y - 34, null, Tema.Humo));
             p.Controls.Add(Ui.Boton("Leer peso", 16, y, 130, 36, (s, e) => LeerPeso()));
             _peso = Ui.Etiqueta("", 160, y + 6, Tema.Mediana, Tema.Azul);
             p.Controls.Add(_peso);
             y += 50;
-            p.Controls.Add(Ui.Etiqueta("Sin báscula conectada, el sistema pide el peso a mano para productos a granel.", 16, y, null, Color.Gray));
+            p.Controls.Add(Ui.Etiqueta("Sin báscula conectada, el sistema pide el peso a mano para productos a granel.", 16, y, null, Tema.Humo));
             return p;
         }
 

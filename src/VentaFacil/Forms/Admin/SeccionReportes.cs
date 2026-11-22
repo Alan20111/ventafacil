@@ -28,7 +28,7 @@ namespace VentaFacil.Forms.Admin
 
         public SeccionReportes()
         {
-            BackColor = Color.White;
+            BackColor = Tema.Crema;
             _grid = AdminUtil.Grid();
             _grid.CellDoubleClick += (s, e) => { if (e.RowIndex >= 0) Detalle(); };
             _grid.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; Detalle(); } };
@@ -39,7 +39,7 @@ namespace VentaFacil.Forms.Admin
             abajo.Controls.Add(_resumen);
             Controls.Add(abajo);
 
-            var filtro = new Panel { Dock = DockStyle.Top, Height = 92, BackColor = Color.White };
+            var filtro = new Panel { Dock = DockStyle.Top, Height = 92, BackColor = Tema.Crema };
             filtro.Controls.Add(Ui.Etiqueta("Reporte:", 10, 14, Tema.Negrita));
             _tipo = new ComboBox { Left = 80, Top = 10, Width = 300, DropDownStyle = ComboBoxStyle.DropDownList, Font = Tema.Normal, MaxDropDownItems = 12 };
             filtro.Controls.Add(_tipo);
@@ -58,7 +58,7 @@ namespace VentaFacil.Forms.Admin
             filtro.Controls.Add(consultar);
             filtro.Controls.Add(Ui.Boton("Imprimir en ticket", 476, 46, 160, 36, (s, e) => ImprimirTicket()));
             filtro.Controls.Add(Ui.Boton("Exportar a Excel", 642, 46, 130, 36, (s, e) => ExcelSemillera.ExportarTabla(_dt, _rep != null ? _rep.Archivo : "reporte")));
-            _ayuda = Ui.Etiqueta("", 790, 54, null, Color.Gray);
+            _ayuda = Ui.Etiqueta("", 790, 54, null, Tema.Humo);
             filtro.Controls.Add(_ayuda);
             Controls.Add(filtro);
             Controls.Add(AdminUtil.TituloSeccion("Reportes"));

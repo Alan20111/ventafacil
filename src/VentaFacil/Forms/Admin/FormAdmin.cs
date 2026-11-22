@@ -22,12 +22,12 @@ namespace VentaFacil.Forms.Admin
             MinimumSize = new Size(1024, 700);
             Size = new Size(1100, 740);
             WindowState = FormWindowState.Maximized;
-            BackColor = Color.White;
+            BackColor = Tema.Crema;
             Font = Tema.Normal;
             KeyPreview = true;
             ShowInTaskbar = false;
 
-            _contenido = new Panel { Dock = DockStyle.Fill, BackColor = Color.White };
+            _contenido = new Panel { Dock = DockStyle.Fill, BackColor = Tema.Crema };
             Controls.Add(_contenido);
 
             var menu = new FlowLayoutPanel
@@ -50,7 +50,7 @@ namespace VentaFacil.Forms.Admin
 
             var salir = new Button
             {
-                Text = "Regresar a ventas (Esc)", Width = 180, Height = 54, Font = Tema.Negrita, BackColor = Color.White, ForeColor = Tema.Rojo,
+                Text = "Regresar a ventas (Esc)", Width = 180, Height = 54, Font = Tema.Negrita, BackColor = Tema.Crema, ForeColor = Tema.Rojo,
                 Margin = new Padding(0, 24, 0, 0)
             };
             salir.Click += (s, e) => Close();
@@ -64,7 +64,7 @@ namespace VentaFacil.Forms.Admin
             _secciones[nombre] = crear;
             var b = new Button
             {
-                Text = nombre, Width = 180, Height = 54, Font = Tema.Mediana, BackColor = Color.White, ForeColor = Tema.Azul,
+                Text = nombre, Width = 180, Height = 54, Font = Tema.Mediana, BackColor = Tema.Crema, ForeColor = Tema.Azul,
                 FlatStyle = FlatStyle.Flat, Margin = new Padding(0, 0, 0, 6), TextAlign = ContentAlignment.MiddleLeft, Tag = nombre
             };
             b.FlatAppearance.BorderColor = Tema.AzulClaro;
@@ -87,7 +87,7 @@ namespace VentaFacil.Forms.Admin
                 foreach (var b in _menu)
                 {
                     bool activo = (string)b.Tag == nombre;
-                    b.BackColor = activo ? Tema.Azul : Color.White;
+                    b.BackColor = activo ? Tema.Azul : Tema.Crema;
                     b.ForeColor = activo ? Color.White : Tema.Azul;
                 }
                 _actual.Focus();

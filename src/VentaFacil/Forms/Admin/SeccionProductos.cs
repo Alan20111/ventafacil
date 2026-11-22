@@ -21,7 +21,7 @@ namespace VentaFacil.Forms.Admin
 
         public SeccionProductos()
         {
-            BackColor = Color.White;
+            BackColor = Tema.Crema;
 
             _grid = AdminUtil.Grid();
             _grid.Columns.Add(Ui.Columna("codigo", "Código", 10));
@@ -37,13 +37,13 @@ namespace VentaFacil.Forms.Admin
             _grid.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; Modificar(); } };
             Controls.Add(_grid);
 
-            var filtro = new Panel { Dock = DockStyle.Top, Height = 50, BackColor = Color.White };
+            var filtro = new Panel { Dock = DockStyle.Top, Height = 50, BackColor = Tema.Crema };
             filtro.Controls.Add(Ui.Etiqueta("Buscar:", 10, 14, Tema.Negrita));
             _buscar = Ui.Caja(80, 10, 380, Tema.Mediana);
             filtro.Controls.Add(_buscar);
             _inactivos = new CheckBox { Text = "Ver desactivados", Left = 476, Top = 14, AutoSize = true };
             filtro.Controls.Add(_inactivos);
-            _conteo = Ui.Etiqueta("", 620, 14, null, Color.Gray);
+            _conteo = Ui.Etiqueta("", 620, 14, null, Tema.Humo);
             filtro.Controls.Add(_conteo);
             Controls.Add(filtro);
 
@@ -98,7 +98,7 @@ namespace VentaFacil.Forms.Admin
                         Fmt.Dinero(p.Precio),
                         p.UsaInventario ? Fmt.Dec(p.Existencia) : "-", p.UsaInventario ? Fmt.Dec(p.Minimo) : "");
                     _grid.Rows[i].Tag = p;
-                    if (!p.Activo) _grid.Rows[i].DefaultCellStyle.ForeColor = Color.Gray;
+                    if (!p.Activo) _grid.Rows[i].DefaultCellStyle.ForeColor = Tema.Humo;
                     else if (p.UsaInventario && p.Existencia <= p.Minimo) _grid.Rows[i].Cells["existencia"].Style.ForeColor = Tema.Rojo;
                 }
                 _conteo.Text = _lista.Count >= 1000 ? "Mostrando los primeros 1000; escriba para filtrar." : _lista.Count + " productos";

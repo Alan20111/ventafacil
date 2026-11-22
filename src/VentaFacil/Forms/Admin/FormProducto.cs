@@ -72,7 +72,7 @@ namespace VentaFacil.Forms.Admin
                 gPrecio.Controls.Add(Ui.Etiqueta(nombres[i], 12, fy + 4, i == Menudeo ? Tema.Negrita : Tema.Normal));
                 _precio[i] = Num(170, fy, 130); gPrecio.Controls.Add(_precio[i]);
                 _porc[i] = Num(330, fy, 100); gPrecio.Controls.Add(_porc[i]);
-                if (i == Menudeo) gPrecio.Controls.Add(Ui.Etiqueta("cualquier cantidad", 470, fy + 4, Tema.Normal, Color.Gray));
+                if (i == Menudeo) gPrecio.Controls.Add(Ui.Etiqueta("cualquier cantidad", 470, fy + 4, Tema.Normal, Tema.Humo));
                 else
                 {
                     _desde[i] = Num(470, fy, 80); gPrecio.Controls.Add(_desde[i]);
@@ -92,7 +92,7 @@ namespace VentaFacil.Forms.Admin
             y += 34;
             Controls.Add(Ui.Etiqueta(_nuevo ? "Existencia inicial:" : "Existencia actual:", x1, y + 4));
             _existencia = Num(x2, y); Controls.Add(_existencia);
-            if (!_nuevo) { _existencia.ReadOnly = true; _existencia.BackColor = Tema.Gris; Controls.Add(Ui.Etiqueta("(se cambia en Inventario)", x2, y + 28, null, Color.Gray)); }
+            if (!_nuevo) { _existencia.ReadOnly = true; _existencia.BackColor = Tema.Gris; Controls.Add(Ui.Etiqueta("(se cambia en Inventario)", x2, y + 28, null, Tema.Humo)); }
             Controls.Add(Ui.Etiqueta("Stock mínimo:", 380, y + 4));
             _minimo = Num(490, y); Controls.Add(_minimo);
 

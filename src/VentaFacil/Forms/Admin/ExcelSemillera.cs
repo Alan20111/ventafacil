@@ -302,13 +302,13 @@ namespace VentaFacil.Forms.Admin
 
             var g = new DataGridView { Left = 16, Top = 40, Width = 948, Height = 380 };
             Ui.EstiloGrid(g);
-            g.Font = new Font("Tahoma", 9f);
+            g.Font = new Font("Segoe UI", 9f);
             foreach (var c in new[] { "Grupo", "Producto", "Stock", "Bulto", "Trae", "Costo", "Mayoreo", "Desde", "Med. may.", "Desde ", "Menudeo", "Venta" })
                 g.Columns.Add(Ui.Columna(c, c, c == "Producto" ? 30 : c == "Grupo" ? 14 : 8, c != "Producto" && c != "Grupo"));
             foreach (var d in datos)
             {
                 int i = g.Rows.Add(d.Grupo, d.Producto, F(d.Stock), D(d.Bulto), F(d.Trae), D(d.Costo), D(d.Mayoreo), F(d.MayoreoDesde), D(d.Medio), F(d.MedioDesde), D(d.Menudeo), d.PorPieza ? "pieza" : "kg");
-                if (!(d.Menudeo ?? d.Medio ?? d.Mayoreo).HasValue) g.Rows[i].DefaultCellStyle.ForeColor = Color.Gray;
+                if (!(d.Menudeo ?? d.Medio ?? d.Mayoreo).HasValue) g.Rows[i].DefaultCellStyle.ForeColor = Tema.Humo;
             }
             Controls.Add(g);
 
@@ -321,11 +321,11 @@ namespace VentaFacil.Forms.Admin
             _actualizar = new CheckBox { Text = "Si el producto ya existe (mismo nombre), actualizar su costo y precios", Left = 16, Top = y, Width = 900, Checked = true };
             Controls.Add(_actualizar);
             y += 30;
-            Controls.Add(Ui.Etiqueta("Los renglones en gris no tienen precio y no se importarán. Cada proveedor/grupo del Excel se vuelve un grupo en VentaFácil.", 16, y, null, Color.Gray));
+            Controls.Add(Ui.Etiqueta("Los renglones en gris no tienen precio y no se importarán. Cada proveedor/grupo del Excel se vuelve un grupo en VentaFácil.", 16, y, null, Tema.Humo));
             if (avisos.Count > 0) Controls.Add(Ui.Etiqueta(string.Join("  ", avisos), 16, y + 20, null, Tema.Rojo));
 
             var ok = Ui.Boton("Importar " + datos.Count + " productos", 620, ClientSize.Height - 56, 200, 42, (s, e) => { DialogResult = DialogResult.OK; });
-            ok.BackColor = Tema.Verde; ok.ForeColor = Color.White;
+            ok.BackColor = Tema.Azul; ok.ForeColor = Color.White;
             var no = Ui.Boton("Cancelar (Esc)", 830, ClientSize.Height - 56, 134, 42, (s, e) => { DialogResult = DialogResult.Cancel; });
             Controls.Add(ok); Controls.Add(no);
             CancelButton = no;

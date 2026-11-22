@@ -40,11 +40,11 @@ namespace VentaFacil.Forms.Pos
             z.BackColor = Tema.Rojo; z.ForeColor = Color.White;
             Controls.Add(z);
 
-            _vista = new TextBox { Left = 16, Top = 96, Width = 726, Height = 440, Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, Font = new Font("Courier New", 10f), BackColor = Color.White };
+            _vista = new TextBox { Left = 16, Top = 96, Width = 726, Height = 440, Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, Font = new Font("Courier New", 10f), BackColor = Tema.Crema };
             Controls.Add(_vista);
             Controls.Add(Ui.Boton("Imprimir (Ctrl+P)", 456, 546, 150, 40, (s, e) => Imprimir()));
             Controls.Add(Ui.Boton("Salir (Esc)", 612, 546, 130, 40, (s, e) => Close()));
-            Controls.Add(Ui.Etiqueta("Los cortes X son informativos. El corte Z cierra el turno.", 16, 556, null, Color.Gray));
+            Controls.Add(Ui.Etiqueta("Los cortes X son informativos. El corte Z cierra el turno.", 16, 556, null, Tema.Humo));
 
             KeyDown += (s, e) =>
             {
