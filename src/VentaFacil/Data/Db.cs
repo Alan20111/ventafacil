@@ -9,19 +9,37 @@ namespace VentaFacil.Data
     /// <summary>
     /// Acceso a la base de datos SQLite local. Un solo archivo, sin servidor.
     /// </summary>
+    public class BaseDanadaException : Exception
+    {
+        public BaseDanadaException(string mensaje) : base("La base de datos está dañada: " + mensaje) { }
+    }
+
     public static class Db
     {
         public static string Carpeta { get; private set; }
         public static string Archivo { get; private set; }
         static string _cadena;
 
-        public static void Inicializar()
+        /// <summary>Define carpeta y archivo de datos sin abrir nada. Lo usan el arranque y la reparación.</summary>
+        public static void PrepararRutas()
         {
             Carpeta = ElegirCarpetaDatos();
-            Directory.CreateDirectory(Carpeta);
             Archivo = Path.Combine(Carpeta, "ventafacil.db");
-            _cadena = "Data Source=" + Archivo + ";Version=3;Foreign Keys=True;Journal Mode=WAL;Synchronous=Normal;BusyTimeout=5000";
+            // Synchronous=Full: al cortarse la luz no se pierde ninguna operación ya confirmada
+            _cadena = "Data Source=" + Archivo + ";Version=3;Foreign Keys=True;Journal Mode=WAL;Synchronous=Full;BusyTimeout=5000";
+        }
+
+        public static void Inicializar()
+        {
+            PrepararRutas();
+            Directory.CreateDirectory(Carpeta);
             bool nueva = !File.Exists(Archivo);
+            if (!nueva)
+            {
+                // Antes de usar la base: si no se puede leer completa, no se abre
+                string revision = Salud.Revisar(Archivo);
+                if (revision != "ok") throw new BaseDanadaException(revision);
+            }
             using (var cn = Abrir())
             {
                 Esquema.Crear(cn);

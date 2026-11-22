@@ -25,6 +25,7 @@ namespace VentaFacil.Data
                     Db.Exec(cn, tx, "INSERT OR REPLACE INTO config(clave, valor) VALUES(@p0, @p1)", kv.Key, kv.Value);
                 tx.Commit();
             }
+            Respaldo.Pedir();
         }
     }
 
@@ -50,6 +51,7 @@ namespace VentaFacil.Data
                 if (!string.IsNullOrEmpty(claveNueva))
                     Db.Exec("UPDATE usuarios SET clave_hash=@p0 WHERE id=@p1", Core.Seguridad.Hash(claveNueva), u.Id);
             }
+            Respaldo.Pedir();
         }
 
         public static int AdminsActivos() { return Convert.ToInt32(Db.Scalar("SELECT COUNT(*) FROM usuarios WHERE rol='ADMIN' AND activo=1")); }
@@ -133,6 +135,7 @@ namespace VentaFacil.Data
                 Guardar(cn, tx, p, usuarioId);
                 tx.Commit();
             }
+            Respaldo.Pedir();
         }
 
         public static void Guardar(SQLiteConnection cn, SQLiteTransaction tx, Producto p, long usuarioId)
@@ -173,6 +176,7 @@ namespace VentaFacil.Data
                 Db.Exec("DELETE FROM movimientos_inv WHERE producto_id=@p0", id);
                 Db.Exec("DELETE FROM productos WHERE id=@p0", id);
             }
+            Respaldo.Pedir();
         }
 
         /// <summary>Suma (o resta) existencia y deja registro en el kardex.</summary>
@@ -194,6 +198,7 @@ namespace VentaFacil.Data
                 MoverExistencia(cn, tx, productoId, cantidad, tipo, referencia, usuarioId);
                 tx.Commit();
             }
+            Respaldo.Pedir();
         }
 
         /// <summary>Fija la existencia a un valor contado físicamente.</summary>
@@ -208,6 +213,7 @@ namespace VentaFacil.Data
                 if (dif != 0) MoverExistencia(cn, tx, productoId, dif, "AJUSTE", referencia, usuarioId);
                 tx.Commit();
             }
+            Respaldo.Pedir();
         }
     }
 
@@ -225,7 +231,9 @@ namespace VentaFacil.Data
             using (var cn = Db.Abrir())
             {
                 long id = Db.InsertId(cn, null, "INSERT INTO turnos(caja,apertura,abierto_por,fondo,estado) VALUES(@p0,@p1,@p2,@p3,'ABIERTO')", caja, Db.Ahora(), usuarioId, fondo);
-                return Db.Lista(cn, null, "SELECT * FROM turnos WHERE id=@p0", Turno.De, id).First();
+                var turno = Db.Lista(cn, null, "SELECT * FROM turnos WHERE id=@p0", Turno.De, id).First();
+                Respaldo.Pedir();
+                return turno;
             }
         }
 
@@ -233,12 +241,14 @@ namespace VentaFacil.Data
         {
             Db.Exec("UPDATE turnos SET estado='CERRADO', cierre=@p0, cerrado_por=@p1, efectivo_declarado=@p2 WHERE id=@p3",
                 Db.Ahora(), usuarioId, efectivoDeclarado.HasValue ? (object)efectivoDeclarado.Value : null, turnoId);
+            Respaldo.Pedir();
         }
 
         public static void Movimiento(long turnoId, long usuarioId, string tipo, decimal monto, string concepto)
         {
             Db.Exec("INSERT INTO movimientos_caja(turno_id,usuario_id,fecha,tipo,monto,concepto) VALUES(@p0,@p1,@p2,@p3,@p4,@p5)",
                 turnoId, usuarioId, Db.Ahora(), tipo, monto, concepto);
+            Respaldo.Pedir();
         }
 
         /// <summary>
@@ -320,6 +330,7 @@ namespace VentaFacil.Data
                 }
                 tx.Commit();
             }
+            Respaldo.Pedir();
             return v.Id;
         }
 
@@ -364,6 +375,7 @@ namespace VentaFacil.Data
                     ProductoRepo.MoverExistencia(cn, tx, l.P, l.C, "CANCELACION", "Cancela ticket " + ventaId, usuarioId);
                 tx.Commit();
             }
+            Respaldo.Pedir();
         }
     }
 
@@ -380,8 +392,11 @@ namespace VentaFacil.Data
                     l.ProductoId.ToString(), Limpia(l.Codigo), Limpia(l.Descripcion), Core.Fmt.Dec(l.Cantidad), Core.Fmt.Dec(l.PrecioLista),
                     Core.Fmt.Dec(l.Precio), Core.Fmt.Dec(l.Descuento), Core.Fmt.Dec(l.Costo), l.Granel ? "1" : "0", l.PrecioManual ? "1" : "0" })).Append('\n');
             decimal total = lineas.Sum(x => x.Importe);
+            long id;
             using (var cn = Db.Abrir())
-                return Db.InsertId(cn, null, "INSERT INTO suspendidas(fecha,usuario_id,nota,total,datos) VALUES(@p0,@p1,@p2,@p3,@p4)", Db.Ahora(), usuarioId, nota, total, sb.ToString());
+                id = Db.InsertId(cn, null, "INSERT INTO suspendidas(fecha,usuario_id,nota,total,datos) VALUES(@p0,@p1,@p2,@p3,@p4)", Db.Ahora(), usuarioId, nota, total, sb.ToString());
+            Respaldo.Pedir();
+            return id;
         }
 
         static string Limpia(string s) { return (s ?? "").Replace('\t', ' ').Replace('\n', ' ').Replace('\r', ' '); }

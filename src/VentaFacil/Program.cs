@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using VentaFacil.Core;
 using VentaFacil.Data;
 using VentaFacil.Forms.Pos;
+using VentaFacil.Forms.Reparar;
 using VentaFacil.UI;
 
 namespace VentaFacil
@@ -12,10 +13,12 @@ namespace VentaFacil
     static class Program
     {
         [STAThread]
-        static void Main()
+        static void Main(string[] args)
         {
             // Primero: que se encuentre SQLite aunque se ejecute el .exe suelto
             Bibliotecas.Preparar();
+            // Acceso "Reparar VentaFácil": no abre el punto de venta
+            if (args.Length > 0 && args[0] == "--reparar") { FormReparar.Ejecutar(); return; }
             // Antes del mutex: si se abre la copia instalada, esta termina y no choca con ella
             if (!Instalacion.Asegurar()) return;
             Arrancar();
@@ -35,25 +38,35 @@ namespace VentaFacil
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
                 Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
-                Application.ThreadException += (s, e) => Ui.Error(e.Exception, "Ocurrió un error inesperado. La venta en curso no se perdió.");
+                Application.ThreadException += (s, e) => Ui.Error(e.Exception, "Ocurrió un error inesperado. Sus ventas guardadas no se pierden. Si vuelve a pasar, cierre y abra el programa.");
                 AppDomain.CurrentDomain.UnhandledException += (s, e) => Log.Error(e.ExceptionObject as Exception, "No controlado");
 
                 try
                 {
-                    Db.Inicializar();
+                    try { Db.Inicializar(); }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "Inicio");
+                        // Base dañada: ofrece restaurar el último respaldo bueno (sin borrar nada)
+                        if (!FormReparar.RecuperarBase(ex.Message)) return;
+                        Db.Inicializar();
+                    }
                     Config.Cargar();
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "Inicio");
-                    MessageBox.Show("No se pudo abrir la base de datos:\n\n" + ex.Message, "VentaFácil", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    Log.Error(ex, "Inicio tras restaurar");
+                    MessageBox.Show("No se pudo abrir la base de datos:\n\n" + ex.Message + "\n\nAbra 'Reparar VentaFácil' en el escritorio.", "VentaFácil", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
-                // Respaldo automático al iniciar (uno por día como mínimo)
+                // Copia continua después de cada cambio (venta, cobro, movimiento, producto)
+                Respaldo.Iniciar();
+
+                // Respaldo diario (se conservan los últimos 30)
                 try
                 {
-                    string marca = Path.Combine(Db.Carpeta, "respaldos", "ultimo.txt");
+                    string marca = Path.Combine(Db.Carpeta, "respaldos", "ultimo_diario.txt");
                     string hoy = DateTime.Today.ToString("yyyyMMdd");
                     if (!File.Exists(marca) || File.ReadAllText(marca) != hoy)
                     {
@@ -79,7 +92,8 @@ namespace VentaFacil
                     }
                     catch (Exception ex) { Log.Error(ex, "Detección de impresora"); }
                 }
-                Application.Run(new FormVenta());
+                try { Application.Run(new FormVenta()); }
+                finally { Respaldo.Final(); }
             }
         }
     }
@@ -87,6 +101,7 @@ namespace VentaFacil
     /// <summary>
     /// Si System.Data.SQLite.dll no está junto al .exe (se descargó solo el .exe),
     /// la saca de los recursos internos a una carpeta y la carga desde ahí.
+    /// Si el archivo extraído está dañado (distinto del recurso), lo repone.
     /// </summary>
     static class Bibliotecas
     {
@@ -124,13 +139,15 @@ namespace VentaFacil
 
         static void Extraer(string recurso, string destino)
         {
+            byte[] datos;
             using (var s = typeof(Program).Assembly.GetManifestResourceStream(recurso))
             {
                 if (s == null) throw new IOException("Falta el recurso " + recurso);
-                if (File.Exists(destino) && new FileInfo(destino).Length == s.Length) return;
-                Directory.CreateDirectory(Path.GetDirectoryName(destino));
-                using (var f = File.Create(destino)) s.CopyTo(f);
+                using (var ms = new MemoryStream()) { s.CopyTo(ms); datos = ms.ToArray(); }
             }
+            if (File.Exists(destino) && Instalacion.HashBytes(File.ReadAllBytes(destino)) == Instalacion.HashBytes(datos)) return;
+            Directory.CreateDirectory(Path.GetDirectoryName(destino));
+            File.WriteAllBytes(destino, datos);
         }
     }
 
@@ -140,7 +157,8 @@ namespace VentaFacil
         {
             try
             {
-                string carpeta = Db.Carpeta ?? AppDomain.CurrentDomain.BaseDirectory;
+                string carpeta = Db.Carpeta ?? Instalacion.Carpeta;
+                Directory.CreateDirectory(carpeta);
                 File.AppendAllText(Path.Combine(carpeta, "errores.log"),
                     DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " [" + contexto + "] " + (ex == null ? "" : ex.ToString()) + Environment.NewLine + Environment.NewLine);
             }
