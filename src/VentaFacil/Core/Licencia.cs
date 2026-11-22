@@ -20,7 +20,7 @@ namespace VentaFacil.Core
 
     /// <summary>
     /// Licencia de VentaFácil: 30 días de prueba y después clave de activación, atada al equipo.
-    /// La clave es una firma RSA (ver LicenciaNucleo): el programa solo lleva la parte pública.
+    /// La clave es un código de 16 caracteres calculado a partir del código del equipo (ver LicenciaNucleo).
     /// Se guarda fuera de la base de datos (licencia.dat y el registro de Windows) para que copiar
     /// o restaurar la base no copie ni borre la licencia.
     /// Limite asumido: es un freno contra copiar el programa a otra PC, no contra quien parchee el .exe.
@@ -152,24 +152,13 @@ namespace VentaFacil.Core
             var g = LeerGuardado();
             var info = new InfoLicencia();
 
-            if (g.Clave != "")
+            string motivoClave;
+            if (g.Clave != "" && LicenciaNucleo.Verificar(CodigoInstalacion(), g.Clave, out motivoClave))
             {
-                DateTime? vence; string motivo;
-                if (LicenciaNucleo.Verificar(CodigoInstalacion(), g.Clave, out vence, out motivo))
-                {
-                    if (!vence.HasValue || vence.Value >= hoy)
-                    {
-                        info.Estado = EstadoLicencia.Activa;
-                        info.Vence = vence;
-                        return info;
-                    }
-                    info.Estado = EstadoLicencia.Vencida;
-                    info.Vence = vence;
-                    info.Motivo = "La licencia venció el " + vence.Value.ToString("dd/MM/yyyy") + ". Pida una clave nueva a su proveedor.";
-                    return info;
-                }
-                // Clave guardada que ya no corresponde (otra PC): se cae a la prueba
+                info.Estado = EstadoLicencia.Activa;
+                return info;
             }
+            // Clave guardada que ya no corresponde (otra PC): se cae a la prueba
 
             if (!g.Inicio.HasValue) g.Inicio = hoy;
             bool relojAtrasado = g.Ultimo.HasValue && hoy < g.Ultimo.Value.AddDays(-1);
@@ -195,14 +184,11 @@ namespace VentaFacil.Core
         /// <summary>Valida y guarda la clave. Devuelve null si quedó activada, o el motivo si no.</summary>
         public static string Activar(string clave)
         {
-            DateTime? vence; string motivo;
-            if (string.IsNullOrWhiteSpace(clave)) return "Pegue la clave de activación que le dio su proveedor.";
-            if (!LicenciaNucleo.Verificar(CodigoInstalacion(), clave, out vence, out motivo)) return motivo;
-            if (vence.HasValue && vence.Value < DateTime.Today) return "Esa clave ya venció el " + vence.Value.ToString("dd/MM/yyyy") + ".";
+            string motivo;
+            if (string.IsNullOrWhiteSpace(clave)) return "Escriba la clave de activación que le dio su proveedor.";
+            if (!LicenciaNucleo.Verificar(CodigoInstalacion(), clave, out motivo)) return motivo;
             var g = LeerGuardado();
-            var limpia = new StringBuilder();
-            foreach (char c in clave) if (!char.IsWhiteSpace(c)) limpia.Append(c);
-            g.Clave = limpia.ToString();
+            g.Clave = Base32.Agrupar(Base32.Normalizar(clave));
             Guardar(g);
             return null;
         }

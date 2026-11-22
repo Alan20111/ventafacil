@@ -6,12 +6,16 @@
     <Nullable>disable</Nullable>
     <RootNamespace>VentaFacil.Licencias</RootNamespace>
     <AssemblyName>Licencias</AssemblyName>
+    <SecretoLicencia>$([System.Environment]::GetFolderPath(SpecialFolder.UserProfile))/.ventafacil-licencias/LicenciaSecreto.cs</SecretoLicencia>
   </PropertyGroup>
 
   <ItemGroup>
     <!-- Se enlaza el código real del programa (no una copia): la verificación y la generación
          de claves son forzosamente las mismas. -->
     <Compile Include="..\..\src\VentaFacil\Core\LicenciaNucleo.cs" Link="Compartido\LicenciaNucleo.cs" />
+    <!-- Secreto real (fuera del repositorio) o, si todavía no existe, el de desarrollo -->
+    <Compile Include="$(SecretoLicencia)" Link="Compartido\LicenciaSecreto.cs" Condition="Exists('$(SecretoLicencia)')" />
+    <Compile Include="..\..\src\VentaFacil\Core\LicenciaSecretoDesarrollo.cs" Link="Compartido\LicenciaSecretoDesarrollo.cs" Condition="!Exists('$(SecretoLicencia)')" />
   </ItemGroup>
 
 </Project>

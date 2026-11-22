@@ -15,7 +15,7 @@ namespace VentaFacil.Forms.Licenciamiento
         readonly TextBox _clave;
         public bool Continuar { get; private set; }
 
-        FormLicencia(InfoLicencia info, bool puedeContinuar) : base("Licencia de VentaFácil", 720, 590)
+        FormLicencia(InfoLicencia info, bool puedeContinuar) : base("Licencia de VentaFácil", 720, 470)
         {
             Continuar = puedeContinuar;
             Controls.Add(Ui.Etiqueta("Licencia de VentaFácil", 16, 12, Tema.Grande, Tema.Azul));
@@ -34,18 +34,18 @@ namespace VentaFacil.Forms.Licenciamiento
             Controls.Add(codigo);
             Controls.Add(Ui.Boton("Copiar código", 408, 152, 200, 40, (s, e) => { try { Clipboard.SetText(codigo.Text); } catch (Exception) { } }));
 
-            Controls.Add(Ui.Etiqueta("Pegue aquí la clave de activación que le dio su proveedor:", 16, 214));
-            _clave = new TextBox { Left = 16, Top = 244, Width = 688, Height = 150, Multiline = true, ScrollBars = ScrollBars.Vertical, Font = new Font("Consolas", 10f, FontStyle.Bold), BackColor = Color.White };
+            Controls.Add(Ui.Etiqueta("Escriba la clave de activación que le dio su proveedor (16 letras y números):", 16, 214));
+            _clave = new TextBox { Left = 16, Top = 244, Width = 688, Font = new Font("Consolas", 22f, FontStyle.Bold), BackColor = Color.White, CharacterCasing = CharacterCasing.Upper, MaxLength = 30 };
             Controls.Add(_clave);
 
-            var activar = Ui.Boton("Activar", 16, 412, 200, 52, (s, e) => Activar());
+            var activar = Ui.Boton("Activar", 16, 316, 200, 52, (s, e) => Activar());
             Tema.Pastilla(activar, true);
             Controls.Add(activar);
             if (puedeContinuar && info.Estado != EstadoLicencia.Activa)
-                Controls.Add(Ui.Boton("Continuar con la prueba", 232, 412, 280, 52, (s, e) => { Continuar = true; Close(); }));
-            Controls.Add(Ui.Boton(info.Estado == EstadoLicencia.Activa ? "Cerrar" : "Salir", 528, 412, 176, 52, (s, e) => { Continuar = info.Estado == EstadoLicencia.Activa; Close(); }));
+                Controls.Add(Ui.Boton("Continuar con la prueba", 232, 316, 280, 52, (s, e) => { Continuar = true; Close(); }));
+            Controls.Add(Ui.Boton(info.Estado == EstadoLicencia.Activa ? "Cerrar" : "Salir", 528, 316, 176, 52, (s, e) => { Continuar = info.Estado == EstadoLicencia.Activa; Close(); }));
 
-            Controls.Add(Ui.Etiqueta("La licencia es permanente y sirve solo en esta computadora. Si reinstala VentaFácil,\nvuelva a pegar la misma clave.", 16, 484, null, Tema.Humo));
+            Controls.Add(Ui.Etiqueta("La licencia es permanente y sirve solo en esta computadora. Si reinstala VentaFácil,\nvuelva a escribir la misma clave.", 16, 392, null, Tema.Humo));
         }
 
         void Activar()

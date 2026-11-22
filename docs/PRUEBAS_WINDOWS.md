@@ -59,7 +59,7 @@ Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y
 | # | Qué hacer | Debe pasar |
 |---|-----------|-----------|
 | 30 | Configuración → **Licencia…** | Muestra el código del equipo y "le quedan 30 días" |
-| 31 | En tu Mac: `cd herramientas/licencias && dotnet run`, pegar el código, generar clave. Pegarla en la laptop | "VentaFácil quedó activado". Reabrir el programa: no vuelve a pedirla |
+| 31 | En tu Mac: `cd herramientas/licencias && dotnet run`, pegar el código, generar la clave. Escribirla en la laptop (el `.exe` debe haberse compilado en tu Mac con `publicar_release.sh`) | "VentaFácil quedó activado". Reabrir el programa: no vuelve a pedirla |
 | 32 | Cambiar la fecha de Windows 40 días adelante **antes** de activar (en otra PC de prueba) | Pide la clave y no deja entrar sin ella. Devolver la fecha |
 
 ## G. Windows 7 (si la tienda lo usa)

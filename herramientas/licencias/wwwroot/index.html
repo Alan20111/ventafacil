@@ -26,7 +26,7 @@
   button.mini{padding:6px 14px;font-size:14px}
   button.peligro{background:#fff;color:var(--rojo);border:2px solid var(--rojo)}
   .resultado{margin-top:18px;padding:18px;border-radius:12px;background:#e8f5e9;border:2px solid var(--verde)}
-  .resultado textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;height:130px;margin:8px 0 12px}
+  .resultado .clave{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:34px;font-weight:700;color:var(--verde);letter-spacing:2px;text-align:center;margin:10px 0 14px}
   .error{margin-top:14px;padding:12px 14px;border-radius:10px;background:#fdeeee;border:2px solid var(--rojo);color:#7a1b1b}
   table{width:100%;border-collapse:collapse;font-size:15px}
   th{text-align:left;font-size:13px;text-transform:uppercase;color:var(--gris);border-bottom:2px solid var(--borde);padding:9px 8px}
@@ -38,7 +38,7 @@
 <body>
 <header>
   <h1>VentaFácil — Licencias</h1>
-  <p>Licencia permanente por computadora. Se genera con el código que muestra el programa en esa computadora.</p>
+  <p>Licencia permanente por computadora. La clave se calcula con el código que muestra el programa en esa computadora.</p>
 </header>
 <main>
   <section class="tarjeta">
@@ -50,7 +50,6 @@
     </div>
     <div class="fila">
       <div><label for="codigo">Código del equipo</label><input id="codigo" placeholder="XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" style="font-family:ui-monospace,Menlo,monospace;font-size:20px;text-transform:uppercase"></div>
-      <div><label for="vence">Vence el (vacío = nunca)</label><input id="vence" type="date"></div>
     </div>
     <div class="fila"><div><label for="notas">Notas (opcional)</label><input id="notas" autocomplete="off"></div></div>
     <button id="generar">Generar clave</button>
@@ -71,9 +70,9 @@ async function cargar(){
   const r = await fetch('/api/registro'); const lista = await r.json();
   if(!lista.length){ $('tabla').innerHTML = '<div class="vacio">Todavía no hay claves emitidas.</div>'; return; }
   lista.reverse();
-  $('tabla').innerHTML = '<table><tr><th>Cliente</th><th>Equipo</th><th>Vence</th><th>Fecha</th><th></th></tr>' +
+  $('tabla').innerHTML = '<table><tr><th>Cliente</th><th>Equipo</th><th>Clave</th><th>Fecha</th><th></th></tr>' +
     lista.map(e => `<tr><td><b>${esc(e.cliente)}</b><br><small>${esc(e.telefono)} ${esc(e.notas)}</small></td>
-      <td><code>${esc(e.codigoInstalacion)}</code></td><td>${e.vence ? esc(e.vence.replace(/(\d{4})(\d\d)(\d\d)/,'$3/$2/$1')) : 'Nunca'}</td>
+      <td><code>${esc(e.codigoInstalacion)}</code></td><td><code>${esc(e.clave)}</code></td>
       <td>${new Date(e.fecha).toLocaleDateString('es-MX')}</td>
       <td style="text-align:right;white-space:nowrap"><button class="mini sec" onclick="copiar(${e.id})">Copiar clave</button>
       <button class="mini peligro" onclick="borrar(${e.id})">Quitar</button></td></tr>`).join('') + '</table>';
@@ -85,13 +84,14 @@ async function borrar(id){ if(!confirm('¿Quitar este registro? La clave que ya 
 $('generar').onclick = async () => {
   $('mensaje').innerHTML = '';
   const r = await fetch('/api/generar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-    cliente:$('cliente').value, telefono:$('telefono').value, notas:$('notas').value, codigoInstalacion:$('codigo').value, vence:$('vence').value })});
+    cliente:$('cliente').value, telefono:$('telefono').value, notas:$('notas').value, codigoInstalacion:$('codigo').value })});
   const d = await r.json();
   if(!r.ok){ $('mensaje').innerHTML = '<div class="error">'+esc(d.error||'No se pudo generar')+'</div>'; return; }
-  $('mensaje').innerHTML = '<div class="resultado"><b>Clave para '+esc(d.cliente)+'</b> (equipo <code>'+esc(d.codigoInstalacion)+'</code>)'+
-    '<textarea id="clave" readonly>'+esc(d.clave)+'</textarea><button id="copiarNueva">Copiar clave</button></div>';
+  $('mensaje').innerHTML = '<div class="resultado"><b>Clave de activación para '+esc(d.cliente)+'</b> (equipo <code>'+esc(d.codigoInstalacion)+'</code>)'+
+    (d.repetido ? '<div style="color:#6d4c00;margin-top:6px">Ese equipo ya tenía clave: es la misma de siempre.</div>' : '')+
+    '<div class="clave">'+esc(d.clave)+'</div><button id="copiarNueva">Copiar clave</button></div>';
   $('copiarNueva').onclick = async () => { await navigator.clipboard.writeText(d.clave); alert('Clave copiada. Envíela al cliente.'); };
-  $('codigo').value=''; $('cliente').value=''; $('telefono').value=''; $('notas').value=''; $('vence').value='';
+  $('codigo').value=''; $('cliente').value=''; $('telefono').value=''; $('notas').value='';
   cargar();
 };
 cargar();

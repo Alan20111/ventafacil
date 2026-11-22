@@ -4,32 +4,42 @@ using System.Text.Json;
 using VentaFacil.Core;
 
 // ======================================================================
-// Herramienta de licencias de VentaFácil. Corre en la computadora de quien VENDE el programa
-// y se abre en el navegador. Solo escucha en 127.0.0.1.
+// Herramienta de licencias de VentaFácil (código corto). Corre en la computadora de quien VENDE
+// el programa y se abre en el navegador. Solo escucha en 127.0.0.1.
 //
 // Guarda, FUERA del repositorio, en ~/.ventafacil-licencias:
-//   privada.pem   -> la llave privada con la que se firman las claves. RESPÁLDELA (USB, otra nube).
-//                    Si se pierde no se pueden generar más claves para los programas ya vendidos.
-//   registro.json -> quién compró, en qué equipo y cuándo.
+//   LicenciaSecreto.cs -> el secreto con el que se calculan las claves. RESPÁLDELO (USB, otra nube).
+//                         Si se pierde o se cambia, las claves ya entregadas dejan de servir.
+//   registro.json      -> quién compró, en qué equipo y cuándo.
 // ======================================================================
 
 var carpeta = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".ventafacil-licencias");
-var rutaPrivada = Path.Combine(carpeta, "privada.pem");
+var rutaSecreto = Path.Combine(carpeta, "LicenciaSecreto.cs");
 var rutaRegistro = Path.Combine(carpeta, "registro.json");
 Directory.CreateDirectory(carpeta);
 
 if (args.Contains("--probar")) return Probar();
 
-RSA rsa = CargarOCrearClave();
-
-if (args.Contains("--publica"))
+if (args.Contains("--crear-secreto"))
 {
-    var p = rsa.ExportParameters(false);
-    Console.WriteLine("Pegue estas dos líneas en src/VentaFacil/Core/LicenciaNucleo.cs:");
-    Console.WriteLine();
-    Console.WriteLine($"        public static readonly byte[] Modulo = Convert.FromBase64String(\"{Convert.ToBase64String(p.Modulus!)}\");");
-    Console.WriteLine($"        public static readonly byte[] Exponente = Convert.FromBase64String(\"{Convert.ToBase64String(p.Exponent!)}\");");
+    if (File.Exists(rutaSecreto)) { Console.WriteLine("Ya existe un secreto en " + rutaSecreto + ". No se cambia (cambiarlo invalida las claves ya entregadas)."); return 0; }
+    var bytes = RandomNumberGenerator.GetBytes(36);
+    string secreto = "VentaFacil::MX::v1::" + Convert.ToBase64String(bytes).Replace('+', 'a').Replace('/', 'b').Replace("=", "");
+    File.WriteAllText(rutaSecreto,
+        "namespace VentaFacil.Core\n{\n    // SECRETO DE LICENCIAS. No subir a ningún repositorio. Respáldelo.\n    internal static class LicenciaSecreto\n    {\n" +
+        $"        public const string Valor = \"{secreto}\";\n        public const bool Desarrollo = false;\n    }}\n}}\n");
+    if (!OperatingSystem.IsWindows()) File.SetUnixFileMode(rutaSecreto, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+    Console.WriteLine("Secreto creado en " + rutaSecreto);
+    Console.WriteLine("Vuelva a ejecutar el comando para que el programa lo use.");
     return 0;
+}
+
+bool sinSecreto = LicenciaSecreto.Desarrollo;
+if (sinSecreto)
+{
+    Console.WriteLine("Todavía no hay un secreto de licencias. Ejecute primero:  dotnet run -- --crear-secreto");
+    Console.WriteLine("(y después vuelva a ejecutar dotnet run).");
+    return 1;
 }
 
 const string Direccion = "http://127.0.0.1:5098";
@@ -47,36 +57,27 @@ app.MapGet("/api/registro", () => { lock (cerrojo) return Results.Json(Leer()); 
 app.MapPost("/api/generar", (Solicitud s) =>
 {
     string codigo = Base32.Normalizar(s.CodigoInstalacion);
-    if (codigo.Length != 12) return Results.BadRequest(new { error = "El código de instalación debe tener 12 caracteres (XXXX-XXXX-XXXX)." });
+    if (codigo.Length != LicenciaNucleo.LongitudCodigo) return Results.BadRequest(new { error = "El código del equipo debe tener 12 caracteres (XXXX-XXXX-XXXX)." });
     if (string.IsNullOrWhiteSpace(s.Cliente)) return Results.BadRequest(new { error = "Escriba el nombre del cliente." });
 
-    string vence = "0";
-    if (!string.IsNullOrWhiteSpace(s.Vence))
-    {
-        if (!DateTime.TryParse(s.Vence, out var d)) return Results.BadRequest(new { error = "La fecha de vencimiento no es válida." });
-        vence = d.ToString("yyyyMMdd");
-    }
-
-    byte[] firma = rsa.SignData(LicenciaNucleo.Datos(codigo, vence), HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-    string clave = LicenciaNucleo.ArmarClave(vence, firma);
-
-    // Comprobación con el MISMO código que usa el programa: si la clave pública del programa
-    // no corresponde a esta llave privada, se avisa aquí y no en la tienda del cliente.
-    if (!LicenciaNucleo.Verificar(codigo, clave, out _, out _))
-        return Results.BadRequest(new { error = "La clave pública del programa no coincide con esta llave privada. Ejecute 'dotnet run -- --publica' y actualice LicenciaNucleo.cs." });
+    string clave = LicenciaNucleo.GenerarClave(codigo, LicenciaSecreto.Valor);
+    // Comprobación con el MISMO código que usa el programa
+    if (!LicenciaNucleo.Verificar(codigo, clave, out _)) return Results.BadRequest(new { error = "Error interno: la clave generada no se verifica." });
 
     lock (cerrojo)
     {
         var lista = Leer();
+        var existente = lista.FirstOrDefault(x => Base32.Normalizar(x.CodigoInstalacion) == codigo);
+        if (existente != null) return Results.Json(new { existente.Id, existente.Cliente, existente.CodigoInstalacion, existente.Clave, repetido = true });
         var entrada = new Entrada
         {
             Id = lista.Count == 0 ? 1 : lista.Max(x => x.Id) + 1,
             Cliente = s.Cliente.Trim(), Telefono = (s.Telefono ?? "").Trim(), Notas = (s.Notas ?? "").Trim(),
-            CodigoInstalacion = Base32.Agrupar(codigo), Vence = vence == "0" ? "" : vence, Clave = clave, Fecha = DateTime.Now
+            CodigoInstalacion = Base32.Agrupar(codigo), Clave = clave, Fecha = DateTime.Now
         };
         lista.Add(entrada);
         Guardar(lista);
-        return Results.Json(entrada);
+        return Results.Json(new { entrada.Id, entrada.Cliente, entrada.CodigoInstalacion, entrada.Clave, repetido = false });
     }
 });
 
@@ -95,7 +96,7 @@ Console.WriteLine();
 Console.WriteLine("  VentaFácil - Licencias");
 Console.WriteLine("  ----------------------");
 Console.WriteLine($"  Abra en el navegador:  {Direccion}");
-Console.WriteLine($"  Llave privada:         {rutaPrivada}   (¡respáldela!)");
+Console.WriteLine($"  Secreto:               {rutaSecreto}   (¡respáldelo!)");
 Console.WriteLine($"  Registro de clientes:  {rutaRegistro}");
 Console.WriteLine("  Para cerrar: Ctrl+C");
 Console.WriteLine();
@@ -104,17 +105,6 @@ app.Run();
 return 0;
 
 // ---------------------------------------------------------------- funciones
-
-RSA CargarOCrearClave()
-{
-    var r = RSA.Create();
-    if (File.Exists(rutaPrivada)) { r.ImportFromPem(File.ReadAllText(rutaPrivada)); return r; }
-    r = RSA.Create(2048);
-    File.WriteAllText(rutaPrivada, r.ExportPkcs8PrivateKeyPem());
-    if (!OperatingSystem.IsWindows()) File.SetUnixFileMode(rutaPrivada, UnixFileMode.UserRead | UnixFileMode.UserWrite);
-    Console.WriteLine("Se creó una llave privada nueva en " + rutaPrivada);
-    return r;
-}
 
 List<Entrada> Leer()
 {
@@ -129,48 +119,36 @@ void Guardar(List<Entrada> lista)
     File.Move(tmp, rutaRegistro, true);
 }
 
-// Prueba de punta a punta con el MISMO código del programa
+// Prueba con el MISMO código del programa
 int Probar()
 {
     int fallas = 0;
     void Revisar(string nombre, bool ok) { Console.WriteLine((ok ? "[OK]    " : "[FALLA] ") + nombre); if (!ok) fallas++; }
+    const string secreto = "secreto-de-prueba-123";
+    string equipo = "ABCD-EFGH-JKLM", otro = "ZZZZ-YYYY-XXXX";
 
-    using var par = RSA.Create(2048);
-    var pub = par.ExportParameters(false);
-    string equipo = "ABCD-EFGH-JKLM";
-    string otro = "ZZZZ-YYYY-XXXX";
+    string clave = LicenciaNucleo.GenerarClave(equipo, secreto);
+    Revisar("la clave tiene 16 caracteres en 4 grupos (XXXX-XXXX-XXXX-XXXX)", clave.Length == 19 && clave.Count(c => c == '-') == 3);
+    Revisar("la clave es siempre la misma para el mismo equipo (sirve al reinstalar)", LicenciaNucleo.GenerarClave("abcdefghjklm", secreto) == clave);
+    Revisar("la clave válida se acepta", LicenciaNucleo.Verificar(equipo, clave, secreto, out _));
+    Revisar("se acepta en minúsculas, sin guiones y con espacios", LicenciaNucleo.Verificar(equipo, " " + clave.Replace("-", "").ToLowerInvariant() + " ", secreto, out _));
+    Revisar("en otro equipo se rechaza", !LicenciaNucleo.Verificar(otro, clave, secreto, out _));
+    Revisar("equipos distintos dan claves distintas", LicenciaNucleo.GenerarClave(otro, secreto) != clave);
 
-    foreach (string vence in new[] { "0", "20991231" })
-    {
-        byte[] firma = par.SignData(LicenciaNucleo.Datos(equipo, vence), HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-        string clave = LicenciaNucleo.ArmarClave(vence, firma);
-
-        Revisar($"clave válida (vence={vence}) acepta", LicenciaNucleo.Verificar(equipo, clave, pub.Modulus!, pub.Exponent!, out var v, out _) && (vence == "0" ? v == null : v == new DateTime(2099, 12, 31)));
-        Revisar("el código se acepta con minúsculas y sin guiones", LicenciaNucleo.Verificar("abcdefghjklm", clave, pub.Modulus!, pub.Exponent!, out _, out _));
-        Revisar("la clave con saltos de línea (pegada de WhatsApp) acepta", LicenciaNucleo.Verificar(equipo, clave.Insert(30, "\r\n").Insert(90, " "), pub.Modulus!, pub.Exponent!, out _, out _));
-        Revisar("en otro equipo se rechaza", !LicenciaNucleo.Verificar(otro, clave, pub.Modulus!, pub.Exponent!, out _, out _));
-
-        string alterada = clave.Substring(0, clave.Length - 6) + (clave.EndsWith("AAAAAA") ? "BBBBBB" : "AAAAAA");
-        Revisar("clave alterada se rechaza", !LicenciaNucleo.Verificar(equipo, alterada, pub.Modulus!, pub.Exponent!, out _, out _));
-    }
-
-    // Quitar el vencimiento de una clave con vencimiento no debe funcionar
-    byte[] f2 = par.SignData(LicenciaNucleo.Datos(equipo, "20260101"), HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-    string conVence = LicenciaNucleo.ArmarClave("20260101", f2);
-    string sinVence = "VF1.0." + conVence.Split('.')[2];
-    Revisar("cambiar la fecha de vencimiento invalida la firma", !LicenciaNucleo.Verificar(equipo, sinVence, pub.Modulus!, pub.Exponent!, out _, out _));
-
-    using var otraLlave = RSA.Create(2048);
-    var pub2 = otraLlave.ExportParameters(false);
-    byte[] f3 = par.SignData(LicenciaNucleo.Datos(equipo, "0"), HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-    Revisar("firmada por otra llave se rechaza", !LicenciaNucleo.Verificar(equipo, LicenciaNucleo.ArmarClave("0", f3), pub2.Modulus!, pub2.Exponent!, out _, out _));
-    Revisar("texto basura se rechaza", !LicenciaNucleo.Verificar(equipo, "hola", pub.Modulus!, pub.Exponent!, out _, out _));
+    char[] c = clave.ToCharArray();
+    int i = clave.Length - 1; c[i] = c[i] == 'A' ? 'B' : 'A';
+    Revisar("una clave con un carácter cambiado se rechaza", !LicenciaNucleo.Verificar(equipo, new string(c), secreto, out _));
+    Revisar("una clave más corta se rechaza", !LicenciaNucleo.Verificar(equipo, clave.Substring(0, 15), secreto, out string m1) && m1.Contains("16"));
+    Revisar("con otro secreto la clave se rechaza", !LicenciaNucleo.Verificar(equipo, clave, "otro-secreto", out _));
+    Revisar("texto basura se rechaza", !LicenciaNucleo.Verificar(equipo, "hola mundo", secreto, out _));
+    Revisar("código de equipo inválido se rechaza", !LicenciaNucleo.Verificar("ABC", clave, secreto, out _));
+    Revisar("el alfabeto no usa caracteres que se confunden (0, 1, I, O)", !Base32.Codificar(RandomNumberGenerator.GetBytes(2000)).Any(ch => "01IO".Contains(ch)));
 
     Console.WriteLine(fallas == 0 ? "\nTodas las pruebas pasaron." : $"\n{fallas} prueba(s) fallaron.");
     return fallas == 0 ? 0 : 1;
 }
 
-record Solicitud(string Cliente, string Telefono, string Notas, string CodigoInstalacion, string Vence);
+record Solicitud(string Cliente, string Telefono, string Notas, string CodigoInstalacion);
 
 class Entrada
 {
@@ -179,7 +157,6 @@ class Entrada
     public string Telefono { get; set; } = "";
     public string Notas { get; set; } = "";
     public string CodigoInstalacion { get; set; } = "";
-    public string Vence { get; set; } = "";
     public string Clave { get; set; } = "";
     public DateTime Fecha { get; set; }
 }

@@ -1,34 +1,39 @@
 # Licencias de VentaFácil
 
-Licencia **permanente por computadora**. 30 días de prueba sin clave; después se pide la clave de activación.
+Licencia **permanente por computadora**. 30 días de prueba sin clave; después se pide la clave de activación (16 letras y números, `XXXX-XXXX-XXXX-XXXX`).
 
 ## Para el cliente
 1. Abre VentaFácil. Cuando le queden 7 días de prueba (o ya haya terminado) aparece la pantalla **Licencia**. También está en Administración → Configuración → **Licencia…**
 2. Te manda el **código del equipo** (`XXXX-XXXX-XXXX`) con "Copiar código".
 3. Tú le generas la clave (abajo) y se la mandas por WhatsApp.
-4. La pega en la pantalla y pulsa **Activar**. Una sola vez. Si reinstala el programa, pega la misma clave.
+4. La escribe en la pantalla y pulsa **Activar**. Una sola vez. Si reinstala el programa, escribe la misma clave (siempre es la misma para esa computadora).
 
 ## Para ti (quien vende)
+La primera vez, crea el secreto (una sola vez en la vida):
+```bash
+cd herramientas/licencias
+dotnet run -- --crear-secreto
+```
+Después, cada vez que vendas:
 ```bash
 cd herramientas/licencias
 dotnet run
 ```
-Se abre una página en el navegador (`http://127.0.0.1:5098`, solo en tu computadora):
-escribes el cliente, pegas su código del equipo y pulsas **Generar clave**. Queda registrada (quién, qué equipo, cuándo). Puedes poner una fecha de vencimiento si algún día vendes algo por suscripción (por ejemplo, el panel web).
+Se abre una página en el navegador (`http://127.0.0.1:5098`, solo en tu computadora): escribes el cliente, pegas su código del equipo y pulsas **Generar clave**. Queda registrada (quién, qué equipo, cuándo). Si el equipo ya tenía clave, te devuelve la misma.
 
-### La llave privada — importante
-- Se crea sola la primera vez en `~/.ventafacil-licencias/privada.pem`. **No está en el repositorio ni debe estarlo.**
-- **Respáldala** (USB y otra nube). Si se pierde no puedes generar claves para los programas ya vendidos; habría que cambiar la llave pública del programa y reactivar a todos.
+### El secreto — importante
+- Está en `~/.ventafacil-licencias/LicenciaSecreto.cs`. **No está en el repositorio ni debe estarlo** (ni en su historial).
+- Al compilar (`scripts/publicar_release.sh`), si ese archivo existe se incrusta en el `.exe`; si no existe, se usa uno de desarrollo y **ese `.exe` no acepta claves reales**. Publica siempre desde tu Mac.
+- **Respáldalo** (USB y otra nube). Si se pierde o se cambia, **las claves ya entregadas dejan de servir** y habría que reactivar a todos.
 - El registro de clientes está en `~/.ventafacil-licencias/registro.json`. Respáldalo también.
 
-## Cómo funciona (por qué es seguro que el código sea público)
-- La clave es una **firma RSA-2048** del código del equipo. El programa solo lleva la parte **pública**, que sirve para comprobar firmas pero no para fabricarlas.
-- Con un esquema de "secreto compartido" (como el de MediConsulta) cualquiera que descargue el `.exe` público podría sacar el secreto y fabricar claves para todos. Aquí no.
-- La clave es larga (~350 caracteres) porque una firma RSA es larga: se pega, no se teclea.
-- El código del equipo sale del `MachineGuid` de Windows: no cambia al cambiar disco o memoria; cambia si se reinstala Windows (se emite una clave nueva).
+## Cómo funciona
+- El código del equipo sale del `MachineGuid` de Windows: no cambia al cambiar disco o memoria; cambia si se reinstala Windows (entonces se emite una clave nueva).
+- La clave es `HMAC-SHA256(secreto, "VF1|" + código del equipo)` recortada a 16 caracteres. Es la misma idea que MediConsulta, con un secreto distinto.
 
-## Límites asumidos
-- Frena copiar el programa a otra computadora. No frena a quien sepa modificar el `.exe`.
+## Límites asumidos (léelos)
+- **El secreto viaja dentro del `.exe`.** Como los `.exe` de VentaFácil están en GitHub Releases (público), cualquier persona con conocimientos puede sacarlo y fabricar claves para cualquier equipo. Esto frena copiar el programa a otra computadora, no a un atacante decidido.
+- Si algún día importa más, hay dos salidas: dejar de publicar el `.exe` en un lugar público (mandarlo por WhatsApp o un enlace privado), o cambiar a una firma RSA, donde el programa solo lleva una llave pública que no sirve para fabricar claves (la clave sería más larga, ~350 caracteres, y se pegaría en lugar de teclearse).
 - Quien borre a la vez el archivo `datos\licencia.dat` y la clave de registro `HKCU\Software\VentaFacil` reinicia la prueba de 30 días.
 - Si se atrasa la fecha de la computadora más de un día, se pide corregirla.
 
@@ -36,4 +41,4 @@ escribes el cliente, pegas su código del equipo y pulsas **Generar clave**. Que
 ```bash
 cd herramientas/licencias && dotnet run -- --probar
 ```
-Prueba que una clave válida se acepta y que se rechazan las alteradas, las de otro equipo, las de otra llave, las con fecha cambiada y el texto basura.
+Prueba que la clave válida se acepta (con minúsculas, sin guiones o con espacios) y que se rechazan la de otro equipo, la alterada, la corta, la de otro secreto y el texto basura.
