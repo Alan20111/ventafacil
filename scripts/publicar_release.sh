@@ -48,12 +48,12 @@ $CAMBIOS
 
 ## Descarga
 
-- **VentaFacil.exe**: el programa en un solo archivo. Cópielo a \`C:\\VentaFacil\\\` y ábralo; los datos se guardan en la carpeta \`datos\` junto al .exe.
-- **$ZIP**: la carpeta completa (exe, bibliotecas, \`instalar.bat\` para el acceso directo y \`LEEME.txt\`). Descomprimir en \`C:\\VentaFacil\`.
+- **VentaFacil.exe**: el programa en un solo archivo. Ábralo: se instala solo en \`C:\\VentaFacil\` y crea el acceso en el escritorio. Los datos quedan en \`C:\\VentaFacil\\datos\`.
+- **$ZIP**: lo mismo en carpeta, por si prefiere copiarla a mano (\`LEEME.txt\` incluido).
 
 ## Antes de abrirlo
 
-1. Windows 7: instalar **.NET Framework 4.0 o superior** (recomendado 4.8). Windows 8, 10 y 11 ya lo traen.
+1. Windows 7: instalar **.NET Framework 4.8** (sin él no abre; Windows 8, 10 y 11 ya lo traen).
 2. Entrar con usuario \`admin\`, contraseña \`admin\` (cámbiela en F11 → Usuarios).
 3. La primera vez se abre la ventana de impresora: **Detectar automáticamente** → **F3 Imprimir prueba** → **Guardar**.
 4. Para cargar los productos de la semillera: F11 → Productos → **Importar Excel semillera**.

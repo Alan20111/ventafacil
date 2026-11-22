@@ -2,14 +2,13 @@ VENTAFACIL - PUNTO DE VENTA
 ===========================
 
 INSTALAR
-1. Copie esta carpeta a C:\VentaFacil
-2. Windows 7: necesita .NET Framework 4.0 o superior (se recomienda 4.8).
-   Windows 8, 10 y 11 ya lo traen.
-3. Doble clic en instalar.bat para crear el acceso directo en el escritorio.
-4. Abra VentaFacil. Usuario: admin   Contraseña: admin
+1. Windows 7: instale .NET Framework 4.8. Windows 8, 10 y 11 ya lo traen.
+2. Abra VentaFacil.exe. Se instala solo en C:\VentaFacil y crea el acceso
+   en el escritorio.
+3. Entre con usuario: admin   Contraseña: admin
    (CAMBIELA en F11 Administracion > Usuarios)
-5. F11 > Configuracion: datos del negocio, impresora, "Imprimir ticket de prueba"
-   y "Probar cajon".
+4. Se abre la ventana de impresora: Detectar automaticamente, Imprimir prueba, Guardar.
+5. F11 > Configuracion: datos del negocio.
 
 TECLAS
   Codigo + Enter ... agregar articulo          3*  ... cantidad 3

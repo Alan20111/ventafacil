@@ -8,7 +8,6 @@ dotnet build src/VentaFacil/VentaFacil.csproj -c Release -o publish/VentaFacil -
 cd publish/VentaFacil
 rm -f *.pdb
 rm -rf x64            # el programa corre en 32 bits (x86): funciona igual en Windows de 32 y 64 bits
-cp "$RAIZ/scripts/instalar.bat" .
 sed "s/\$/$(printf "\\r")/" "$RAIZ/docs/LEEME.txt" > LEEME.txt
 cd ..
 rm -f VentaFacil.zip && zip -qr VentaFacil.zip VentaFacil

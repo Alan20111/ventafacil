@@ -13,8 +13,8 @@ Punto de venta sencillo para Windows 7 y Windows 10/11, inspirado en **Zafirah R
 
 El programa listo para Windows está en el [último release](https://github.com/Alan20111/ventafacil/releases/latest):
 
-- **VentaFacil.exe**: un solo archivo (trae SQLite adentro). Cópielo a `C:\VentaFacil\` y ábralo.
-- **VentaFacil-vX.Y-win.zip**: la carpeta completa, con `instalar.bat` para el acceso directo y `LEEME.txt`.
+- **VentaFacil.exe**: un solo archivo. Ábralo y se instala solo en `C:\VentaFacil\`, con acceso en el escritorio. No necesita nada más, salvo .NET Framework 4.8 en Windows 7.
+- **VentaFacil-vX.Y-win.zip**: lo mismo en carpeta, por si prefiere copiarla a mano.
 
 Cada cambio al proyecto publica un release nuevo.
 

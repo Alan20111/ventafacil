@@ -16,6 +16,8 @@ namespace VentaFacil
         {
             // Primero: que se encuentre SQLite aunque se ejecute el .exe suelto
             Bibliotecas.Preparar();
+            // Antes del mutex: si se abre la copia instalada, esta termina y no choca con ella
+            if (!Instalacion.Asegurar()) return;
             Arrancar();
         }
 
