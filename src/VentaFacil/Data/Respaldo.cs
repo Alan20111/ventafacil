@@ -2,6 +2,7 @@ using System;
 using System.Data.SQLite;
 using System.IO;
 using System.Threading;
+using VentaFacil.Core;
 
 namespace VentaFacil.Data
 {
@@ -70,7 +71,24 @@ namespace VentaFacil.Data
                 // Primero se escribe completo en un temporal; solo después reemplaza al bueno.
                 if (File.Exists(fin)) File.Delete(fin);
                 File.Move(tmp, fin);
+                Exportar(fin, "VentaFacil_ultimo.db");
             }
+        }
+
+        /// <summary>
+        /// Copia el respaldo a la carpeta elegida en Configuración (p. ej. escritorio o USB).
+        /// Si la carpeta no está disponible (USB quitada), se anota en el registro y se sigue.
+        /// </summary>
+        public static void Exportar(string archivo, string nombreDestino)
+        {
+            string carpeta = Config.Actual == null ? "" : Config.Actual.CarpetaRespaldo;
+            if (string.IsNullOrEmpty(carpeta)) return;
+            try
+            {
+                Directory.CreateDirectory(carpeta);
+                File.Copy(archivo, Path.Combine(carpeta, nombreDestino), true);
+            }
+            catch (Exception ex) { Log.Error(ex, "Copia a carpeta de respaldo " + carpeta); }
         }
     }
 }

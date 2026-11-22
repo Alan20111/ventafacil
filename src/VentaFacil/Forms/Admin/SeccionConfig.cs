@@ -14,7 +14,7 @@ namespace VentaFacil.Forms.Admin
         readonly Config _c;
 
         // Negocio
-        TextBox _nombre, _direccion, _telefono, _rfc, _encabezado, _pie, _banner;
+        TextBox _nombre, _direccion, _telefono, _rfc, _encabezado, _pie, _banner, _carpetaRespaldo;
         NumericUpDown _caja;
         // Impresora
         ComboBox _impresora, _modo, _ancho, _fuente;
@@ -105,6 +105,11 @@ namespace VentaFacil.Forms.Admin
             _pie = Texto(p, "Mensaje al pie del ticket:", ref y);
             _banner = Texto(p, "Mensaje en pantalla de venta:", ref y);
             _caja = Numero(p, "Número de esta caja:", ref y, 1, 99);
+            p.Controls.Add(Ui.Etiqueta("Carpeta de respaldos:", 16, y + 4));
+            _carpetaRespaldo = Ui.Caja(220, y, 300);
+            p.Controls.Add(_carpetaRespaldo);
+            p.Controls.Add(Ui.Boton("Examinar…", 530, y - 4, 130, 36, (s, e) => ElegirCarpetaRespaldo()));
+            y += 38;
             p.Controls.Add(Ui.Etiqueta("Si tiene varias computadoras, cada una debe tener un número de caja distinto.", 16, y, null, Tema.Humo));
             return p;
         }
@@ -212,6 +217,7 @@ namespace VentaFacil.Forms.Admin
         {
             _nombre.Text = _c.NegocioNombre; _direccion.Text = _c.NegocioDireccion; _telefono.Text = _c.NegocioTelefono; _rfc.Text = _c.NegocioRfc;
             _encabezado.Text = _c.TicketEncabezado; _pie.Text = _c.TicketPie; _banner.Text = _c.Banner; _caja.Value = Limitar(_caja, _c.Caja);
+            _carpetaRespaldo.Text = _c.CarpetaRespaldo;
 
             Elegir(_impresora, string.IsNullOrEmpty(_c.Impresora) ? Automatica : _c.Impresora);
             _modo.SelectedIndex = _c.ModoImpresion == "ESCPOS" ? 1 : 0;
@@ -244,6 +250,8 @@ namespace VentaFacil.Forms.Admin
             _c.NegocioNombre = _nombre.Text.Trim(); _c.NegocioDireccion = _direccion.Text.Trim(); _c.NegocioTelefono = _telefono.Text.Trim();
             _c.NegocioRfc = _rfc.Text.Trim(); _c.TicketEncabezado = _encabezado.Text.Trim(); _c.TicketPie = _pie.Text.Trim(); _c.Banner = _banner.Text.Trim();
             _c.Caja = (int)_caja.Value;
+            _c.CarpetaRespaldo = _carpetaRespaldo.Text.Trim();
+            _c.CarpetaRespaldoRevisada = true;
 
             _c.Impresora = _impresora.SelectedItem != null && _impresora.SelectedItem.ToString() != Automatica ? _impresora.SelectedItem.ToString() : "";
             _c.ModoImpresion = _modo.SelectedIndex == 1 ? "ESCPOS" : "WINDOWS";
@@ -269,6 +277,15 @@ namespace VentaFacil.Forms.Admin
             _c.PedirFondoAlAbrir = _fondo.Checked; _c.DeclararEfectivoEnCorte = _declarar.Checked; _c.PermitirVentaSinExistencia = _sinExistencia.Checked;
             _c.CajeroPuedeCancelar = _cajeroCancela.Checked; _c.AvisarNoEncontrado = _avisar.Checked;
             return true;
+        }
+
+        void ElegirCarpetaRespaldo()
+        {
+            using (var d = new FolderBrowserDialog { Description = "Elija la carpeta para los respaldos (escritorio o memoria USB)" })
+            {
+                if (!string.IsNullOrEmpty(_carpetaRespaldo.Text)) d.SelectedPath = _carpetaRespaldo.Text;
+                if (d.ShowDialog() == DialogResult.OK) _carpetaRespaldo.Text = d.SelectedPath;
+            }
         }
 
         void Guardar()

@@ -63,6 +63,10 @@ namespace VentaFacil.Core
         public string TicketPie = "¡GRACIAS POR SU COMPRA!";
         public int Caja = 1;
 
+        // Copia de seguridad: carpeta donde se guarda una copia de la base cada vez que cambia
+        public string CarpetaRespaldo = "";        // vacío = no se copia afuera
+        public bool CarpetaRespaldoRevisada = false; // ya se preguntó en el primer arranque
+
         // Impresión
         public string Impresora = "";              // nombre de la impresora de Windows ("" = automático: la predeterminada)
         public bool ImpresoraRevisada = false;     // ya se hizo la detección del primer arranque

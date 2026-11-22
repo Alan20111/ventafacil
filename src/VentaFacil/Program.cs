@@ -24,6 +24,28 @@ namespace VentaFacil
             Arrancar();
         }
 
+        /// <summary>
+        /// Primer arranque: pregunta dónde guardar la copia de seguridad.
+        /// Por defecto, el escritorio (carpeta VentaFacil_Respaldos).
+        /// </summary>
+        static void ElegirCarpetaRespaldo()
+        {
+            if (Config.Actual.CarpetaRespaldoRevisada) return;
+            string escritorio = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "VentaFacil_Respaldos");
+            string elegida = escritorio;
+            if (!Ui.Confirmar("Primera vez: los respaldos del programa se guardarán en:\n\n" + escritorio +
+                "\n\n¿Usar esta carpeta?\n(Si elige No, podrá escoger otra, por ejemplo una memoria USB.)"))
+            {
+                using (var d = new FolderBrowserDialog { Description = "Elija la carpeta para los respaldos", SelectedPath = escritorio })
+                    if (d.ShowDialog() == DialogResult.OK) elegida = d.SelectedPath;
+            }
+            var c = Config.Actual.Copia();
+            c.CarpetaRespaldo = elegida;
+            c.CarpetaRespaldoRevisada = true;
+            c.Guardar();
+            Config.Cargar();
+        }
+
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
         static void Arrancar()
         {
@@ -52,6 +74,7 @@ namespace VentaFacil
                         Db.Inicializar();
                     }
                     Config.Cargar();
+                    ElegirCarpetaRespaldo();
                 }
                 catch (Exception ex)
                 {
@@ -70,7 +93,8 @@ namespace VentaFacil
                     string hoy = DateTime.Today.ToString("yyyyMMdd");
                     if (!File.Exists(marca) || File.ReadAllText(marca) != hoy)
                     {
-                        Db.Respaldar();
+                        string archivo = Db.Respaldar();
+                        Respaldo.Exportar(archivo, Path.GetFileName(archivo));
                         File.WriteAllText(marca, hoy);
                     }
                 }
