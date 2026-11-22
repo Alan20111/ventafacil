@@ -56,7 +56,6 @@ namespace VentaFacil
             try
             {
                 string lnk = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "VentaFacil.lnk");
-                if (File.Exists(lnk)) return;
                 Type tipo = Type.GetTypeFromProgID("WScript.Shell");
                 if (tipo == null) return;
                 object shell = Activator.CreateInstance(tipo);
@@ -64,6 +63,7 @@ namespace VentaFacil
                 Type t = acceso.GetType();
                 t.InvokeMember("TargetPath", System.Reflection.BindingFlags.SetProperty, null, acceso, new object[] { destino });
                 t.InvokeMember("WorkingDirectory", System.Reflection.BindingFlags.SetProperty, null, acceso, new object[] { Carpeta });
+                t.InvokeMember("IconLocation", System.Reflection.BindingFlags.SetProperty, null, acceso, new object[] { destino + ",0" });
                 t.InvokeMember("Description", System.Reflection.BindingFlags.SetProperty, null, acceso, new object[] { "VentaFácil - Punto de venta" });
                 t.InvokeMember("Save", System.Reflection.BindingFlags.InvokeMethod, null, acceso, null);
             }
