@@ -49,6 +49,7 @@ namespace VentaFacil.Data
         public decimal Existencia;
         public decimal Minimo;
         public bool Activo = true;
+        public bool SinBarras;            // marcado como "no lleva código de barras" (granel, verdura…)
 
         /// <summary>Precio que corresponde a la cantidad (aplica mayoreo si procede).</summary>
         public decimal PrecioPara(decimal cantidad)
@@ -70,6 +71,7 @@ namespace VentaFacil.Data
                 CostoBulto = Db.D(r, "costo_bulto"), CantBulto = Db.D(r, "cant_bulto"), Orden = Db.L(r, "orden")
             };
             try { p.Departamento = Db.S(r, "departamento"); } catch (IndexOutOfRangeException) { }
+            try { p.SinBarras = Db.B(r, "sin_barras"); } catch (IndexOutOfRangeException) { }
             return p;
         }
     }

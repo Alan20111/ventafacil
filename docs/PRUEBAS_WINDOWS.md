@@ -4,7 +4,8 @@ Hacer **antes de entregar**, en la computadora real, con la impresora y el cajó
 Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y mande una foto de la pantalla.
 
 > Lo que se probó fuera de Windows (en una Mac): claves de licencia, lectura/escritura de Excel del conteo,
-> redondeo de dinero y detección de base dañada. **Nada de lo que sigue se había probado en Windows.**
+> redondeo de dinero, detección de base dañada, y el código de barras Code 128 (contra una librería independiente) y la trama ESC/POS de las etiquetas.
+> **El dibujo de la etiqueta, su impresión real y la lectura con el lector NO se han probado: son el paso 36.** **Nada de lo que sigue se había probado en Windows.**
 
 ## A. Instalación
 | # | Qué hacer | Debe pasar |
@@ -66,4 +67,12 @@ Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y
 - Debe tener **.NET Framework 4.8** instalado (viene en Windows 10/11; en Windows 7 se instala aparte).
 - Repetir al menos los pasos 1, 6, 12, 18 y 27.
 
-Resultado: ______ de 32 pasos bien.   Fallas anotadas: ____________________________
+## H. Códigos de barras y etiquetas
+| # | Qué hacer | Debe pasar |
+|---|-----------|-----------|
+| 33 | Productos → **Códigos de barras…**; tomar 3 productos con empaque y pasar el lector | Cada código se guarda y salta al siguiente; la columna «Cód. barras» de Productos lo muestra |
+| 34 | Pasar el MISMO código en otro producto | Avisa de quién es y ofrece pasarlo; no deja duplicar |
+| 35 | En la pantalla de cobro, escanear un empaque ya asignado | Entra el producto con su precio |
+| 36 | Un producto de granel → **Etiqueta** (F5) → ver la vista previa → Imprimir; luego escanear la etiqueta impresa **con el lector** | La etiqueta sale legible (nombre, precio, barras) y el lector la lee y entra el producto |
+
+Resultado: ______ de 36 pasos bien.   Fallas anotadas: ____________________________

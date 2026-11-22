@@ -149,6 +149,13 @@ CREATE TABLE IF NOT EXISTS suspendidas (
                 }
                 Db.Exec(cn, null, "PRAGMA user_version = 2");
             }
+            if (v < 3)
+            {
+                // v3: productos que NO llevan código de barras (granel, verdura): se cobran con su código corto o por nombre
+                try { Db.Exec(cn, null, "ALTER TABLE productos ADD COLUMN sin_barras INTEGER NOT NULL DEFAULT 0"); }
+                catch (System.Data.SQLite.SQLiteException) { /* ya existe */ }
+                Db.Exec(cn, null, "PRAGMA user_version = 3");
+            }
         }
     }
 }

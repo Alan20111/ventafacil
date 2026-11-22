@@ -122,6 +122,54 @@ namespace VentaFacil.Data
             return Db.Lista("SELECT DISTINCT proveedor FROM productos WHERE proveedor<>'' ORDER BY proveedor", r => Db.S(r, "proveedor"));
         }
 
+        // ---------- códigos de barras (se guardan en el código alterno; el código corto no se toca) ----------
+
+        /// <summary>Quién tiene ese código (como código corto o como código de barras), aunque esté desactivado.</summary>
+        public static Producto QuienTieneCodigo(string codigo, long excluirId)
+        {
+            codigo = (codigo ?? "").Trim();
+            if (codigo == "") return null;
+            return Db.Lista(Base + "WHERE p.id<>@p1 AND (p.codigo=@p0 OR (p.codigo2<>'' AND p.codigo2=@p0)) LIMIT 1", Producto.De, codigo, excluirId).FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Pone el código de barras (código alterno) de un producto. Devuelve null si quedó, o el producto que ya
+        /// tenía ese código (no se asigna: un código no puede ser de dos productos).
+        /// </summary>
+        public static Producto AsignarCodigoBarras(long productoId, string codigo)
+        {
+            codigo = (codigo ?? "").Trim();
+            if (codigo == "" || codigo.Length > 40 || codigo.IndexOfAny(new[] { ' ', '\t', '\r', '\n' }) >= 0)
+                throw new ArgumentException("El código de barras no puede estar vacío, tener espacios ni pasar de 40 caracteres.");
+            var otro = QuienTieneCodigo(codigo, productoId);
+            if (otro != null) return otro;
+            Db.Exec("UPDATE productos SET codigo2=@p0, sin_barras=0, actualizado=@p1 WHERE id=@p2", codigo, Db.Ahora(), productoId);
+            Respaldo.Pedir();
+            return null;
+        }
+
+        /// <summary>Quita el código de barras del producto (vuelve a quedar solo con su código corto).</summary>
+        public static void QuitarCodigoBarras(long productoId)
+        {
+            Db.Exec("UPDATE productos SET codigo2='', actualizado=@p0 WHERE id=@p1", Db.Ahora(), productoId);
+            Respaldo.Pedir();
+        }
+
+        /// <summary>Marca (o desmarca) que el producto no lleva código de barras: deja de salir en la lista de pendientes.</summary>
+        public static void MarcarSinBarras(long productoId, bool sinBarras)
+        {
+            Db.Exec("UPDATE productos SET sin_barras=@p0, actualizado=@p1 WHERE id=@p2", sinBarras ? 1 : 0, Db.Ahora(), productoId);
+            Respaldo.Pedir();
+        }
+
+        /// <summary>Cuántos productos activos hay con código de barras, sin él pero marcados, y pendientes.</summary>
+        public static void ResumenBarras(out int conBarras, out int sinMarcar, out int marcados)
+        {
+            conBarras = Convert.ToInt32(Db.Scalar("SELECT COUNT(*) FROM productos WHERE activo=1 AND codigo2<>''"));
+            marcados = Convert.ToInt32(Db.Scalar("SELECT COUNT(*) FROM productos WHERE activo=1 AND codigo2='' AND sin_barras=1"));
+            sinMarcar = Convert.ToInt32(Db.Scalar("SELECT COUNT(*) FROM productos WHERE activo=1 AND codigo2='' AND sin_barras=0"));
+        }
+
         public static bool CodigoExiste(string codigo, long excluirId)
         {
             return Convert.ToInt64(Db.Scalar("SELECT COUNT(*) FROM productos WHERE (codigo=@p0 OR (codigo2<>'' AND codigo2=@p0)) AND id<>@p1", codigo.Trim(), excluirId)) > 0;

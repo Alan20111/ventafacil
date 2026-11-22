@@ -25,6 +25,7 @@ namespace VentaFacil.Forms.Admin
 
             _grid = AdminUtil.Grid();
             _grid.Columns.Add(Ui.Columna("codigo", "Código", 10));
+            _grid.Columns.Add(Ui.Columna("barras", "Cód. barras", 13));
             _grid.Columns.Add(Ui.Columna("descripcion", "Producto", 34));
             _grid.Columns.Add(Ui.Columna("proveedor", "Proveedor", 13));
             _grid.Columns.Add(Ui.Columna("costo", "Costo", 10, true));
@@ -54,6 +55,10 @@ namespace VentaFacil.Forms.Admin
             var impXls = AdminUtil.BotonBarra("Importar Excel semillera", (s, e) => { if (ExcelSemillera.Importar(FindForm())) Cargar(); }, 200);
             impXls.ForeColor = Tema.Verde;
             barra.Controls.Add(impXls);
+            var barras = AdminUtil.BotonBarra("Códigos de barras…", (s, e) => { using (var f = new FormAsignarCodigos()) f.ShowDialog(FindForm()); Cargar(); }, 190);
+            barras.ForeColor = Tema.Azul;
+            barra.Controls.Add(barras);
+            barra.Controls.Add(AdminUtil.BotonBarra("Etiqueta…", (s, e) => { var p = Seleccionado(); if (p == null) Ui.Aviso("Elija un producto de la lista."); else FormVistaEtiqueta.Mostrar(p); }, 120));
             barra.Controls.Add(AdminUtil.BotonBarra("Lista de costos (Excel)", (s, e) => ExcelSemillera.ExportarLista(FindForm()), 190));
             barra.Controls.Add(AdminUtil.BotonBarra("Importar CSV", (s, e) => Importar()));
             barra.Controls.Add(AdminUtil.BotonBarra("Exportar CSV", (s, e) => Exportar()));
@@ -92,7 +97,7 @@ namespace VentaFacil.Forms.Admin
                 foreach (var p in _lista)
                 {
                     string u = p.Granel ? "kg" : "pz";
-                    int i = _grid.Rows.Add(p.Codigo, p.Descripcion + (p.Granel ? "" : "  (pz)"), p.Proveedor, Fmt.Dinero(p.Costo),
+                    int i = _grid.Rows.Add(p.Codigo, p.Codigo2, p.Descripcion + (p.Granel ? "" : "  (pz)"), p.Proveedor, Fmt.Dinero(p.Costo),
                         p.PrecioMayoreo > 0 ? Fmt.Dinero(p.PrecioMayoreo) + " ≥" + Fmt.Dec(p.MayoreoDesde) + u : "",
                         p.PrecioMedio > 0 ? Fmt.Dinero(p.PrecioMedio) + " ≥" + Fmt.Dec(p.MedioDesde) + u : "",
                         Fmt.Dinero(p.Precio),

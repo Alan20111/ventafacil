@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net11.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- El mismo código del programa, no una copia -->
+    <Compile Include="..\..\src\VentaFacil\Printing\Code128.cs" Link="Compartido\Code128.cs" />
+    <Compile Include="..\..\src\VentaFacil\Printing\RasterEscPos.cs" Link="Compartido\RasterEscPos.cs" />
+    <None Include="referencias-jsbarcode.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

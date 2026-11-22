@@ -3,12 +3,20 @@ VENTAFACIL - PUNTO DE VENTA
 
 INSTALAR
 1. Windows 7: instale .NET Framework 4.8. Windows 8, 10 y 11 ya lo traen.
-2. Abra VentaFacil.exe. Se instala solo en C:\VentaFacil y crea el acceso
-   en el escritorio.
-3. Entre con usuario: admin   Contraseña: admin
+2. Abra VentaFacil.exe. Se instala solo en C:\VentaFacil y crea dos accesos
+   en el escritorio: "VentaFacil" y "VentaFacil - Reparar".
+3. La primera vez pregunta DONDE guardar los respaldos (por defecto el
+   escritorio, carpeta VentaFacil_Respaldos). Puede elegir una USB.
+4. Entre con usuario: admin   Contraseña: admin
    (CAMBIELA en F11 Administracion > Usuarios)
-4. Se abre la ventana de impresora: Detectar automaticamente, Imprimir prueba, Guardar.
-5. F11 > Configuracion: datos del negocio.
+5. Se abre la ventana de impresora: Detectar automaticamente, Imprimir prueba, Guardar.
+6. F11 > Configuracion: datos del negocio.
+
+LICENCIA
+  Tiene 30 dias de prueba. Cuando queden 7 o menos aparece la pantalla de
+  Licencia con el CODIGO DE ESTE EQUIPO: mandelo a su proveedor y escriba la
+  clave que le de (16 letras y numeros). Se activa una sola vez; si reinstala,
+  escribe la misma clave. Tambien esta en F11 > Configuracion > Licencia.
 
 TECLAS
   Codigo + Enter ... agregar articulo          3*  ... cantidad 3
@@ -21,6 +29,29 @@ TECLAS
   Ctrl+P ........... reimprimir ultimo ticket   Ctrl+D abrir cajon
   Ctrl+I ........... elegir / detectar impresora
 
+CODIGOS DE BARRAS (para escanear y cobrar)
+  F11 > Productos > "Codigos de barras...": tome un producto, pase el lector
+  por su empaque y el codigo se guarda solo y pasa al siguiente.
+    F2 saltar   F3 "sin codigo de barras"   F4 quitar codigo   F5 etiqueta
+  Lo que no trae codigo (granel, verdura): F3 lo marca, o F5 imprime una
+  etiqueta con su codigo corto para pegarla. Todos se cobran igual: se escanea
+  y sale el precio.
+
+INVENTARIO
+  F11 > Inventario > "Conteo con Excel": exporta la hoja, cuente y escriba lo
+  contado en la columna CONTADO, importela y vera los faltantes y sobrantes
+  (con su valor en pesos) ANTES de aplicar nada.
+
+SI SE VA LA LUZ O ALGO SE DANA
+  - Una venta ya cobrada no se pierde por un corte de luz.
+  - Despues de cada venta o cambio se guarda una copia en datos\respaldos
+    (ultimo.db) y otra en la carpeta de respaldos que eligio. Ademas hay un
+    respaldo cada dia (los ultimos 30) y uno en cada corte Z.
+  - Si la base se daña, al abrir el programa ofrece restaurar el ultimo
+    respaldo bueno (la dañada se guarda aparte, no se borra).
+  - Si algo raro pasa, abra "VentaFacil - Reparar" del escritorio: revisa el
+    programa, la base y los respaldos sin borrar sus datos.
+
 DATOS Y RESPALDOS
-  Los datos estan en la carpeta "datos". Se respalda solo cada dia y en
-  cada corte Z (carpeta datos\respaldos). Copie esa carpeta a una USB seguido.
+  Los datos estan en C:\VentaFacil\datos. Copie tambien su carpeta de
+  respaldos a una USB seguido.

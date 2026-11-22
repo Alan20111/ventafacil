@@ -32,7 +32,7 @@ namespace VentaFacil.Forms.Admin
             int x1 = 20, x2 = 170, y = 14, paso = 38;
             Controls.Add(Ui.Etiqueta("Código:", x1, y + 4, Tema.Negrita));
             _codigo = Ui.Caja(x2, y, 200, Tema.Mediana); Controls.Add(_codigo);
-            Controls.Add(Ui.Etiqueta("Código alterno:", x2 + 220, y + 4));
+            Controls.Add(Ui.Etiqueta("Cód. de barras:", x2 + 220, y + 4));
             _codigo2 = Ui.Caja(x2 + 340, y, 210); Controls.Add(_codigo2);
             y += paso + 2;
             Controls.Add(Ui.Etiqueta("Producto:", x1, y + 4, Tema.Negrita));
@@ -284,7 +284,7 @@ namespace VentaFacil.Forms.Admin
                 if (ProductoRepo.CodigoExiste(codigo, Producto.Id)) { Ui.Aviso("Ya existe otro producto con el código \"" + codigo + "\"."); _codigo.Focus(); _codigo.SelectAll(); return; }
                 string c2 = _codigo2.Text.Trim();
                 if (c2 != "" && (c2.Equals(codigo, StringComparison.OrdinalIgnoreCase) || ProductoRepo.CodigoExiste(c2, Producto.Id)))
-                { Ui.Aviso("El código alterno \"" + c2 + "\" ya está en uso."); _codigo2.Focus(); return; }
+                { Ui.Aviso("Ese código de barras \"" + c2 + "\" ya está en uso."); _codigo2.Focus(); return; }
 
                 var p = Producto;
                 p.Codigo = codigo;

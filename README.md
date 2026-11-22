@@ -111,6 +111,10 @@ En *F11 → Productos*:
 - Si la base se daña, el programa lo detecta al abrir y ofrece restaurar el último respaldo bueno. La base dañada se guarda aparte, no se borra.
 - El acceso **VentaFácil - Reparar** del escritorio revisa el programa, la base, los respaldos y los accesos sin borrar datos.
 
+### Códigos de barras y etiquetas
+La lista de la semillera no trae códigos de barras, así que lo importado se cobra con su **código corto** (1, 2, 3…). Para escanear: Administración → Productos → **Códigos de barras…**. Se toma el producto, se pasa el lector por su empaque y el código se guarda solo (en el *código alterno*; el código corto no se toca) y salta al siguiente. `F2` saltar · `F3` «sin código de barras» · `F4` quitar · `F5` etiqueta. Un código no puede ser de dos productos: si ya existe, avisa de quién es y ofrece pasarlo.
+Lo que no trae código (granel, verdura): **Etiqueta** imprime una tira con nombre, precio y el código corto en Code 128 por la impresora de tickets (por controlador de Windows o como imagen en modo ESC/POS, sin depender del comando de barras de la impresora).
+
 ### Conteo de inventario con Excel
 Inventario → **Conteo con Excel**: se exporta la hoja (todo o por proveedor), se llena la columna CONTADO en el negocio y se importa; antes de aplicar se ven los faltantes y sobrantes con su valor.
 
@@ -118,8 +122,8 @@ Inventario → **Conteo con Excel**: se exporta la hoja (todo o por proveedor), 
 30 días de prueba; después una clave por computadora (permanente). Se genera con `herramientas/licencias` (ver [docs/LICENCIAS.md](docs/LICENCIAS.md)).
 
 ### Pruebas
-- [docs/PRUEBAS_WINDOWS.md](docs/PRUEBAS_WINDOWS.md): 32 pasos para la laptop.
-- `dotnet run` en `herramientas/licencias -- --probar`, `herramientas/pruebas-dinero` y `herramientas/pruebas-conteo`: pruebas automáticas (se corren en Mac o Windows).
+- [docs/PRUEBAS_WINDOWS.md](docs/PRUEBAS_WINDOWS.md): 36 pasos para la laptop.
+- `dotnet run` en `herramientas/licencias -- --probar`, `herramientas/pruebas-dinero`, `herramientas/pruebas-conteo` y `herramientas/pruebas-barras` (código de barras contra una librería independiente): pruebas automáticas (se corren en Mac o Windows).
 
 ## Desarrollo
 
