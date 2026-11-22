@@ -9,6 +9,13 @@ Licencia **permanente por computadora**. 30 días de prueba sin clave; después 
 4. La escribe en la pantalla y pulsa **Activar**. Una sola vez. Si reinstala el programa, escribe la misma clave (siempre es la misma para esa computadora).
 
 ## Para ti (quien vende)
+
+### Lo normal: el portal web
+**https://licencias.alanmendez.dev** (acceso directo "Licencias" en el escritorio de la Mac). Entras con tu contraseña, eliges **VentaFácil**, pegas el código del equipo y copias la clave. Sirve desde el teléfono. Es un portal general para todos tus productos; su código está en `~/Documents/Proyectos/PortalLicencias` (ver su `LEEME.md`).
+- El secreto de VentaFácil está ahí como variable de entorno de Vercel, igual al de tu Mac. Las claves de una y otra herramienta son **idénticas** (hay pruebas que lo comprueban).
+- Los registros del portal web y de la herramienta local (abajo) son **separados**: elige uno para trabajar.
+
+### Alternativa local (sin internet)
 La primera vez, crea el secreto (una sola vez en la vida):
 ```bash
 cd herramientas/licencias
