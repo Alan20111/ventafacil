@@ -53,6 +53,7 @@ namespace VentaFacil.Forms.Admin
                 Text = "Regresar a ventas (Esc)", Width = 180, Height = 54, Font = Tema.Negrita, BackColor = Tema.Crema, ForeColor = Tema.Rojo,
                 Margin = new Padding(0, 24, 0, 0)
             };
+            Tema.Pastilla(salir);
             salir.Click += (s, e) => Close();
             menu.Controls.Add(salir);
 
@@ -67,7 +68,7 @@ namespace VentaFacil.Forms.Admin
                 Text = nombre, Width = 180, Height = 54, Font = Tema.Mediana, BackColor = Tema.Crema, ForeColor = Tema.Azul,
                 FlatStyle = FlatStyle.Flat, Margin = new Padding(0, 0, 0, 6), TextAlign = ContentAlignment.MiddleLeft, Tag = nombre
             };
-            b.FlatAppearance.BorderColor = Tema.AzulClaro;
+            Tema.Pastilla(b);
             b.Click += (s, e) => Abrir(nombre);
             _menu.Add(b);
             menu.Controls.Add(b);

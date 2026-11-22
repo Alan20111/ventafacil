@@ -40,37 +40,56 @@ namespace VentaFacil.UI
         public static readonly Font Captura = new Font(Fuente, 16f);
         public static readonly Font Mono = new Font("Consolas", 10.5f);
 
-        /// <summary>Botón en píldora: fondo crema y borde piedra; el principal va en negro.</summary>
+        /// <summary>
+        /// Botón en píldora. El borde de Windows es rectangular y se veía "cuadrado" alrededor del botón redondo,
+        /// así que aquí no se usa: el contorno redondo se dibuja a mano con la misma forma del botón.
+        /// </summary>
         public static void Pastilla(Button b, bool principal = false)
         {
             b.FlatStyle = FlatStyle.Flat;
-            b.FlatAppearance.BorderSize = 1;
-            b.FlatAppearance.BorderColor = principal ? Color.Black : Piedra;
+            b.FlatAppearance.BorderSize = 0;
             b.FlatAppearance.MouseOverBackColor = principal ? Grafito : Taupe;
             b.FlatAppearance.MouseDownBackColor = principal ? Grafito : Piedra;
             b.BackColor = principal ? Color.Black : Crema;
             b.ForeColor = principal ? Color.White : Color.Black;
             b.UseVisualStyleBackColor = false;
             b.Cursor = Cursors.Hand;
-            Redondear(b);
+            b.Paint -= DibujarContorno;
+            b.Paint += DibujarContorno;
             b.SizeChanged -= AlCambiarTamano;
             b.SizeChanged += AlCambiarTamano;
+            Redondear(b);
         }
 
         static void AlCambiarTamano(object sender, EventArgs e) { Redondear((Control)sender); }
 
-        /// <summary>Esquinas redondeadas en forma de píldora (radio = mitad de la altura).</summary>
+        /// <summary>Contorno de 1 px redondo; los botones oscuros no lo necesitan.</summary>
+        static void DibujarContorno(object sender, PaintEventArgs e)
+        {
+            var b = (Control)sender;
+            if (b.Width < 4 || b.Height < 4 || b.BackColor.GetBrightness() < 0.4f) return;
+            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            using (var pluma = new Pen(Piedra, 1f))
+            using (var forma = Forma(b.Width - 1, b.Height - 1))
+                e.Graphics.DrawPath(pluma, forma);
+        }
+
+        /// <summary>Píldora: los extremos son semicírculos (radio = mitad de la altura).</summary>
+        static System.Drawing.Drawing2D.GraphicsPath Forma(int ancho, int alto)
+        {
+            int d = Math.Min(alto, ancho);
+            var p = new System.Drawing.Drawing2D.GraphicsPath();
+            p.AddArc(0, 0, d, d, 90, 180);
+            p.AddArc(ancho - d, 0, d, d, 270, 180);
+            p.CloseFigure();
+            return p;
+        }
+
+        /// <summary>Recorta el botón a la misma píldora (sin esquinas cuadradas).</summary>
         public static void Redondear(Control c)
         {
             if (c.Width <= 2 || c.Height <= 2) return;
-            int d = Math.Min(c.Height, c.Width);
-            using (var p = new System.Drawing.Drawing2D.GraphicsPath())
-            {
-                p.AddArc(0, 0, d, d, 90, 180);
-                p.AddArc(c.Width - d - 1, 0, d, d, 270, 180);
-                p.CloseFigure();
-                c.Region = new Region(p);
-            }
+            using (var p = Forma(c.Width, c.Height)) c.Region = new Region(p);
         }
     }
 
