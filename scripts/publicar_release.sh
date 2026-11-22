@@ -2,7 +2,7 @@
 # Compila VentaFácil y lo publica como un release nuevo en GitHub
 # (v1.0 -> v1.1 -> v1.2 ...) con:
 #   - VentaFacil.exe            ejecutable suelto (trae SQLite adentro, funciona solo)
-#   - VentaFacil-vX.Y-win.zip   carpeta completa: exe, DLLs, instalar.bat y LEEME.txt
+#   - VentaFacil-vX.Y-win.zip   carpeta completa: exe, DLLs y LEEME.txt
 #
 #   scripts/publicar_release.sh "Qué cambió"         (siguiente versión)
 #   scripts/publicar_release.sh "Qué cambió" v2.0    (versión explícita)

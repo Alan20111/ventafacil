@@ -24,7 +24,7 @@ Cada cambio al proyecto publica un release nuevo.
    Para saber si ya está instalado: *Panel de control → Programas y características*, busque "Microsoft .NET Framework 4".
    Si no aparece, instale el instalador sin conexión de .NET Framework 4.8 (`ndp48-x86-x64-allos-enu.exe`, de microsoft.com). En Windows 7 necesita el Service Pack 1.
 2. Copie la carpeta `VentaFacil` a `C:\VentaFacil` (no a *Archivos de programa*, para que pueda guardar los datos ahí mismo).
-3. Haga doble clic en `instalar.bat` para crear el acceso directo en el escritorio, o abra `VentaFacil.exe` directamente.
+3. Abra `VentaFacil.exe`: se instala solo en `C:\VentaFacil` y crea el acceso en el escritorio.
 4. Entre con el usuario **admin** y la contraseña **admin**. **Cámbiela de inmediato** en *F11 Administración → Usuarios*.
 5. La primera vez se abre sola la ventana **Impresora de tickets**: detecta las impresoras instaladas en Windows, marca las de tickets y recomienda una. Pulse **F3 Imprimir prueba** y **Guardar**. Se puede volver a abrir en cualquier momento con **Ctrl+I** o en *F11 → Configuración → Impresora*.
 6. En *F11 → Configuración*, capture los datos del negocio.
