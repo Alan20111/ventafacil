@@ -54,25 +54,6 @@ namespace VentaFacil.Forms.Pos
             _titulo.Controls.Add(_lblReloj);
             _titulo.Resize += (s, e) => UbicarEncabezado();
 
-            // ---- Columna derecha de botones (como Zafirah) ----
-            var derecha = new FlowLayoutPanel { Dock = DockStyle.Right, Width = 150, FlowDirection = FlowDirection.TopDown, WrapContents = false, AutoScroll = true, Padding = new Padding(6), BackColor = Tema.AzulFondo };
-            Action<string, string, EventHandler> boton = (tecla, texto, click) =>
-                derecha.Controls.Add(new BotonF(tecla, texto, click) { Width = 132, Height = 46, Margin = new Padding(0, 0, 0, 4) });
-            boton("F2", "Buscar artículo", (s, e) => Buscar());
-            boton("F3", "Quitar artículo", (s, e) => QuitarArticulo());
-            boton("F4", "Consultar precio", (s, e) => ConsultarPrecio());
-            boton("F5", "Venta en espera", (s, e) => Espera());
-            boton("F6", "Descuento / precio", (s, e) => Descuento());
-            boton("F7", "Entradas / salidas", (s, e) => MovimientoCaja());
-            boton("F8", "Artículo varios", (s, e) => ArticuloComun());
-            boton("F9", "Cortes de caja", (s, e) => Cortes());
-            boton("F10", "Cambiar usuario", (s, e) => CambiarUsuario());
-            boton("F11", "Administración", (s, e) => Administracion());
-            boton("F12", "Cancelar ticket", (s, e) => CancelarTicket());
-            boton("Ctrl+P", "Reimprimir último", (s, e) => ReimprimirUltimo());
-            boton("Ctrl+D", "Abrir cajón", (s, e) => AbrirCajon());
-            boton("Ctrl+I", "Impresora", (s, e) => ConfigurarImpresora());
-
             // ---- Zona inferior: captura + total ----
             var abajo = new Panel { Dock = DockStyle.Bottom, Height = 150, BackColor = Tema.AzulFondo, Padding = new Padding(8) };
 
@@ -124,15 +105,115 @@ namespace VentaFacil.Forms.Pos
             };
             centro.Controls.Add(_grid);
 
+            // Orden de acople (el último que se agrega queda más arriba): centro, abajo, banner, barra de botones, menú, encabezado
+            var menu = ConstruirMenu();
+            var acciones = ConstruirBarraAcciones();
             Controls.Add(centro);
-            Controls.Add(derecha);
             Controls.Add(abajo);
             Controls.Add(_lblBanner);
+            Controls.Add(acciones);
+            Controls.Add(menu);
             Controls.Add(_titulo);
+            MainMenuStrip = menu;
 
             _reloj = new Timer { Interval = 1000 };
             _reloj.Tick += (s, e) => { _lblReloj.Text = DateTime.Now.ToString("dddd dd/MMM/yyyy  hh:mm:ss tt", new System.Globalization.CultureInfo("es-MX")); UbicarEncabezado(); };
             _reloj.Start();
+        }
+
+        // =====================================================================
+        //  Menú superior y barra de botones (todo hace lo mismo que las teclas F)
+        // =====================================================================
+        ToolStripMenuItem Opcion(string texto, string atajo, EventHandler click)
+        {
+            var i = new ToolStripMenuItem(texto) { ForeColor = Tema.Texto, Font = new Font("Segoe UI", 12f, FontStyle.Bold), Padding = new Padding(4, 7, 4, 7) };
+            if (!string.IsNullOrEmpty(atajo)) { i.ShortcutKeyDisplayString = atajo; i.ShowShortcutKeys = true; }
+            if (click != null) i.Click += click;
+            return i;
+        }
+
+        ToolStripMenuItem Desplegable(string texto, params ToolStripItem[] hijos)
+        {
+            var m = new ToolStripMenuItem(texto) { ForeColor = Color.White, Font = new Font("Segoe UI", 13f, FontStyle.Bold), Padding = new Padding(14, 8, 14, 8) };
+            m.DropDown.BackColor = Tema.Crema;
+            m.DropDownItems.AddRange(hijos);
+            return m;
+        }
+
+        MenuStrip ConstruirMenu()
+        {
+            var ms = new MenuStrip { Dock = DockStyle.Top, BackColor = Tema.AzulOscuro, ForeColor = Color.White, Renderer = new MenuRenderer(), Padding = new Padding(8, 2, 8, 2), GripStyle = ToolStripGripStyle.Hidden };
+            ms.Items.Add(Desplegable("&Venta",
+                Opcion("Cobrar", "F1  /  +", (s, e) => Cobrar()),
+                new ToolStripSeparator(),
+                Opcion("Buscar artículo", "F2", (s, e) => Buscar()),
+                Opcion("Consultar precio", "F4", (s, e) => ConsultarPrecio()),
+                Opcion("Quitar artículo", "F3", (s, e) => QuitarArticulo()),
+                Opcion("Descuento / precio", "F6", (s, e) => Descuento()),
+                Opcion("Artículo varios", "F8", (s, e) => ArticuloComun()),
+                new ToolStripSeparator(),
+                Opcion("Venta en espera", "F5", (s, e) => Espera()),
+                Opcion("Cancelar ticket", "F12", (s, e) => CancelarTicket()),
+                Opcion("Reimprimir último ticket", "Ctrl+P", (s, e) => ReimprimirUltimo())));
+            ms.Items.Add(Desplegable("&Caja",
+                Opcion("Entradas / salidas de efectivo", "F7", (s, e) => MovimientoCaja()),
+                Opcion("Cortes de caja (X y Z)", "F9", (s, e) => Cortes()),
+                new ToolStripSeparator(),
+                Opcion("Abrir cajón", "Ctrl+D", (s, e) => AbrirCajon())));
+            ms.Items.Add(Desplegable("&Productos",
+                Opcion("Catálogo de productos", "", (s, e) => Administracion("Productos")),
+                Opcion("Códigos de barras…", "", (s, e) => Administracion("Productos", "barras")),
+                Opcion("Departamentos", "", (s, e) => Administracion("Departamentos"))));
+            ms.Items.Add(Desplegable("&Inventario",
+                Opcion("Inventario  (entradas, conteo con Excel, kardex)", "", (s, e) => Administracion("Inventario"))));
+            ms.Items.Add(Desplegable("&Reportes",
+                Opcion("Reportes y exportar a Excel", "", (s, e) => Administracion("Reportes"))));
+            ms.Items.Add(Desplegable("&Sistema",
+                Opcion("Configuración del negocio", "", (s, e) => Administracion("Configuración")),
+                Opcion("Usuarios", "", (s, e) => Administracion("Usuarios")),
+                Opcion("Respaldos", "", (s, e) => Administracion("Respaldos")),
+                Opcion("Administración (todo)", "F11", (s, e) => Administracion()),
+                new ToolStripSeparator(),
+                Opcion("Impresora…", "Ctrl+I", (s, e) => ConfigurarImpresora()),
+                Opcion("Licencia…", "", (s, e) => { Licenciamiento.FormLicencia.Mostrar(Licencia.Evaluar(), true); _captura.Focus(); }),
+                Opcion("Cambiar usuario", "F10", (s, e) => CambiarUsuario()),
+                new ToolStripSeparator(),
+                Opcion("Salir del programa", "", (s, e) => Close())));
+            ms.Items.Add(Desplegable("&Ayuda",
+                Opcion("Teclas rápidas", "", (s, e) => { using (var f = new FormAyudaTeclas()) f.ShowDialog(this); _captura.Focus(); }),
+                Opcion("Acerca de VentaFácil", "", (s, e) => AcercaDe())));
+            // Al cerrar un menú, el cursor vuelve a la captura para seguir escaneando
+            ms.MenuDeactivate += (s, e) => { if (_captura != null && _captura.CanFocus) _captura.Focus(); };
+            return ms;
+        }
+
+        /// <summary>Barra de botones con lo que más se usa en el mostrador (el resto está en el menú).</summary>
+        Control ConstruirBarraAcciones()
+        {
+            var tabla = new TableLayoutPanel { Dock = DockStyle.Top, Height = 68, ColumnCount = 9, RowCount = 1, BackColor = Tema.AzulFondo, Padding = new Padding(8, 6, 8, 4) };
+            for (int i = 0; i < 9; i++) tabla.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f / 9f));
+            tabla.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
+            Action<int, string, string, EventHandler> boton = (col, tecla, texto, click) =>
+                tabla.Controls.Add(new BotonF(tecla, texto, click) { Dock = DockStyle.Fill, Margin = new Padding(3, 0, 3, 0) }, col, 0);
+            boton(0, "F2", "Buscar", (s, e) => Buscar());
+            boton(1, "F3", "Quitar", (s, e) => QuitarArticulo());
+            boton(2, "F4", "Precio", (s, e) => ConsultarPrecio());
+            boton(3, "F5", "En espera", (s, e) => Espera());
+            boton(4, "F6", "Descuento", (s, e) => Descuento());
+            boton(5, "F7", "Entr./Sal.", (s, e) => MovimientoCaja());
+            boton(6, "F8", "Varios", (s, e) => ArticuloComun());
+            boton(7, "F9", "Cortes", (s, e) => Cortes());
+            boton(8, "F12", "Cancelar", (s, e) => CancelarTicket());
+            return tabla;
+        }
+
+        void AcercaDe()
+        {
+            var v = typeof(FormVenta).Assembly.GetName().Version;
+            var l = Licencia.Evaluar();
+            string estado = l.Estado == EstadoLicencia.Activa ? "Activada" : l.Estado == EstadoLicencia.Prueba ? "Prueba: " + l.DiasRestantes + " días" : "Vencida";
+            Ui.Info("VentaFácil  " + v.Major + "." + v.Minor + "\nPunto de venta para tiendas.\n\nLicencia: " + estado + "\nDatos: " + Db.Carpeta, "Acerca de VentaFácil");
+            _captura.Focus();
         }
 
         void UbicarEncabezado()
@@ -554,11 +635,11 @@ namespace VentaFacil.Forms.Pos
             _captura.Focus();
         }
 
-        void Administracion()
+        void Administracion(string seccion = null, string accion = null)
         {
             if (_lineas.Count > 0) { Ui.Aviso("Termine la venta actual antes de entrar a Administración."); return; }
             if (Ui.AutorizarAdmin("Administración: se requiere un administrador") == null) { _captura.Focus(); return; }
-            using (var f = new Admin.FormAdmin()) f.ShowDialog(this);
+            using (var f = new Admin.FormAdmin(seccion, accion)) f.ShowDialog(this);
             Config.Cargar();
             ActualizarEncabezado();
             _captura.Focus();

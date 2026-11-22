@@ -55,7 +55,7 @@ namespace VentaFacil.Forms.Admin
             var impXls = AdminUtil.BotonBarra("Importar Excel semillera", (s, e) => { if (ExcelSemillera.Importar(FindForm())) Cargar(); }, 200);
             impXls.ForeColor = Tema.Verde;
             barra.Controls.Add(impXls);
-            var barras = AdminUtil.BotonBarra("Códigos de barras…", (s, e) => { using (var f = new FormAsignarCodigos()) f.ShowDialog(FindForm()); Cargar(); }, 190);
+            var barras = AdminUtil.BotonBarra("Códigos de barras…", (s, e) => CodigosDeBarras(), 190);
             barras.ForeColor = Tema.Azul;
             barra.Controls.Add(barras);
             barra.Controls.Add(AdminUtil.BotonBarra("Etiqueta…", (s, e) => { var p = Seleccionado(); if (p == null) Ui.Aviso("Elija un producto de la lista."); else FormVistaEtiqueta.Mostrar(p); }, 120));
@@ -109,6 +109,13 @@ namespace VentaFacil.Forms.Admin
                 _conteo.Text = _lista.Count >= 1000 ? "Mostrando los primeros 1000; escriba para filtrar." : _lista.Count + " productos";
             }
             catch (Exception ex) { Ui.Error(ex, "Cargar productos"); }
+        }
+
+        /// <summary>Abre la asignación rápida de códigos de barras y, al cerrar, recarga la lista.</summary>
+        public void CodigosDeBarras()
+        {
+            using (var f = new FormAsignarCodigos()) f.ShowDialog(FindForm());
+            Cargar();
         }
 
         Producto Seleccionado()

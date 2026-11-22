@@ -18,6 +18,12 @@ LICENCIA
   clave que le de (16 letras y numeros). Se activa una sola vez; si reinstala,
   escribe la misma clave. Tambien esta en F11 > Configuracion > Licencia.
 
+MENU DE ARRIBA
+  Arriba de la pantalla de venta hay un menu (Venta, Caja, Productos,
+  Inventario, Reportes, Sistema, Ayuda) y una barra de botones con lo que mas
+  se usa. Todo se puede hacer con el raton o con las teclas; las teclas son
+  solo para ir mas rapido. Ayuda > Teclas rapidas muestra la lista.
+
 TECLAS
   Codigo + Enter ... agregar articulo          3*  ... cantidad 3
   + o F1 ........... COBRAR                     F2 ... buscar

@@ -5,7 +5,7 @@ Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y
 
 > Lo que se probó fuera de Windows (en una Mac): claves de licencia, lectura/escritura de Excel del conteo,
 > redondeo de dinero, detección de base dañada, y el código de barras Code 128 (contra una librería independiente) y la trama ESC/POS de las etiquetas.
-> **El dibujo de la etiqueta, su impresión real y la lectura con el lector NO se han probado: son el paso 36.** **Nada de lo que sigue se había probado en Windows.**
+> **El dibujo de la etiqueta, su impresión real y la lectura con el lector NO se han probado: son el paso 36. Tampoco se ha visto en pantalla el menú superior (pasos 37 a 40).** **Nada de lo que sigue se había probado en Windows.**
 
 ## A. Instalación
 | # | Qué hacer | Debe pasar |
@@ -75,4 +75,12 @@ Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y
 | 35 | En la pantalla de cobro, escanear un empaque ya asignado | Entra el producto con su precio |
 | 36 | Un producto de granel → **Etiqueta** (F5) → ver la vista previa → Imprimir; luego escanear la etiqueta impresa **con el lector** | La etiqueta sale legible (nombre, precio, barras) y el lector la lee y entra el producto |
 
-Resultado: ______ de 36 pasos bien.   Fallas anotadas: ____________________________
+## I. Menú superior
+| # | Qué hacer | Debe pasar |
+|---|-----------|-----------|
+| 37 | Abrir la pantalla de venta | Se ven el encabezado azul, el **menú** (Venta, Caja, Productos, Inventario, Reportes, Sistema, Ayuda) y la barra de 9 botones; la lista de venta ocupa todo el ancho; nada se encima ni se corta con 1366x768 |
+| 38 | Abrir cada menú con el ratón y con Alt+V, Alt+C… | Se despliegan legibles (la opción seleccionada se ve en blanco sobre azul) y muestran su tecla a la derecha |
+| 39 | Hacer una venta usando solo el menú (Venta → Buscar artículo, Cobrar) y otra solo con la barra de botones | Funcionan igual que con las teclas; al cerrar un menú el cursor vuelve a la captura y el lector sigue escaneando |
+| 40 | Pulsar **F10** con la caja abierta; luego Productos → Códigos de barras… | F10 cambia de usuario **sin** abrir el menú de Windows; la opción de Productos abre la Administración directo en la asignación de códigos |
+
+Resultado: ______ de 40 pasos bien.   Fallas anotadas: ____________________________

@@ -15,8 +15,13 @@ namespace VentaFacil.Forms.Admin
         readonly Dictionary<string, Func<Control>> _secciones = new Dictionary<string, Func<Control>>();
         Control _actual;
 
-        public FormAdmin()
+        readonly string _seccionInicial, _accionInicial;
+
+        /// <summary>seccion: Productos, Departamentos, Inventario, Reportes, Usuarios, Configuración o Respaldos. accion: "barras" abre la asignación de códigos de barras.</summary>
+        public FormAdmin(string seccion = null, string accion = null)
         {
+            _seccionInicial = seccion;
+            _accionInicial = accion;
             Text = "VentaFácil - Administración";
             StartPosition = FormStartPosition.CenterScreen;
             MinimumSize = new Size(1024, 700);
@@ -57,7 +62,15 @@ namespace VentaFacil.Forms.Admin
             salir.Click += (s, e) => Close();
             menu.Controls.Add(salir);
 
-            Shown += (s, e) => Abrir("Productos");
+            Shown += (s, e) =>
+            {
+                Abrir(_seccionInicial != null && _secciones.ContainsKey(_seccionInicial) ? _seccionInicial : "Productos");
+                if (_accionInicial == "barras")
+                {
+                    var productos = _actual as SeccionProductos;
+                    if (productos != null) productos.CodigosDeBarras();
+                }
+            };
         }
 
         void Agregar(FlowLayoutPanel menu, string nombre, Func<Control> crear)
