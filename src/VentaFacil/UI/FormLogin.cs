@@ -35,24 +35,31 @@ namespace VentaFacil.UI
             }
             else y += 10;
 
-            Controls.Add(Ui.Etiqueta("Usuario:", 24, y + 6, Tema.Mediana));
-            _usuario = Ui.Caja(140, y, 250, Tema.Captura);
+            Controls.Add(Ui.Etiqueta("Usuario:", 24, y + 4, Tema.Mediana));
+            _usuario = Ui.Caja(140, y, 250, Tema.Mediana);
             Controls.Add(_usuario);
-            y += 52;
-            Controls.Add(Ui.Etiqueta("Contraseña:", 24, y + 6, Tema.Mediana));
-            _clave = Ui.Caja(140, y, 250, Tema.Captura);
+            y += 48;
+            Controls.Add(Ui.Etiqueta("Contraseña:", 24, y + 4, Tema.Mediana));
+            _clave = Ui.Caja(140, y, 250, Tema.Mediana);
             _clave.UseSystemPasswordChar = true;
             Controls.Add(_clave);
-            y += 60;
+            y += 56;
 
-            var ok = Ui.Boton("Entrar (Enter)", 140, y, 130, 40, (s, e) => Entrar());
+            var ok = Ui.Boton("Entrar (Enter)", 140, y, 130, 40, (s, e) => Entrar(), true);
             var no = Ui.Boton(autorizacion ? "Cancelar" : "Salir", 280, y, 110, 40, (s, e) => { DialogResult = DialogResult.Cancel; Close(); });
             Controls.Add(ok); Controls.Add(no);
             AcceptButton = ok; CancelButton = no;
 
             _usuario.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; _clave.Focus(); } };
-            if (!autorizacion && UsuarioRepo.Validar("admin", "admin") != null)
-                Controls.Add(Ui.Etiqueta("Primera vez: usuario admin, contraseña admin", 24, ClientSize.Height - 26, null, Tema.Humo));
+            if (!autorizacion)
+            {
+                if (UsuarioRepo.Validar("admin", "admin") != null)
+                    Controls.Add(Ui.Etiqueta("Primera vez: usuario admin, contraseña admin", 20, ClientSize.Height - 26, null, Tema.Humo));
+                var marca = Ui.Etiqueta("alanmendez.dev", ClientSize.Width - 105, ClientSize.Height - 24, new Font("Segoe UI", 8.5f), Color.FromArgb(130, 145, 168));
+                marca.Cursor = Cursors.Hand;
+                marca.Click += (s, e) => { try { System.Diagnostics.Process.Start("https://alanmendez.dev"); } catch { } };
+                Controls.Add(marca);
+            }
             Shown += (s, e) => _usuario.Focus();
         }
 

@@ -45,12 +45,11 @@ namespace VentaFacil.Forms.Admin
             Controls.Add(tabs);
 
             var barra = AdminUtil.Barra();
-            var guardar = AdminUtil.BotonBarra("Guardar cambios", (s, e) => Guardar(), 170);
-            Tema.Pastilla(guardar, true);
+            var guardar = AdminUtil.BotonBarra("Guardar cambios", (s, e) => Guardar(), 140, true);
             barra.Controls.Add(guardar);
-            barra.Controls.Add(AdminUtil.BotonBarra("Imprimir ticket de prueba", (s, e) => Prueba(), 220));
-            barra.Controls.Add(AdminUtil.BotonBarra("Probar cajón", (s, e) => ProbarCajon(), 140));
-            barra.Controls.Add(AdminUtil.BotonBarra("Licencia…", (s, e) => VentaFacil.Forms.Licenciamiento.FormLicencia.Mostrar(Licencia.Evaluar(), true), 130));
+            barra.Controls.Add(AdminUtil.BotonBarra("Ticket prueba", (s, e) => Prueba(), 130));
+            barra.Controls.Add(AdminUtil.BotonBarra("Probar cajón", (s, e) => ProbarCajon(), 115));
+            barra.Controls.Add(AdminUtil.BotonBarra("Licencia", (s, e) => VentaFacil.Forms.Licenciamiento.FormLicencia.Mostrar(Licencia.Evaluar(), true), 95));
             Controls.Add(barra);
             Controls.Add(AdminUtil.TituloSeccion("Configuración"));
             Llenar();

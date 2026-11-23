@@ -22,9 +22,9 @@ namespace VentaFacil.Forms.Admin
             Controls.Add(_grid);
 
             var barra = AdminUtil.Barra();
-            barra.Controls.Add(AdminUtil.BotonBarra("F3 Nuevo", (s, e) => Nuevo()));
-            barra.Controls.Add(AdminUtil.BotonBarra("F4 Renombrar", (s, e) => Renombrar()));
-            barra.Controls.Add(AdminUtil.BotonBarra("F5 Eliminar", (s, e) => Eliminar()));
+            barra.Controls.Add(AdminUtil.BotonBarra("F3 Nuevo", (s, e) => Nuevo(), 95));
+            barra.Controls.Add(AdminUtil.BotonBarra("F4 Renombrar", (s, e) => Renombrar(), 115));
+            barra.Controls.Add(AdminUtil.BotonBarra("F5 Eliminar", (s, e) => Eliminar(), 95));
             Controls.Add(barra);
             Controls.Add(AdminUtil.TituloSeccion("Departamentos"));
             Load += (s, e) => { Cargar(); _grid.Focus(); };

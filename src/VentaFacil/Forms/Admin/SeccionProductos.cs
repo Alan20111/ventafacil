@@ -38,35 +38,37 @@ namespace VentaFacil.Forms.Admin
             _grid.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; Modificar(); } };
             Controls.Add(_grid);
 
-            var filtro = new Panel { Dock = DockStyle.Top, Height = 50, BackColor = Tema.Crema };
-            filtro.Controls.Add(Ui.Etiqueta("Buscar:", 10, 14, Tema.Negrita));
-            _buscar = Ui.Caja(80, 10, 380, Tema.Mediana);
+            var filtro = new Panel { Dock = DockStyle.Top, Height = 46, BackColor = Tema.Crema };
+            filtro.Controls.Add(Ui.Etiqueta("Buscar:", 10, 12, Tema.Negrita));
+            _buscar = Ui.Caja(75, 8, 300, Tema.Mediana);
             filtro.Controls.Add(_buscar);
-            _inactivos = new CheckBox { Text = "Ver desactivados", Left = 476, Top = 14, AutoSize = true };
+            _inactivos = new CheckBox { Text = "Ver desactivados", Left = 390, Top = 12, AutoSize = true, Font = Tema.Normal };
             filtro.Controls.Add(_inactivos);
-            _conteo = Ui.Etiqueta("", 620, 14, null, Tema.Humo);
+            _conteo = Ui.Etiqueta("", 535, 12, null, Tema.Humo);
             filtro.Controls.Add(_conteo);
             Controls.Add(filtro);
 
             var barra = AdminUtil.Barra();
-            barra.Controls.Add(AdminUtil.BotonBarra("F3 Nuevo", (s, e) => Nuevo()));
-            barra.Controls.Add(AdminUtil.BotonBarra("F4 Modificar", (s, e) => Modificar()));
-            barra.Controls.Add(AdminUtil.BotonBarra("F5 Eliminar", (s, e) => Eliminar()));
-            var impXls = AdminUtil.BotonBarra("Importar Excel semillera", (s, e) => { if (ExcelSemillera.Importar(FindForm())) Cargar(); }, 200);
+            barra.Controls.Add(AdminUtil.BotonBarra("F3 Nuevo", (s, e) => Nuevo(), 95));
+            barra.Controls.Add(AdminUtil.BotonBarra("F4 Modificar", (s, e) => Modificar(), 105));
+            barra.Controls.Add(AdminUtil.BotonBarra("F5 Eliminar", (s, e) => Eliminar(), 95));
+            var impXls = AdminUtil.BotonBarra("Importar Excel", (s, e) => { if (ExcelSemillera.Importar(FindForm())) Cargar(); }, 120);
             impXls.ForeColor = Tema.Verde;
             barra.Controls.Add(impXls);
-            var barras = AdminUtil.BotonBarra("Códigos de barras…", (s, e) => CodigosDeBarras(), 190);
+            var barras = AdminUtil.BotonBarra("Códigos barras", (s, e) => CodigosDeBarras(), 115);
             barras.ForeColor = Tema.Azul;
             barra.Controls.Add(barras);
-            var zafirah = AdminUtil.BotonBarra("      Importar de Zafirah…", (s, e) => ImportarZafirah(), 250);
-            zafirah.Image = Iconos.Importar(24, Tema.Azul);
-            zafirah.ImageAlign = ContentAlignment.MiddleLeft;
-            zafirah.ForeColor = Tema.Azul;
+            barra.Controls.Add(AdminUtil.BotonBarra("Etiqueta", (s, e) => { var p = Seleccionado(); if (p == null) Ui.Aviso("Elija un producto de la lista."); else FormVistaEtiqueta.Mostrar(p); }, 85));
+            barra.Controls.Add(AdminUtil.BotonBarra("Lista costos", (s, e) => ExcelSemillera.ExportarLista(FindForm()), 105));
+            barra.Controls.Add(AdminUtil.BotonBarra("Importar CSV", (s, e) => Importar(), 105));
+            barra.Controls.Add(AdminUtil.BotonBarra("Exportar CSV", (s, e) => Exportar(), 105));
+            // Botón discreto tipo icono para importar desde Zafirah sin llamar la atención
+            var zafirah = AdminUtil.BotonBarra("", (s, e) => ImportarZafirah(), 38);
+            zafirah.Image = Iconos.Importar(18, Tema.Humo);
+            zafirah.ImageAlign = ContentAlignment.MiddleCenter;
+            var ttZafirah = new ToolTip();
+            ttZafirah.SetToolTip(zafirah, "Importar desde Zafirah (.BK o SQL Server)");
             barra.Controls.Add(zafirah);
-            barra.Controls.Add(AdminUtil.BotonBarra("Etiqueta…", (s, e) => { var p = Seleccionado(); if (p == null) Ui.Aviso("Elija un producto de la lista."); else FormVistaEtiqueta.Mostrar(p); }, 120));
-            barra.Controls.Add(AdminUtil.BotonBarra("Lista de costos (Excel)", (s, e) => ExcelSemillera.ExportarLista(FindForm()), 190));
-            barra.Controls.Add(AdminUtil.BotonBarra("Importar CSV", (s, e) => Importar()));
-            barra.Controls.Add(AdminUtil.BotonBarra("Exportar CSV", (s, e) => Exportar()));
             Controls.Add(barra);
             Controls.Add(AdminUtil.TituloSeccion("Productos"));
 

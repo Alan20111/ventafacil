@@ -12,3 +12,5 @@ obj/
 .vs/
 publish/
 *.db
+.nuget/
+.local/

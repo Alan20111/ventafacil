@@ -29,17 +29,17 @@ namespace VentaFacil.Forms.Admin
                 "Recomendación: una vez por semana respalde también a una memoria USB.", 16, y, null, Tema.Humo));
             y += 50;
 
-            p.Controls.Add(Ui.Boton("Respaldar ahora", 16, y, 220, 44, (s, e) => Respaldar(null)));
-            p.Controls.Add(Ui.Boton("Respaldar a USB / carpeta…", 246, y, 240, 44, (s, e) => RespaldarA()));
-            p.Controls.Add(Ui.Boton("Abrir carpeta de datos", 496, y, 200, 44, (s, e) => AbrirCarpeta()));
-            y += 70;
+            p.Controls.Add(Ui.Boton("Respaldar ahora", 16, y, 180, 42, (s, e) => Respaldar(null), true));
+            p.Controls.Add(Ui.Boton("Respaldar a USB…", 206, y, 180, 42, (s, e) => RespaldarA()));
+            p.Controls.Add(Ui.Boton("Carpeta de datos", 396, y, 170, 42, (s, e) => AbrirCarpeta()));
+            y += 66;
 
             p.Controls.Add(Ui.Etiqueta("Restaurar", 16, y, Tema.Mediana, Tema.Rojo));
-            y += 30;
-            p.Controls.Add(Ui.Etiqueta("Reemplaza TODOS los datos actuales por los de un respaldo. Úselo sólo si se dañó la información o cambió de computadora.", 16, y, null, Tema.Humo));
             y += 28;
-            var restaurar = Ui.Boton("Restaurar respaldo…", 16, y, 220, 44, (s, e) => Restaurar());
-            restaurar.ForeColor = Tema.Rojo;
+            p.Controls.Add(Ui.Etiqueta("Reemplaza TODOS los datos actuales por los de un respaldo. Úselo sólo si se dañó la información o cambió de computadora.", 16, y, null, Tema.Humo));
+            y += 26;
+            var restaurar = Ui.Boton("Restaurar respaldo…", 16, y, 200, 42, (s, e) => Restaurar());
+            Tema.BotonPeligro(restaurar);
             p.Controls.Add(restaurar);
         }
 

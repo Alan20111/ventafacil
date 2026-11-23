@@ -125,7 +125,29 @@ namespace VentaFacil.Forms.Pos
             foreach (var m in new[] { new[] { "F1", "Caja" }, new[] { "F2", "Turno" }, new[] { "F3", "Catálogo" }, new[] { "F4", "Almacén" }, new[] { "F5", "Resultados" }, new[] { "F6", "Ajustes" } })
                 _barraMod.Agregar(m[0], m[1]);
             _barraMod.Elegido += IrAModulo;
+
+            // Marca de agua discreta y elegante en la base del programa: alanmendez.dev
+            var pie = new Panel { Dock = DockStyle.Bottom, Height = 22, BackColor = Tema.Crema };
+            pie.Paint += (s, e) =>
+            {
+                using (var pen = new Pen(Tema.Piedra, 1f))
+                    e.Graphics.DrawLine(pen, 0, 0, pie.Width, 0);
+            };
+            var lblMarca = new Label
+            {
+                Text = "alanmendez.dev",
+                AutoSize = true,
+                Font = new Font("Segoe UI", 9f, FontStyle.Regular),
+                ForeColor = Color.FromArgb(120, 135, 155),
+                BackColor = Color.Transparent,
+                Cursor = Cursors.Hand
+            };
+            lblMarca.Click += (s, e) => { try { System.Diagnostics.Process.Start("https://alanmendez.dev"); } catch { } };
+            pie.Controls.Add(lblMarca);
+            pie.Resize += (s, e) => { lblMarca.Left = (pie.ClientSize.Width - lblMarca.Width) / 2; lblMarca.Top = 2; };
+
             Controls.Add(_host);
+            Controls.Add(pie);
             Controls.Add(_barraMod);
             Controls.Add(_titulo);
 
@@ -181,7 +203,7 @@ namespace VentaFacil.Forms.Pos
             switch (n)
             {
                 case 1:
-                    m = new ModuloVista("Turno", "turno actual, dinero en caja y cortes");
+                    m = new ModuloVista("Turno", "turno, dinero y cortes");
                     m.AgregarVista("Resumen del turno", VistaTurno);
                     m.AgregarAccion("Entradas / salidas", Y(MovimientoCaja));
                     m.AgregarAccion("Cortes X / Z", Y(Cortes));
@@ -190,22 +212,21 @@ namespace VentaFacil.Forms.Pos
                     m.AgregarAccion("Cambiar usuario (F10)", Y(CambiarUsuario));
                     break;
                 case 2:
-                    m = new ModuloVista("Catálogo", "productos, precios, códigos de barras e importación");
+                    m = new ModuloVista("Catálogo", "productos, precios y códigos");
                     m.AgregarVista("Productos", () => new Admin.SeccionProductos());
                     m.AgregarVista("Grupos", () => new Admin.SeccionDepartamentos());
                     m.AgregarAccion("Códigos de barras", () => { m.Mostrar(0); var sp = m.Actual as Admin.SeccionProductos; if (sp != null) sp.CodigosDeBarras(); });
-                    m.AgregarAccion("Importar Zafirah / .BK", () => { m.Mostrar(0); var sp = m.Actual as Admin.SeccionProductos; if (sp != null) { sp.ImportarZafirah(); m.Recargar(); } });
                     break;
                 case 3:
-                    m = new ModuloVista("Almacén", "existencias, entradas, conteo y movimientos");
+                    m = new ModuloVista("Almacén", "existencias, entradas y conteo");
                     m.AgregarVista("Inventario", () => new Admin.SeccionInventario());
                     break;
                 case 4:
-                    m = new ModuloVista("Resultados", "ventas y reportes (se exportan a Excel)");
+                    m = new ModuloVista("Resultados", "ventas y reportes");
                     m.AgregarVista("Reportes", () => new Admin.SeccionReportes());
                     break;
                 default:
-                    m = new ModuloVista("Ajustes", "negocio, usuarios, respaldos, impresora y licencia");
+                    m = new ModuloVista("Ajustes", "configuración del sistema");
                     m.AgregarVista("Negocio", () => new Admin.SeccionConfig());
                     m.AgregarVista("Usuarios", () => new Admin.SeccionUsuarios());
                     m.AgregarVista("Respaldos", () => new Admin.SeccionRespaldos());

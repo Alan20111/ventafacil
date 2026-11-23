@@ -245,9 +245,9 @@ namespace VentaFacil.Forms.Pos
                 return bt;
             };
             var efectivo = b("F2 / Enter\nEfectivo", "EFECTIVO");
-            efectivo.BackColor = Tema.Azul; efectivo.ForeColor = Color.White;
+            Tema.Pastilla(efectivo, true);
             b("F3\nTarjeta", "TARJETA");
-            b("F4\nTransferencia", "TRANSFERENCIA");
+            b("F4\nTransfer.", "TRANSFERENCIA");
             b("F5\nVales", "VALES");
             Controls.Add(Ui.Etiqueta("Esc = regresar a la venta", 16, 386, null, Tema.Humo));
 
@@ -446,15 +446,15 @@ namespace VentaFacil.Forms.Pos
 
         public FormMovimiento() : base("F7 - Entradas y salidas de efectivo", 480, 290)
         {
-            _salida = new RadioButton { Text = "F3  SALIDA / retiro (pago a proveedor, gasto, retiro)", Left = 16, Top = 14, Width = 450, Checked = true, Font = Tema.Negrita };
-            _entrada = new RadioButton { Text = "F2  ENTRADA (más cambio / fondo)", Left = 16, Top = 42, Width = 450, Font = Tema.Negrita };
+            _salida = new RadioButton { Text = "F3 Salida / Retiro (gasto o proveedor)", Left = 16, Top = 14, Width = 440, Checked = true, Font = Tema.Negrita };
+            _entrada = new RadioButton { Text = "F2 Entrada de efectivo (fondo o cambio)", Left = 16, Top = 42, Width = 440, Font = Tema.Negrita };
             Controls.Add(_salida); Controls.Add(_entrada);
             Controls.Add(Ui.Etiqueta("Importe:", 16, 90, Tema.Mediana));
             _monto = Ui.Caja(130, 84, 330, Tema.Captura); _monto.TextAlign = HorizontalAlignment.Right; Controls.Add(_monto);
             Controls.Add(Ui.Etiqueta("Concepto:", 16, 146, Tema.Mediana));
-            _concepto = Ui.Caja(130, 142, 330); Controls.Add(_concepto);
-            var ok = Ui.Boton("Guardar (Enter)", 196, 226, 130, 44, (s, e) => Aceptar());
-            var no = Ui.Boton("Cancelar (Esc)", 332, 226, 130, 44, (s, e) => { DialogResult = DialogResult.Cancel; });
+            _concepto = Ui.Caja(130, 142, 330, Tema.Mediana); Controls.Add(_concepto);
+            var ok = Ui.Boton("Guardar (Enter)", 196, 224, 130, 42, (s, e) => Aceptar(), true);
+            var no = Ui.Boton("Cancelar (Esc)", 332, 224, 130, 42, (s, e) => { DialogResult = DialogResult.Cancel; });
             Controls.Add(ok); Controls.Add(no);
             AcceptButton = ok; CancelButton = no;
             KeyDown += (s, e) =>

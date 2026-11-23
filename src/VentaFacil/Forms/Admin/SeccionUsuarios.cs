@@ -25,9 +25,9 @@ namespace VentaFacil.Forms.Admin
             Controls.Add(_grid);
 
             var barra = AdminUtil.Barra();
-            barra.Controls.Add(AdminUtil.BotonBarra("F3 Nuevo", (s, e) => Nuevo()));
-            barra.Controls.Add(AdminUtil.BotonBarra("F4 Modificar", (s, e) => Modificar()));
-            barra.Controls.Add(AdminUtil.BotonBarra("Cambiar mi contraseña", (s, e) => MiClave(), 190));
+            barra.Controls.Add(AdminUtil.BotonBarra("F3 Nuevo", (s, e) => Nuevo(), 95));
+            barra.Controls.Add(AdminUtil.BotonBarra("F4 Modificar", (s, e) => Modificar(), 105));
+            barra.Controls.Add(AdminUtil.BotonBarra("Mi contraseña", (s, e) => MiClave(), 125));
             Controls.Add(barra);
             Controls.Add(AdminUtil.TituloSeccion("Usuarios"));
             Load += (s, e) => { Cargar(); _grid.Focus(); };

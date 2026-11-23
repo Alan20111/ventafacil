@@ -23,7 +23,7 @@
   </ItemGroup>
   <!-- SQLite va también DENTRO del .exe: así el VentaFacil.exe suelto funciona sin los demás archivos -->
   <PropertyGroup>
-    <SqliteStub>$(NuGetPackageRoot)stub.system.data.sqlite.core.netframework/1.0.118/</SqliteStub>
+    <SqliteStub>$([MSBuild]::EnsureTrailingSlash('$(NuGetPackageRoot)'))stub.system.data.sqlite.core.netframework/1.0.118/</SqliteStub>
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="$(SqliteStub)lib/net40/System.Data.SQLite.dll" LogicalName="lib.System.Data.SQLite.dll" Visible="false" />

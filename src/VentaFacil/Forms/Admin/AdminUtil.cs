@@ -21,10 +21,10 @@ namespace VentaFacil.Forms.Admin
             };
         }
 
-        public static Button BotonBarra(string texto, EventHandler click, int ancho = 130)
+        public static Button BotonBarra(string texto, EventHandler click, int ancho = 110, bool principal = false)
         {
-            var b = new Button { Text = texto, Width = ancho, Height = 38, Font = Tema.Negrita, Margin = new Padding(3) };
-            Tema.Pastilla(b);
+            var b = new Button { Text = texto, Width = ancho, Height = 36, Font = Tema.Negrita, Margin = new Padding(3, 4, 3, 4) };
+            Tema.Pastilla(b, principal);
             if (click != null) b.Click += click;
             return b;
         }

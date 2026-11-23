@@ -34,16 +34,18 @@ namespace VentaFacil.Forms.Pos
             _cajeros.SelectedItem = _cajeros.Items.Cast<ItemUsuario>().First(i => i.U.Id == Sesion.Usuario.Id);
             Controls.Add(_cajeros);
 
-            Controls.Add(Ui.Boton("F3  Corte X\nde cajero", 300, 36, 140, 48, (s, e) => CorteXCajero()));
-            Controls.Add(Ui.Boton("F4  Corte X\nde caja", 446, 36, 140, 48, (s, e) => CorteXCaja()));
-            var z = Ui.Boton("F2  Corte Z\n(cerrar día)", 592, 36, 150, 48, (s, e) => CorteZ());
-            z.BackColor = Tema.Rojo; z.ForeColor = Color.White;
+            Controls.Add(Ui.Boton("F3 Corte cajero", 300, 38, 136, 42, (s, e) => CorteXCajero()));
+            Controls.Add(Ui.Boton("F4 Corte de caja", 444, 38, 136, 42, (s, e) => CorteXCaja()));
+            var z = Ui.Boton("F2 Corte Z (cierre)", 588, 38, 154, 42, (s, e) => CorteZ());
+            Tema.BotonPeligro(z);
             Controls.Add(z);
 
-            _vista = new TextBox { Left = 16, Top = 96, Width = 726, Height = 440, Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, Font = new Font("Courier New", 10f), BackColor = Tema.Crema };
+            _vista = new TextBox { Left = 16, Top = 92, Width = 726, Height = 440, Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, Font = new Font("Courier New", 10f), BackColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
             Controls.Add(_vista);
-            Controls.Add(Ui.Boton("Imprimir (Ctrl+P)", 456, 546, 150, 40, (s, e) => Imprimir()));
-            Controls.Add(Ui.Boton("Salir (Esc)", 612, 546, 130, 40, (s, e) => Close()));
+            var imp = Ui.Boton("Imprimir (Ctrl+P)", 466, 546, 140, 38, (s, e) => Imprimir());
+            Tema.Pastilla(imp, true);
+            Controls.Add(imp);
+            Controls.Add(Ui.Boton("Salir (Esc)", 614, 546, 128, 38, (s, e) => Close()));
             Controls.Add(Ui.Etiqueta("Los cortes X son informativos. El corte Z cierra el turno.", 16, 556, null, Tema.Humo));
 
             KeyDown += (s, e) =>

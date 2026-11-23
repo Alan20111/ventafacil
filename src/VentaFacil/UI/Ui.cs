@@ -56,7 +56,7 @@ namespace VentaFacil.UI
             b.UseVisualStyleBackColor = false;
             b.Cursor = Cursors.Hand;
             var f = FundidoBoton.De(b);
-            f.Definir(principal ? Azul : Crema, principal ? AzulOscuro : AzulClaro2, principal ? AzulOscuro : Piedra);
+            f.Definir(principal ? Azul : Crema, principal ? AzulOscuro : Color.FromArgb(230, 240, 252), principal ? AzulOscuro : Piedra);
             b.Paint -= DibujarContorno;
             b.Paint += DibujarContorno;
             b.SizeChanged -= AlCambiarTamano;
@@ -64,54 +64,74 @@ namespace VentaFacil.UI
             Redondear(b);
         }
 
+        /// <summary>Estilo para acciones de peligro (cierre de turno, eliminar, cancelar ticket).</summary>
+        public static void BotonPeligro(Button b)
+        {
+            b.FlatStyle = FlatStyle.Flat;
+            b.FlatAppearance.BorderSize = 0;
+            b.UseVisualStyleBackColor = false;
+            b.Cursor = Cursors.Hand;
+            var f = FundidoBoton.De(b);
+            f.Definir(Rojo, Color.FromArgb(160, 15, 15), Color.FromArgb(130, 10, 10));
+            b.Paint -= DibujarContorno;
+            b.Paint += DibujarContorno;
+            b.SizeChanged -= AlCambiarTamano;
+            b.SizeChanged -= AlCambiarTamano;
+            Redondear(b);
+        }
+
         static void AlCambiarTamano(object sender, EventArgs e) { Redondear((Control)sender); }
 
         /// <summary>
-        /// Contorno de 2 px, dibujado DENTRO de la forma (no a medias sobre su borde recortado): así no se ve punteado.
-        /// Los botones oscuros no lo necesitan.
+        /// Borde suave de 1 px con esquinas redondeadas.
+        /// Los botones oscuros de acción principal o peligro no lo necesitan.
         /// </summary>
         static void DibujarContorno(object sender, PaintEventArgs e)
         {
             var b = (Control)sender;
             if (b.Width < 6 || b.Height < 6) return;
             var f = FundidoBoton.Buscar(b);
-            if (f != null && f.Reposo.GetBrightness() < 0.4f) return;
+            if (f != null && f.Reposo.GetBrightness() < 0.45f) return;
             e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             e.Graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
-            using (var pluma = new Pen(b.Enabled ? Azul : Ceniza, 2f))
-            using (var forma = Forma(b.Width - 3, b.Height - 3))
+            Color colorBorde = b.Enabled ? Color.FromArgb(175, 195, 222) : Ceniza;
+            using (var pluma = new Pen(colorBorde, 1.2f))
+            using (var forma = Forma(b.Width - 2, b.Height - 2, 7))
             {
                 var m = new System.Drawing.Drawing2D.Matrix();
-                m.Translate(1, 1);
+                m.Translate(0.5f, 0.5f);
                 forma.Transform(m);
                 e.Graphics.DrawPath(pluma, forma);
             }
         }
 
-        /// <summary>Píldora: los extremos son semicírculos (radio = mitad de la altura).</summary>
-        static System.Drawing.Drawing2D.GraphicsPath Forma(int ancho, int alto)
+        /// <summary>Rectángulo redondeado suave (radio estándar de 8 px para interfaces modernas).</summary>
+        static System.Drawing.Drawing2D.GraphicsPath Forma(int ancho, int alto, int radio = 8)
         {
-            int d = Math.Min(alto, ancho);
+            int r = Math.Max(2, Math.Min(radio, Math.Min(ancho, alto) / 2));
+            int d = r * 2;
             var p = new System.Drawing.Drawing2D.GraphicsPath();
-            p.AddArc(0, 0, d, d, 90, 180);
-            p.AddArc(ancho - d, 0, d, d, 270, 180);
+            p.AddArc(0, 0, d, d, 180, 90);
+            p.AddArc(ancho - d, 0, d, d, 270, 90);
+            p.AddArc(ancho - d, alto - d, d, d, 0, 90);
+            p.AddArc(0, alto - d, d, d, 90, 90);
             p.CloseFigure();
             return p;
         }
 
-        /// <summary>Recorta el botón a la misma píldora (sin esquinas cuadradas).</summary>
-        public static void Redondear(Control c)
+        /// <summary>Recorta el botón con esquinas suaves de 8 px sin dientes de sierra.</summary>
+        public static void Redondear(Control c, int radio = 8)
         {
             if (c.Width <= 2 || c.Height <= 2) return;
-            using (var p = Forma(c.Width, c.Height)) c.Region = new Region(p);
+            using (var p = Forma(c.Width, c.Height, radio)) c.Region = new Region(p);
         }
     }
 
-    /// <summary>Hover y clic con transición corta de color (≈120 ms) y un pequeño «hundido» al presionar.</summary>
+    /// <summary>Hover y clic con transición suave de color y garantía de alto contraste de texto.</summary>
     public class FundidoBoton
     {
         static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Control, FundidoBoton> Tabla = new System.Runtime.CompilerServices.ConditionalWeakTable<Control, FundidoBoton>();
-        public Color Reposo = Tema.Crema, Hover = Tema.AzulClaro2, Abajo = Tema.Piedra;
+        public Color Reposo = Tema.Crema, Hover = Color.FromArgb(230, 240, 252), Abajo = Tema.Piedra;
         readonly Button _b;
         readonly System.Windows.Forms.Timer _t = new System.Windows.Forms.Timer { Interval = 15 };
         float _x;          // 0 = reposo, 1 = hover
@@ -132,7 +152,7 @@ namespace VentaFacil.UI
             _t.Tick += (s, e) => Paso();
             b.MouseEnter += (s, e) => { _dir = 1; Empezar(); };
             b.MouseLeave += (s, e) => { _dir = -1; _abajo = false; b.Padding = Padding.Empty; Empezar(); };
-            b.MouseDown += (s, e) => { _abajo = true; Aplicar(); if (Tema.Animaciones) b.Padding = new Padding(0, 2, 0, 0); };
+            b.MouseDown += (s, e) => { _abajo = true; Aplicar(); if (Tema.Animaciones) b.Padding = new Padding(0, 1, 0, 0); };
             b.MouseUp += (s, e) => { _abajo = false; b.Padding = Padding.Empty; Aplicar(); };
             b.Disposed += (s, e) => _t.Dispose();
         }
@@ -142,14 +162,14 @@ namespace VentaFacil.UI
             Reposo = reposo; Hover = hover; Abajo = abajo;
             _x = 0; _dir = 0; _t.Stop();
             _b.FlatAppearance.MouseDownBackColor = abajo;
-            _b.ForeColor = reposo.GetBrightness() < 0.4f ? Color.White : Tema.Azul;
+            _b.BackColor = reposo;
             Aplicar();
         }
 
         void Empezar() { if (Tema.Animaciones) _t.Start(); else { _x = _dir > 0 ? 1 : 0; Aplicar(); } }
         void Paso()
         {
-            _x += _dir * 0.2f;
+            _x += _dir * 0.25f;
             if (_x >= 1) { _x = 1; _t.Stop(); }
             if (_x <= 0) { _x = 0; _t.Stop(); }
             Aplicar();
@@ -159,7 +179,12 @@ namespace VentaFacil.UI
         {
             Color c = _abajo ? Abajo : Mezcla(Reposo, Hover, _x);
             _b.BackColor = c;
-            _b.FlatAppearance.MouseOverBackColor = c;   // si no, Windows pinta el hover por encima de la transición
+            _b.FlatAppearance.MouseOverBackColor = c;
+            // Accesibilidad de contraste:
+            // Fondo oscuro (brillo < 0.45) -> texto blanco.
+            // Fondo claro -> texto azul oscuro (Tema.AzulOscuro) con contraste > 7:1.
+            _b.ForeColor = c.GetBrightness() < 0.45f ? Color.White : Tema.AzulOscuro;
+            _b.Invalidate();
         }
 
         static Color Mezcla(Color a, Color b, float t)
@@ -183,13 +208,13 @@ namespace VentaFacil.UI
             if (!string.IsNullOrEmpty(Subtitulo))
             {
                 var tam = TextRenderer.MeasureText(Titulo, Tema.Grande);
-                TextRenderer.DrawText(e.Graphics, Subtitulo, Tema.Mediana, new Point(24 + tam.Width, 24), Tema.AzulClaro2);
+                TextRenderer.DrawText(e.Graphics, Subtitulo, Tema.Mediana, new Point(24 + tam.Width, 24), Color.FromArgb(220, 235, 255));
             }
         }
         protected override void OnResize(EventArgs e) { base.OnResize(e); Invalidate(); }
     }
 
-    /// <summary>Botón grande con la tecla rápida arriba: "F2" / "Buscar".</summary>
+    /// <summary>Botón con atajo arriba y nombre abajo: "Ctrl+F1" / "Productos".</summary>
     public class BotonF : Button
     {
         public string Tecla;
@@ -197,7 +222,7 @@ namespace VentaFacil.UI
         {
             Tecla = tecla;
             Text = (string.IsNullOrEmpty(tecla) ? "" : tecla + "\n") + texto;
-            Font = new Font("Segoe UI", 11f, FontStyle.Bold);
+            Font = new Font("Segoe UI", 10.5f, FontStyle.Bold);
             Tema.Pastilla(this);
             TabStop = false;
             if (click != null) Click += click;
@@ -255,13 +280,13 @@ namespace VentaFacil.UI
 
         public static TextBox Caja(int x, int y, int ancho, Font font = null)
         {
-            return new TextBox { Left = x, Top = y, Width = ancho, Font = font ?? Tema.Normal };
+            return new TextBox { Left = x, Top = y, Width = ancho, Font = font ?? Tema.Normal, BorderStyle = BorderStyle.FixedSingle, BackColor = Color.White };
         }
 
-        public static Button Boton(string texto, int x, int y, int ancho, int alto, EventHandler click)
+        public static Button Boton(string texto, int x, int y, int ancho, int alto, EventHandler click, bool principal = false)
         {
             var b = new Button { Text = texto, Left = x, Top = y, Width = ancho, Height = alto, Font = Tema.Negrita };
-            Tema.Pastilla(b);
+            Tema.Pastilla(b, principal);
             if (click != null) b.Click += click;
             return b;
         }

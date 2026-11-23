@@ -54,8 +54,8 @@ namespace VentaFacil.Forms.Admin
                 _cantidad = Ui.Caja(240, 32, 100, Tema.Mediana); _cantidad.TextAlign = HorizontalAlignment.Right; _cantidad.Text = "1"; arriba.Controls.Add(_cantidad);
                 arriba.Controls.Add(Ui.Etiqueta("Costo nuevo (opcional):", 350, 10));
                 _costo = Ui.Caja(350, 32, 120, Tema.Mediana); _costo.TextAlign = HorizontalAlignment.Right; arriba.Controls.Add(_costo);
-                arriba.Controls.Add(Ui.Boton("Agregar (Enter)", 480, 30, 140, 34, (s, e) => Agregar()));
-                arriba.Controls.Add(Ui.Boton("Buscar (F2)", 626, 30, 110, 34, (s, e) => Buscar()));
+                arriba.Controls.Add(Ui.Boton("Agregar (Enter)", 480, 30, 130, 34, (s, e) => Agregar(), true));
+                arriba.Controls.Add(Ui.Boton("Buscar (F2)", 616, 30, 105, 34, (s, e) => Buscar()));
                 arriba.Controls.Add(Ui.Etiqueta("Escanee el código, escriba la cantidad y presione Enter. Al terminar presione \"Aplicar entrada\".", 10, 70, null, Tema.Humo));
                 Controls.Add(arriba);
 
@@ -70,11 +70,10 @@ namespace VentaFacil.Forms.Admin
                 var abajo = new Panel { Dock = DockStyle.Bottom, Height = 56 };
                 abajo.Controls.Add(Ui.Etiqueta("Referencia (factura / proveedor):", 10, 18));
                 _referencia = Ui.Caja(240, 14, 260); abajo.Controls.Add(_referencia);
-                abajo.Controls.Add(Ui.Boton("Quitar renglón (Supr)", 510, 10, 170, 38, (s, e) => Quitar()));
-                var aplicar = Ui.Boton("Aplicar entrada", 690, 10, 160, 38, (s, e) => Aplicar());
-                aplicar.ForeColor = Tema.Verde;
+                abajo.Controls.Add(Ui.Boton("Quitar (Supr)", 510, 10, 120, 38, (s, e) => Quitar()));
+                var aplicar = Ui.Boton("Aplicar entrada", 640, 10, 150, 38, (s, e) => Aplicar(), true);
                 abajo.Controls.Add(aplicar);
-                _total = Ui.Etiqueta("", 860, 18, Tema.Negrita);
+                _total = Ui.Etiqueta("", 800, 18, Tema.Negrita);
                 abajo.Controls.Add(_total);
 
                 Controls.Add(_grid);
