@@ -25,9 +25,9 @@ Cada cambio al proyecto publica un release nuevo.
    Si no aparece, instale el instalador sin conexión de .NET Framework 4.8 (`ndp48-x86-x64-allos-enu.exe`, de microsoft.com). En Windows 7 necesita el Service Pack 1.
 2. Copie la carpeta `VentaFacil` a `C:\VentaFacil` (no a *Archivos de programa*, para que pueda guardar los datos ahí mismo).
 3. Abra `VentaFacil.exe`: se instala solo en `C:\VentaFacil` y crea el acceso en el escritorio.
-4. Entre con el usuario **admin** y la contraseña **admin**. **Cámbiela de inmediato** en *F11 Administración → Usuarios*.
+4. Entre con el usuario **admin** y la contraseña **admin**. **Cámbiela de inmediato** en *F6 Ajustes → Usuarios*.
 5. La primera vez se abre sola la ventana **Impresora de tickets**: detecta las impresoras instaladas en Windows, marca las de tickets y recomienda una. Pulse **F3 Imprimir prueba** y **Guardar**. Se puede volver a abrir en cualquier momento con **Ctrl+I** o en *F11 → Configuración → Impresora*.
-6. En *F11 → Configuración*, capture los datos del negocio.
+6. En *F6 Ajustes → Negocio*, capture los datos del negocio.
 
 Los datos quedan en `C:\VentaFacil\datos\ventafacil.db`. Cada día, y después de cada corte Z, se hace un respaldo automático en `datos\respaldos\` (se guardan los últimos 30).
 
@@ -58,17 +58,15 @@ VentaFácil **no usa puertos**: imprime por la cola de Windows. Si Windows impri
 | Escanear o escribir el código + **Enter** | Agrega el artículo |
 | `3*` y luego escanear | Vende 3 piezas del artículo (multiplicar) |
 | Escribir parte del nombre + **Enter** | Busca el artículo por nombre |
-| **+** o **F1** | **Cobrar** (F2 efectivo, F3 tarjeta, F4 transferencia, F5 vales) |
-| **F2** | Buscar artículo |
-| **F3** o **Supr** | Quitar el artículo seleccionado (↑↓ para elegir) |
-| **F4** | Consultar precio (Enter otra vez para venderlo) |
-| **F5** | Venta en espera: guardar la venta actual o recuperar una |
-| **F6** | Descuento por artículo (% o $), cambio de precio, o % a toda la venta |
-| **F7** | Entradas y salidas de efectivo (retiros, pagos a proveedores, cambio) |
-| **F8** | Artículo varios: venta sin código, con precio libre |
-| **F9** | Cortes: X de cajero, X de caja (parciales) y **Z** (cierre del día) |
-| **F10** | Cambiar de usuario sin cerrar el programa |
-| **F11** | Administración (productos, inventario, reportes, usuarios, configuración) |
+| **+** o **Ctrl+F1** | **Cobrar** (en la ventana de cobro: F2 efectivo, F3 tarjeta, F4 transferencia, F5 vales) |
+| **Ctrl+F2** | Buscar artículo |
+| **Ctrl+F3** o **Supr** | Quitar el artículo seleccionado (↑↓ para elegir) |
+| **Ctrl+F4** | Consultar precio (Enter otra vez para venderlo) |
+| **Ctrl+F5** | Venta en espera: guardar la venta actual o recuperar una |
+| **Ctrl+F6** | Descuento por artículo (% o $), cambio de precio, o % a toda la venta |
+| **Ctrl+F7** | Artículo varios: venta sin código, con precio libre |
+| **Ctrl+F8** | Cancelar un ticket |
+| **F1 … F6** | **Cambiar de módulo** (ver abajo); **Esc** regresa a Caja; **F10** cambia de usuario |
 | **F12** | Cancelar un ticket ya cobrado (regresa la mercancía al inventario) |
 | **Ctrl+P** | Reimprimir el último ticket |
 | **Ctrl+D** o **Shift+−** | Abrir el cajón |
@@ -80,7 +78,7 @@ VentaFácil **no usa puertos**: imprime por la cola de Windows. Si Windows impri
 
 ### Lista de costos estilo semillera (Excel)
 
-En *F11 → Productos*:
+En *F3 Catálogo*:
 
 - **Importar Excel semillera**: lee el archivo de costos tal cual se usa hoy (hojas con columnas NO, STOCK, PRODUCTO, BTO, CANT, COSTO, MAYOREO, CANT, MED. MAY., CANT, MENUDEO). Antes de importar muestra una vista previa:
   - Cada renglón de proveedor o grupo (JUANJO, SAMY, DURAN…) se vuelve el proveedor y grupo de los productos que le siguen.
@@ -120,8 +118,19 @@ Al importar: respaldo automático previo, **todo en una transacción**, y un res
 - **Perfiles** (`<datos>\perfiles\*.json`): dicen en qué base/tabla y con qué nombres de columna buscar cada dato, y las reglas (sumar almacenes, unidades a granel). Hay uno incluido (Zafirah); se crean desde el asistente con **Guardar…** o a mano (el botón **Carpeta** deja un ejemplo). Aceptan comentarios `//` y comas finales; un perfil roto se explica (línea y columna) y se omite. Adaptar el programa a otro sistema = un archivo, sin recompilar.
 - No probado contra un SQL Server real ni en Windows (solo la lógica pura y la compilación): ver pasos 45–48 de `docs/PRUEBAS_WINDOWS.md`.
 
-### Menú superior
-La pantalla de venta tiene arriba un **menú** (Venta · Caja · Productos · Inventario · Reportes · Sistema · Ayuda) y una **barra de botones** con las acciones más usadas (Buscar, Quitar, Precio, En espera, Descuento, Entr./Sal., Varios, Cortes, Cancelar). Los menús de Productos, Inventario, Reportes y Sistema abren la Administración directo en esa sección (piden administrador si quien cobra no lo es). Todas las teclas F siguen funcionando igual; F10 no activa el menú de Windows porque se atiende antes. Ayuda → *Teclas rápidas* muestra la lista.
+### Módulos (barra de arriba)
+La barra azul de arriba tiene los módulos, que se cambian con **F1–F6** o con el ratón; la línea blanca se desliza al elegido:
+
+| Tecla | Módulo | Vistas y atajos (Ctrl+F1, Ctrl+F2…) |
+|---|---|---|
+| F1 | **Caja** | Cobrar · Buscar · Quitar · Precio · En espera · Descuento · Varios · Cancelar |
+| F2 | **Turno** | Resumen · Entradas/salidas · Cortes X/Z · Abrir cajón · Reimprimir ticket · Cambiar usuario |
+| F3 | **Catálogo** | Productos · Grupos · Códigos de barras · Importar Zafirah/.BK |
+| F4 | **Almacén** | Inventario (entradas, ajustes, conteo con Excel, kardex) |
+| F5 | **Resultados** | Reportes y exportar a Excel |
+| F6 | **Ajustes** | Negocio · Usuarios · Respaldos · Impresora · Licencia · Teclas rápidas · Acerca de · Salir |
+
+Cada módulo declara arriba sus botones con su atajo. Los módulos F3–F6 piden administrador (una vez) si quien cobra no lo es, y no se entra a ellos con una venta a medias. Los botones tienen borde de 2 px, transición de color al pasar el ratón y un pequeño hundido al pulsar.
 
 ### Códigos de barras y etiquetas
 La lista de la semillera no trae códigos de barras, así que lo importado se cobra con su **código corto** (1, 2, 3…). Para escanear: Administración → Productos → **Códigos de barras…**. Se toma el producto, se pasa el lector por su empaque y el código se guarda solo (en el *código alterno*; el código corto no se toca) y salta al siguiente. `F2` saltar · `F3` «sin código de barras» · `F4` quitar · `F5` etiqueta. Un código no puede ser de dos productos: si ya existe, avisa de quién es y ofrece pasarlo.

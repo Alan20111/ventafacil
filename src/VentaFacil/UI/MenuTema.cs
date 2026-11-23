@@ -48,33 +48,34 @@ namespace VentaFacil.UI
     {
         public FormAyudaTeclas() : base("Teclas rápidas", 720, 640)
         {
-            Controls.Add(Ui.Etiqueta("Teclas rápidas del punto de venta", 16, 12, Tema.Mediana, Tema.Azul));
+            Controls.Add(Ui.Etiqueta("Teclas rápidas", 16, 12, Tema.Mediana, Tema.Azul));
             var texto = new TextBox
             {
                 Left = 16, Top = 54, Width = 688, Height = 520, Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical,
                 Font = Tema.Mono, BackColor = Tema.Crema, Text = string.Join("\r\n", new[] {
+                    "MÓDULOS (en cualquier pantalla)",
+                    "F1 Caja     F2 Turno     F3 Catálogo",
+                    "F4 Almacén  F5 Resultados  F6 Ajustes",
+                    "Esc ............ regresar a Caja",
+                    "F10 ............ cambiar usuario",
+                    "",
+                    "CAJA",
                     "Código + Enter ... agregar artículo",
                     "3*  + código ..... cantidad 3 de un artículo",
-                    "+ o F1 ........... COBRAR",
-                    "F2 ............... buscar artículo",
-                    "F3 o Supr ........ quitar artículo",
-                    "F4 ............... consultar precio",
-                    "F5 ............... venta en espera",
-                    "F6 ............... descuento / precio",
-                    "F7 ............... entradas / salidas de efectivo",
-                    "F8 ............... artículo varios",
-                    "F9 ............... cortes de caja (X y Z)",
-                    "F10 .............. cambiar usuario",
-                    "F11 .............. administración",
-                    "F12 .............. cancelar ticket",
+                    "+ o Ctrl+F1 ...... COBRAR",
+                    "Ctrl+F2 .......... buscar artículo",
+                    "Ctrl+F3 o Supr ... quitar artículo",
+                    "Ctrl+F4 .......... consultar precio",
+                    "Ctrl+F5 .......... venta en espera",
+                    "Ctrl+F6 .......... descuento / precio",
+                    "Ctrl+F7 .......... artículo varios",
+                    "Ctrl+F8 .......... cancelar ticket",
                     "Ctrl+P ........... reimprimir último ticket",
                     "Ctrl+D ........... abrir cajón",
                     "Ctrl+I ........... elegir / detectar impresora",
                     "",
-                    "Alt ............... abre el menú de arriba",
-                    "",
-                    "Todo se puede hacer con el menú de arriba o con la barra de",
-                    "botones; las teclas son solo para ir más rápido." })
+                    "Los demás módulos: Ctrl+F1, Ctrl+F2… son los botones",
+                    "que se ven arriba de cada uno (cambian de vista o hacen algo)." })
             };
             Controls.Add(texto);
             Controls.Add(Ui.Boton("Cerrar (Esc)", 556, 586, 148, 44, (s, e) => Close()));

@@ -77,13 +77,14 @@ Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y
 | 35 | En la pantalla de cobro, escanear un empaque ya asignado | Entra el producto con su precio |
 | 36 | Un producto de granel → **Etiqueta** (F5) → ver la vista previa → Imprimir; luego escanear la etiqueta impresa **con el lector** | La etiqueta sale legible (nombre, precio, barras) y el lector la lee y entra el producto |
 
-## I. Menú superior
+## I. Módulos y atajos
 | # | Qué hacer | Debe pasar |
 |---|-----------|-----------|
-| 37 | Abrir la pantalla de venta | Se ven el encabezado azul, el **menú** (Venta, Caja, Productos, Inventario, Reportes, Sistema, Ayuda) y la barra de 9 botones; la lista de venta ocupa todo el ancho; nada se encima ni se corta con 1366x768 |
-| 38 | Abrir cada menú con el ratón y con Alt+V, Alt+C… | Se despliegan legibles (la opción seleccionada se ve en blanco sobre azul) y muestran su tecla a la derecha |
-| 39 | Hacer una venta usando solo el menú (Venta → Buscar artículo, Cobrar) y otra solo con la barra de botones | Funcionan igual que con las teclas; al cerrar un menú el cursor vuelve a la captura y el lector sigue escaneando |
-| 40 | Pulsar **F10** con la caja abierta; luego Productos → Códigos de barras… | F10 cambia de usuario **sin** abrir el menú de Windows; la opción de Productos abre la Administración directo en la asignación de códigos |
+| 37 | Abrir la pantalla de venta | Se ven el encabezado, la **barra de módulos** (F1 Caja … F6 Ajustes) y la barra de 8 botones «Ctrl+F#»; nada se encima ni se corta con 1366x768 |
+| 38 | Pulsar F2, F3, F4, F5, F6 y F1 con el teclado, y luego con el ratón | Cambia de módulo; la línea blanca se desliza; F1 regresa a Caja con el cursor en la captura |
+| 39 | En cada módulo, ver la barra de atajos de arriba y probar Ctrl+F1, Ctrl+F2… | Cada botón hace lo que dice (cambia de vista o abre su diálogo); Esc regresa a Caja |
+| 40 | En Caja: Ctrl+F1 cobra (y también «+»), Ctrl+F2 busca, Ctrl+F8 cancela; F10 cambia de usuario | Funcionan; con una venta a medias, F3–F6 avisan y no entran |
+| 40b | Pasar el ratón y pulsar botones secundarios y principales | Borde azul de 2 px **liso** (sin puntitos), el color cambia suave, el botón se hunde al pulsar |
 
 ## J. Importar de Zafirah (pasos 41–48)
 | # | Qué hacer | Debe pasar |

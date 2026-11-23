@@ -46,16 +46,17 @@ namespace VentaFacil.UI
         /// Botón en píldora. El borde de Windows es rectangular y se veía "cuadrado" alrededor del botón redondo,
         /// así que aquí no se usa: el contorno redondo se dibuja a mano con la misma forma del botón.
         /// </summary>
+        /// <summary>Animaciones de botones y de la barra de módulos (se pueden apagar en Ajustes; ninguna dura más de ~150 ms).</summary>
+        public static bool Animaciones = true;
+
         public static void Pastilla(Button b, bool principal = false)
         {
             b.FlatStyle = FlatStyle.Flat;
             b.FlatAppearance.BorderSize = 0;
-            b.FlatAppearance.MouseOverBackColor = principal ? AzulOscuro : AzulClaro2;
-            b.FlatAppearance.MouseDownBackColor = principal ? AzulOscuro : Piedra;
-            b.BackColor = principal ? Azul : Crema;
-            b.ForeColor = principal ? Color.White : Azul;
             b.UseVisualStyleBackColor = false;
             b.Cursor = Cursors.Hand;
+            var f = FundidoBoton.De(b);
+            f.Definir(principal ? Azul : Crema, principal ? AzulOscuro : AzulClaro2, principal ? AzulOscuro : Piedra);
             b.Paint -= DibujarContorno;
             b.Paint += DibujarContorno;
             b.SizeChanged -= AlCambiarTamano;
@@ -65,15 +66,26 @@ namespace VentaFacil.UI
 
         static void AlCambiarTamano(object sender, EventArgs e) { Redondear((Control)sender); }
 
-        /// <summary>Contorno de 1 px redondo; los botones oscuros no lo necesitan.</summary>
+        /// <summary>
+        /// Contorno de 2 px, dibujado DENTRO de la forma (no a medias sobre su borde recortado): así no se ve punteado.
+        /// Los botones oscuros no lo necesitan.
+        /// </summary>
         static void DibujarContorno(object sender, PaintEventArgs e)
         {
             var b = (Control)sender;
-            if (b.Width < 4 || b.Height < 4 || b.BackColor.GetBrightness() < 0.4f) return;
+            if (b.Width < 6 || b.Height < 6) return;
+            var f = FundidoBoton.Buscar(b);
+            if (f != null && f.Reposo.GetBrightness() < 0.4f) return;
             e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            using (var pluma = new Pen(Azul, 1.5f))
-            using (var forma = Forma(b.Width - 1, b.Height - 1))
+            e.Graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+            using (var pluma = new Pen(b.Enabled ? Azul : Ceniza, 2f))
+            using (var forma = Forma(b.Width - 3, b.Height - 3))
+            {
+                var m = new System.Drawing.Drawing2D.Matrix();
+                m.Translate(1, 1);
+                forma.Transform(m);
                 e.Graphics.DrawPath(pluma, forma);
+            }
         }
 
         /// <summary>Píldora: los extremos son semicírculos (radio = mitad de la altura).</summary>
@@ -92,6 +104,67 @@ namespace VentaFacil.UI
         {
             if (c.Width <= 2 || c.Height <= 2) return;
             using (var p = Forma(c.Width, c.Height)) c.Region = new Region(p);
+        }
+    }
+
+    /// <summary>Hover y clic con transición corta de color (≈120 ms) y un pequeño «hundido» al presionar.</summary>
+    public class FundidoBoton
+    {
+        static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Control, FundidoBoton> Tabla = new System.Runtime.CompilerServices.ConditionalWeakTable<Control, FundidoBoton>();
+        public Color Reposo = Tema.Crema, Hover = Tema.AzulClaro2, Abajo = Tema.Piedra;
+        readonly Button _b;
+        readonly System.Windows.Forms.Timer _t = new System.Windows.Forms.Timer { Interval = 15 };
+        float _x;          // 0 = reposo, 1 = hover
+        int _dir;
+        bool _abajo;
+
+        public static FundidoBoton Buscar(Control c) { FundidoBoton f; return Tabla.TryGetValue(c, out f) ? f : null; }
+        public static FundidoBoton De(Button b)
+        {
+            FundidoBoton f;
+            if (!Tabla.TryGetValue(b, out f)) { f = new FundidoBoton(b); Tabla.Add(b, f); }
+            return f;
+        }
+
+        FundidoBoton(Button b)
+        {
+            _b = b;
+            _t.Tick += (s, e) => Paso();
+            b.MouseEnter += (s, e) => { _dir = 1; Empezar(); };
+            b.MouseLeave += (s, e) => { _dir = -1; _abajo = false; b.Padding = Padding.Empty; Empezar(); };
+            b.MouseDown += (s, e) => { _abajo = true; Aplicar(); if (Tema.Animaciones) b.Padding = new Padding(0, 2, 0, 0); };
+            b.MouseUp += (s, e) => { _abajo = false; b.Padding = Padding.Empty; Aplicar(); };
+            b.Disposed += (s, e) => _t.Dispose();
+        }
+
+        public void Definir(Color reposo, Color hover, Color abajo)
+        {
+            Reposo = reposo; Hover = hover; Abajo = abajo;
+            _x = 0; _dir = 0; _t.Stop();
+            _b.FlatAppearance.MouseDownBackColor = abajo;
+            _b.ForeColor = reposo.GetBrightness() < 0.4f ? Color.White : Tema.Azul;
+            Aplicar();
+        }
+
+        void Empezar() { if (Tema.Animaciones) _t.Start(); else { _x = _dir > 0 ? 1 : 0; Aplicar(); } }
+        void Paso()
+        {
+            _x += _dir * 0.2f;
+            if (_x >= 1) { _x = 1; _t.Stop(); }
+            if (_x <= 0) { _x = 0; _t.Stop(); }
+            Aplicar();
+        }
+
+        void Aplicar()
+        {
+            Color c = _abajo ? Abajo : Mezcla(Reposo, Hover, _x);
+            _b.BackColor = c;
+            _b.FlatAppearance.MouseOverBackColor = c;   // si no, Windows pinta el hover por encima de la transición
+        }
+
+        static Color Mezcla(Color a, Color b, float t)
+        {
+            return Color.FromArgb((int)(a.R + (b.R - a.R) * t), (int)(a.G + (b.G - a.G) * t), (int)(a.B + (b.B - a.B) * t));
         }
     }
 

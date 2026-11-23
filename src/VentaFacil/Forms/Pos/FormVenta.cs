@@ -25,6 +25,13 @@ namespace VentaFacil.Forms.Pos
         Label _lblTotal, _lblArticulos, _lblCantidad, _lblMensaje, _lblUsuario, _lblReloj, _lblUltimo, _lblBanner;
         Timer _reloj;
 
+        // ---- módulos (F1 Caja · F2 Turno · F3 Catálogo · F4 Almacén · F5 Resultados · F6 Ajustes) ----
+        BarraModulos _barraMod;
+        Panel _host, _panelCaja;
+        ModuloVista _modulo;
+        int _modActivo;
+        bool _adminOk;
+
         public FormVenta()
         {
             AutoScaleDimensions = new SizeF(96F, 96F);
@@ -61,7 +68,7 @@ namespace VentaFacil.Forms.Pos
             panelTotal.Controls.Add(Ui.Etiqueta("TOTAL:", 12, 14, Tema.Grande, Tema.Azul));
             _lblTotal = new Label { Text = "$0.00", Font = Tema.Enorme, ForeColor = Tema.Azul, AutoSize = false, TextAlign = ContentAlignment.MiddleRight, Left = 120, Top = 2, Width = 296, Height = 60, Anchor = AnchorStyles.Top | AnchorStyles.Right };
             panelTotal.Controls.Add(_lblTotal);
-            var btnCobrar = new Button { Text = "COBRAR  ( + )", Font = Tema.Mediana, BackColor = Tema.Azul, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Left = 12, Top = 72, Width = 404, Height = 58, TabStop = false, Cursor = Cursors.Hand };
+            var btnCobrar = new Button { Text = "COBRAR  ( + / Ctrl+F1 )", Font = Tema.Mediana, BackColor = Tema.Azul, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Left = 12, Top = 72, Width = 404, Height = 58, TabStop = false, Cursor = Cursors.Hand };
             btnCobrar.Click += (s, e) => Cobrar();
             Tema.Pastilla(btnCobrar, true);
             panelTotal.Controls.Add(btnCobrar);
@@ -106,15 +113,21 @@ namespace VentaFacil.Forms.Pos
             centro.Controls.Add(_grid);
 
             // Orden de acople (el último que se agrega queda más arriba): centro, abajo, banner, barra de botones, menú, encabezado
-            var menu = ConstruirMenu();
             var acciones = ConstruirBarraAcciones();
-            Controls.Add(centro);
-            Controls.Add(abajo);
-            Controls.Add(_lblBanner);
-            Controls.Add(acciones);
-            Controls.Add(menu);
+            _panelCaja = new Panel { Dock = DockStyle.Fill, BackColor = Tema.AzulFondo };
+            _panelCaja.Controls.Add(centro);
+            _panelCaja.Controls.Add(abajo);
+            _panelCaja.Controls.Add(_lblBanner);
+            _panelCaja.Controls.Add(acciones);
+            _host = new Panel { Dock = DockStyle.Fill, BackColor = Tema.AzulFondo };
+            _host.Controls.Add(_panelCaja);
+            _barraMod = new BarraModulos();
+            foreach (var m in new[] { new[] { "F1", "Caja" }, new[] { "F2", "Turno" }, new[] { "F3", "Catálogo" }, new[] { "F4", "Almacén" }, new[] { "F5", "Resultados" }, new[] { "F6", "Ajustes" } })
+                _barraMod.Agregar(m[0], m[1]);
+            _barraMod.Elegido += IrAModulo;
+            Controls.Add(_host);
+            Controls.Add(_barraMod);
             Controls.Add(_titulo);
-            MainMenuStrip = menu;
 
             _reloj = new Timer { Interval = 1000 };
             _reloj.Tick += (s, e) => { _lblReloj.Text = DateTime.Now.ToString("dddd dd/MMM/yyyy  hh:mm:ss tt", new System.Globalization.CultureInfo("es-MX")); UbicarEncabezado(); };
@@ -124,87 +137,129 @@ namespace VentaFacil.Forms.Pos
         // =====================================================================
         //  Menú superior y barra de botones (todo hace lo mismo que las teclas F)
         // =====================================================================
-        ToolStripMenuItem Opcion(string texto, string atajo, EventHandler click)
+        // ---------------------------------------------------------------------
+        //  Módulos: cada uno con su barra de atajos (Ctrl+F1, Ctrl+F2…)
+        // ---------------------------------------------------------------------
+        void IrAModulo(int n)
         {
-            var i = new ToolStripMenuItem(texto) { ForeColor = Tema.Texto, Font = new Font("Segoe UI", 12f, FontStyle.Bold), Padding = new Padding(4, 7, 4, 7) };
-            if (!string.IsNullOrEmpty(atajo)) { i.ShortcutKeyDisplayString = atajo; i.ShowShortcutKeys = true; }
-            if (click != null) i.Click += click;
-            return i;
+            if (n == _modActivo) { if (n == 0) _captura.Focus(); return; }
+            if (n >= 2)
+            {
+                if (_lineas.Count > 0) { Ui.Aviso("Termine la venta actual antes de entrar a este módulo."); return; }
+                if (!_adminOk)
+                {
+                    if (Ui.AutorizarAdmin("Se requiere un administrador") == null) { _captura.Focus(); return; }
+                    _adminOk = true;
+                }
+            }
+            else _adminOk = false;
+
+            if (_modulo != null) { _host.Controls.Remove(_modulo); _modulo.Dispose(); _modulo = null; }
+            _modActivo = n;
+            _barraMod.Activo = n;
+            if (n == 0)
+            {
+                _panelCaja.Visible = true;
+                Config.Cargar();
+                ActualizarEncabezado();
+                _captura.Focus();
+                return;
+            }
+            _panelCaja.Visible = false;
+            _modulo = ConstruirModulo(n);
+            _host.Controls.Add(_modulo);
+            _modulo.BringToFront();
+            _modulo.Construir();
         }
 
-        ToolStripMenuItem Desplegable(string texto, params ToolStripItem[] hijos)
+        /// <summary>Ejecuta algo del módulo y refresca su vista (y el encabezado) después.</summary>
+        Action Y(Action a) { return () => { a(); if (_modulo != null) _modulo.Recargar(); if (!IsDisposed) ActualizarEncabezado(); }; }
+
+        ModuloVista ConstruirModulo(int n)
         {
-            var m = new ToolStripMenuItem(texto) { ForeColor = Color.White, Font = new Font("Segoe UI", 13f, FontStyle.Bold), Padding = new Padding(14, 8, 14, 8) };
-            m.DropDown.BackColor = Tema.Crema;
-            m.DropDownItems.AddRange(hijos);
+            ModuloVista m;
+            switch (n)
+            {
+                case 1:
+                    m = new ModuloVista("Turno", "turno actual, dinero en caja y cortes");
+                    m.AgregarVista("Resumen del turno", VistaTurno);
+                    m.AgregarAccion("Entradas / salidas", Y(MovimientoCaja));
+                    m.AgregarAccion("Cortes X / Z", Y(Cortes));
+                    m.AgregarAccion("Abrir cajón", AbrirCajon);
+                    m.AgregarAccion("Reimprimir ticket", ReimprimirUltimo);
+                    m.AgregarAccion("Cambiar usuario (F10)", Y(CambiarUsuario));
+                    break;
+                case 2:
+                    m = new ModuloVista("Catálogo", "productos, precios, códigos de barras e importación");
+                    m.AgregarVista("Productos", () => new Admin.SeccionProductos());
+                    m.AgregarVista("Grupos", () => new Admin.SeccionDepartamentos());
+                    m.AgregarAccion("Códigos de barras", () => { m.Mostrar(0); var sp = m.Actual as Admin.SeccionProductos; if (sp != null) sp.CodigosDeBarras(); });
+                    m.AgregarAccion("Importar Zafirah / .BK", () => { m.Mostrar(0); var sp = m.Actual as Admin.SeccionProductos; if (sp != null) { sp.ImportarZafirah(); m.Recargar(); } });
+                    break;
+                case 3:
+                    m = new ModuloVista("Almacén", "existencias, entradas, conteo y movimientos");
+                    m.AgregarVista("Inventario", () => new Admin.SeccionInventario());
+                    break;
+                case 4:
+                    m = new ModuloVista("Resultados", "ventas y reportes (se exportan a Excel)");
+                    m.AgregarVista("Reportes", () => new Admin.SeccionReportes());
+                    break;
+                default:
+                    m = new ModuloVista("Ajustes", "negocio, usuarios, respaldos, impresora y licencia");
+                    m.AgregarVista("Negocio", () => new Admin.SeccionConfig());
+                    m.AgregarVista("Usuarios", () => new Admin.SeccionUsuarios());
+                    m.AgregarVista("Respaldos", () => new Admin.SeccionRespaldos());
+                    m.AgregarAccion("Impresora", ConfigurarImpresora);
+                    m.AgregarAccion("Licencia", () => Licenciamiento.FormLicencia.Mostrar(Licencia.Evaluar(), true));
+                    m.AgregarAccion("Teclas rápidas", () => { using (var f = new FormAyudaTeclas()) f.ShowDialog(this); });
+                    m.AgregarAccion("Acerca de", AcercaDe);
+                    m.AgregarAccion("Salir del programa", () => Close());
+                    break;
+            }
             return m;
         }
 
-        MenuStrip ConstruirMenu()
+        Control VistaTurno()
         {
-            var ms = new MenuStrip { Dock = DockStyle.Top, BackColor = Tema.AzulOscuro, ForeColor = Color.White, Renderer = new MenuRenderer(), Padding = new Padding(8, 2, 8, 2), GripStyle = ToolStripGripStyle.Hidden };
-            ms.Items.Add(Desplegable("&Venta",
-                Opcion("Cobrar", "F1  /  +", (s, e) => Cobrar()),
-                new ToolStripSeparator(),
-                Opcion("Buscar artículo", "F2", (s, e) => Buscar()),
-                Opcion("Consultar precio", "F4", (s, e) => ConsultarPrecio()),
-                Opcion("Quitar artículo", "F3", (s, e) => QuitarArticulo()),
-                Opcion("Descuento / precio", "F6", (s, e) => Descuento()),
-                Opcion("Artículo varios", "F8", (s, e) => ArticuloComun()),
-                new ToolStripSeparator(),
-                Opcion("Venta en espera", "F5", (s, e) => Espera()),
-                Opcion("Cancelar ticket", "F12", (s, e) => CancelarTicket()),
-                Opcion("Reimprimir último ticket", "Ctrl+P", (s, e) => ReimprimirUltimo())));
-            ms.Items.Add(Desplegable("&Caja",
-                Opcion("Entradas / salidas de efectivo", "F7", (s, e) => MovimientoCaja()),
-                Opcion("Cortes de caja (X y Z)", "F9", (s, e) => Cortes()),
-                new ToolStripSeparator(),
-                Opcion("Abrir cajón", "Ctrl+D", (s, e) => AbrirCajon())));
-            ms.Items.Add(Desplegable("&Productos",
-                Opcion("Catálogo de productos", "", (s, e) => Administracion("Productos")),
-                Opcion("Códigos de barras…", "", (s, e) => Administracion("Productos", "barras")),
-                Opcion("Importar de Zafirah…", "", (s, e) => Administracion("Productos", "zafirah")),
-                Opcion("Departamentos", "", (s, e) => Administracion("Departamentos"))));
-            ms.Items.Add(Desplegable("&Inventario",
-                Opcion("Inventario  (entradas, conteo con Excel, kardex)", "", (s, e) => Administracion("Inventario"))));
-            ms.Items.Add(Desplegable("&Reportes",
-                Opcion("Reportes y exportar a Excel", "", (s, e) => Administracion("Reportes"))));
-            ms.Items.Add(Desplegable("&Sistema",
-                Opcion("Configuración del negocio", "", (s, e) => Administracion("Configuración")),
-                Opcion("Usuarios", "", (s, e) => Administracion("Usuarios")),
-                Opcion("Respaldos", "", (s, e) => Administracion("Respaldos")),
-                Opcion("Administración (todo)", "F11", (s, e) => Administracion()),
-                new ToolStripSeparator(),
-                Opcion("Impresora…", "Ctrl+I", (s, e) => ConfigurarImpresora()),
-                Opcion("Licencia…", "", (s, e) => { Licenciamiento.FormLicencia.Mostrar(Licencia.Evaluar(), true); _captura.Focus(); }),
-                Opcion("Cambiar usuario", "F10", (s, e) => CambiarUsuario()),
-                new ToolStripSeparator(),
-                Opcion("Salir del programa", "", (s, e) => Close())));
-            ms.Items.Add(Desplegable("&Ayuda",
-                Opcion("Teclas rápidas", "", (s, e) => { using (var f = new FormAyudaTeclas()) f.ShowDialog(this); _captura.Focus(); }),
-                Opcion("Acerca de VentaFácil", "", (s, e) => AcercaDe())));
-            // Al cerrar un menú, el cursor vuelve a la captura para seguir escaneando
-            ms.MenuDeactivate += (s, e) => { if (_captura != null && _captura.CanFocus) _captura.Focus(); };
-            return ms;
+            var p = new Panel { BackColor = Tema.Crema };
+            var t = Sesion.Turno;
+            var c = Config.Actual;
+            int y = 24;
+            Action<string, string> fila = (k, v) =>
+            {
+                p.Controls.Add(Ui.Etiqueta(k, 24, y, Tema.Negrita, Tema.Humo));
+                p.Controls.Add(Ui.Etiqueta(v, 220, y - 3, Tema.Mediana, Tema.Texto));
+                y += 44;
+            };
+            fila("Cajero:", Sesion.Usuario != null ? Sesion.Usuario.Nombre : "");
+            fila("Caja:", c.Caja.ToString());
+            if (t == null) fila("Turno:", "No hay un turno abierto");
+            else
+            {
+                fila("Turno número:", t.Id.ToString());
+                fila("Abierto el:", t.Apertura.ToString("dd/MM/yyyy HH:mm"));
+                fila("Fondo inicial:", Fmt.Dinero(t.Fondo));
+            }
+            p.Controls.Add(Ui.Etiqueta("Entradas y salidas de efectivo, cortes X y Z, el cajón y el cambio de usuario están en los botones de arriba.", 24, y + 16, Tema.Normal, Tema.Humo));
+            return p;
         }
 
         /// <summary>Barra de botones con lo que más se usa en el mostrador (el resto está en el menú).</summary>
         Control ConstruirBarraAcciones()
         {
-            var tabla = new TableLayoutPanel { Dock = DockStyle.Top, Height = 68, ColumnCount = 9, RowCount = 1, BackColor = Tema.AzulFondo, Padding = new Padding(8, 6, 8, 4) };
-            for (int i = 0; i < 9; i++) tabla.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f / 9f));
+            var tabla = new TableLayoutPanel { Dock = DockStyle.Top, Height = 68, ColumnCount = 8, RowCount = 1, BackColor = Tema.AzulFondo, Padding = new Padding(8, 6, 8, 4) };
+            for (int i = 0; i < 8; i++) tabla.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f / 8f));
             tabla.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
             Action<int, string, string, EventHandler> boton = (col, tecla, texto, click) =>
                 tabla.Controls.Add(new BotonF(tecla, texto, click) { Dock = DockStyle.Fill, Margin = new Padding(3, 0, 3, 0) }, col, 0);
-            boton(0, "F2", "Buscar", (s, e) => Buscar());
-            boton(1, "F3", "Quitar", (s, e) => QuitarArticulo());
-            boton(2, "F4", "Precio", (s, e) => ConsultarPrecio());
-            boton(3, "F5", "En espera", (s, e) => Espera());
-            boton(4, "F6", "Descuento", (s, e) => Descuento());
-            boton(5, "F7", "Entr./Sal.", (s, e) => MovimientoCaja());
-            boton(6, "F8", "Varios", (s, e) => ArticuloComun());
-            boton(7, "F9", "Cortes", (s, e) => Cortes());
-            boton(8, "F12", "Cancelar", (s, e) => CancelarTicket());
+            boton(0, "Ctrl+F1", "Cobrar", (s, e) => Cobrar());
+            boton(1, "Ctrl+F2", "Buscar", (s, e) => Buscar());
+            boton(2, "Ctrl+F3", "Quitar", (s, e) => QuitarArticulo());
+            boton(3, "Ctrl+F4", "Precio", (s, e) => ConsultarPrecio());
+            boton(4, "Ctrl+F5", "En espera", (s, e) => Espera());
+            boton(5, "Ctrl+F6", "Descuento", (s, e) => Descuento());
+            boton(6, "Ctrl+F7", "Varios", (s, e) => ArticuloComun());
+            boton(7, "Ctrl+F8", "Cancelar", (s, e) => CancelarTicket());
             return tabla;
         }
 
@@ -244,26 +299,50 @@ namespace VentaFacil.Forms.Pos
             if (Form.ActiveForm != this) return base.ProcessCmdKey(ref msg, keyData);
             switch (keyData)
             {
-                case Keys.F1: Cobrar(); return true;
-                case Keys.F2: Buscar(); return true;
-                case Keys.F3: QuitarArticulo(); return true;
-                case Keys.F4: ConsultarPrecio(); return true;
-                case Keys.F5: Espera(); return true;
-                case Keys.F6: Descuento(); return true;
-                case Keys.F7: MovimientoCaja(); return true;
-                case Keys.F8: ArticuloComun(); return true;
-                case Keys.F9: Cortes(); return true;
+                // F1..F6: cambiar de módulo
+                case Keys.F1: IrAModulo(0); return true;
+                case Keys.F2: IrAModulo(1); return true;
+                case Keys.F3: IrAModulo(2); return true;
+                case Keys.F4: IrAModulo(3); return true;
+                case Keys.F5: IrAModulo(4); return true;
+                case Keys.F6: IrAModulo(5); return true;
                 case Keys.F10: CambiarUsuario(); return true;
-                case Keys.F11: Administracion(); return true;
-                case Keys.F12: CancelarTicket(); return true;
+                case Keys.Escape: if (_modActivo != 0) { IrAModulo(0); return true; } break;
                 case Keys.Control | Keys.P: ReimprimirUltimo(); return true;
-                case Keys.Control | Keys.D: AbrirCajon(); return true;
                 case Keys.Control | Keys.I: ConfigurarImpresora(); return true;
-                case Keys.Shift | Keys.Subtract: AbrirCajon(); return true;
-                case Keys.Shift | Keys.OemMinus: AbrirCajon(); return true;
-                case Keys.Control | Keys.Delete: CancelarVentaActual(); return true;
-                case Keys.Shift | Keys.Delete: CancelarVentaActual(); return true;
-                case Keys.Add: Cobrar(); return true;
+            }
+            // Ctrl+F1..F12: los atajos del módulo en el que se está
+            if ((keyData & Keys.Control) == Keys.Control && (keyData & Keys.Shift) == 0)
+            {
+                int f = (int)(keyData & Keys.KeyCode) - (int)Keys.F1 + 1;
+                if (f >= 1 && f <= 12)
+                {
+                    if (_modActivo != 0) return _modulo != null && _modulo.Atajo(f);
+                    switch (f)
+                    {
+                        case 1: Cobrar(); return true;
+                        case 2: Buscar(); return true;
+                        case 3: QuitarArticulo(); return true;
+                        case 4: ConsultarPrecio(); return true;
+                        case 5: Espera(); return true;
+                        case 6: Descuento(); return true;
+                        case 7: ArticuloComun(); return true;
+                        case 8: CancelarTicket(); return true;
+                    }
+                    return true;
+                }
+            }
+            if (_modActivo == 0)
+            {
+                switch (keyData)
+                {
+                    case Keys.Control | Keys.D: AbrirCajon(); return true;
+                    case Keys.Shift | Keys.Subtract: AbrirCajon(); return true;
+                    case Keys.Shift | Keys.OemMinus: AbrirCajon(); return true;
+                    case Keys.Control | Keys.Delete: CancelarVentaActual(); return true;
+                    case Keys.Shift | Keys.Delete: CancelarVentaActual(); return true;
+                    case Keys.Add: Cobrar(); return true;
+                }
             }
             return base.ProcessCmdKey(ref msg, keyData);
         }
@@ -459,7 +538,7 @@ namespace VentaFacil.Forms.Pos
             _lblCantidad.ForeColor = _multiplicador != 1 ? Tema.Rojo : Tema.Texto;
         }
 
-        void Mensaje(string t) { _lblMensaje.Text = t; }
+        void Mensaje(string t) { _lblMensaje.Text = t; if (_modulo != null) _modulo.Estado(t); }
 
         LineaVenta LineaSeleccionada()
         {
@@ -633,16 +712,6 @@ namespace VentaFacil.Forms.Pos
                     Mensaje("Bienvenido(a), " + Sesion.Usuario.Nombre);
                 }
             }
-            _captura.Focus();
-        }
-
-        void Administracion(string seccion = null, string accion = null)
-        {
-            if (_lineas.Count > 0) { Ui.Aviso("Termine la venta actual antes de entrar a Administración."); return; }
-            if (Ui.AutorizarAdmin("Administración: se requiere un administrador") == null) { _captura.Focus(); return; }
-            using (var f = new Admin.FormAdmin(seccion, accion)) f.ShowDialog(this);
-            Config.Cargar();
-            ActualizarEncabezado();
             _captura.Focus();
         }
 

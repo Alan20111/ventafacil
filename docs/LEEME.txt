@@ -8,35 +8,38 @@ INSTALAR
 3. La primera vez pregunta DONDE guardar los respaldos (por defecto el
    escritorio, carpeta VentaFacil_Respaldos). Puede elegir una USB.
 4. Entre con usuario: admin   Contraseña: admin
-   (CAMBIELA en F11 Administracion > Usuarios)
+   (CAMBIELA en F6 Ajustes > Usuarios)
 5. Se abre la ventana de impresora: Detectar automaticamente, Imprimir prueba, Guardar.
-6. F11 > Configuracion: datos del negocio.
+6. F6 Ajustes > Negocio: datos del negocio.
 
 LICENCIA
   Tiene 30 dias de prueba. Cuando queden 7 o menos aparece la pantalla de
   Licencia con el CODIGO DE ESTE EQUIPO: mandelo a su proveedor y escriba la
   clave que le de (16 letras y numeros). Se activa una sola vez; si reinstala,
-  escribe la misma clave. Tambien esta en F11 > Configuracion > Licencia.
+  escribe la misma clave. Tambien esta en F6 Ajustes > Licencia.
 
 MENU DE ARRIBA
   Arriba de la pantalla de venta hay un menu (Venta, Caja, Productos,
   Inventario, Reportes, Sistema, Ayuda) y una barra de botones con lo que mas
   se usa. Todo se puede hacer con el raton o con las teclas; las teclas son
-  solo para ir mas rapido. Ayuda > Teclas rapidas muestra la lista.
+  solo para ir mas rapido. F6 Ajustes > Teclas rapidas muestra la lista.
 
-TECLAS
+MODULOS (barra azul de arriba; tambien con el raton)
+  F1 Caja    F2 Turno    F3 Catalogo    F4 Almacen    F5 Resultados    F6 Ajustes
+  Esc regresa a Caja.  F10 cambia de usuario.
+  Dentro de cada modulo, Ctrl+F1, Ctrl+F2... son los botones que se ven arriba.
+
+TECLAS DE LA CAJA
   Codigo + Enter ... agregar articulo          3*  ... cantidad 3
-  + o F1 ........... COBRAR                     F2 ... buscar
-  F3 / Supr ........ quitar articulo            F4 ... consultar precio
-  F5 ............... venta en espera            F6 ... descuento
-  F7 ............... entradas/salidas de dinero F8 ... articulo varios
-  F9 ............... CORTES (X y Z)             F10 .. cambiar usuario
-  F11 .............. administracion             F12 .. cancelar ticket
+  + o Ctrl+F1 ...... COBRAR                     Ctrl+F2 ... buscar
+  Ctrl+F3 / Supr ... quitar articulo            Ctrl+F4 ... consultar precio
+  Ctrl+F5 .......... venta en espera            Ctrl+F6 ... descuento
+  Ctrl+F7 .......... articulo varios            Ctrl+F8 ... cancelar ticket
   Ctrl+P ........... reimprimir ultimo ticket   Ctrl+D abrir cajon
   Ctrl+I ........... elegir / detectar impresora
 
 CODIGOS DE BARRAS (para escanear y cobrar)
-  F11 > Productos > "Codigos de barras...": tome un producto, pase el lector
+  F3 Catalogo > "Codigos de barras" (Ctrl+F3): tome un producto, pase el lector
   por su empaque y el codigo se guarda solo y pasa al siguiente.
     F2 saltar   F3 "sin codigo de barras"   F4 quitar codigo   F5 etiqueta
   Lo que no trae codigo (granel, verdura): F3 lo marca, o F5 imprime una
@@ -44,7 +47,7 @@ CODIGOS DE BARRAS (para escanear y cobrar)
   y sale el precio.
 
 IMPORTAR LOS PRODUCTOS DE ZAFIRAH
-  F11 > Productos > "Importar de Zafirah..." (tambien en el menu Productos).
+  F3 Catalogo > "Importar Zafirah / .BK" (Ctrl+F4).
   Dos formas de traer los datos:
     - "Base de Zafirah": se conecta a su SQL Server (solo LEE, no cambia nada en
       Zafirah), elige la tabla de articulos y la lee.
@@ -60,7 +63,7 @@ IMPORTAR LOS PRODUCTOS DE ZAFIRAH
   (el que se teclea en caja) y su codigo de barras.
 
 INVENTARIO
-  F11 > Inventario > "Conteo con Excel": exporta la hoja, cuente y escriba lo
+  F4 Almacen > "Conteo con Excel": exporta la hoja, cuente y escriba lo
   contado en la columna CONTADO, importela y vera los faltantes y sobrantes
   (con su valor en pesos) ANTES de aplicar nada.
 
