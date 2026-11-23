@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net11.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <NoWarn>CS0618;CS8632</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.*" />
+    <!-- El código REAL de la capa de datos del programa, no una copia -->
+    <Compile Include="..\..\src\VentaFacil\Core\Basicos.cs" Link="Real\Basicos.cs" />
+    <Compile Include="..\..\src\VentaFacil\Core\Fmt.cs" Link="Real\Fmt.cs" />
+    <Compile Include="..\..\src\VentaFacil\Core\Dinero.cs" Link="Real\Dinero.cs" />
+    <Compile Include="..\..\src\VentaFacil\Core\ZafirahMapeo.cs" Link="Real\ZafirahMapeo.cs" />
+    <Compile Include="..\..\src\VentaFacil\Data\Db.cs" Link="Real\Db.cs" />
+    <Compile Include="..\..\src\VentaFacil\Data\Esquema.cs" Link="Real\Esquema.cs" />
+    <Compile Include="..\..\src\VentaFacil\Data\Modelos.cs" Link="Real\Modelos.cs" />
+    <Compile Include="..\..\src\VentaFacil\Data\Repos.cs" Link="Real\Repos.cs" />
+    <Compile Include="..\..\src\VentaFacil\Data\Respaldo.cs" Link="Real\Respaldo.cs" />
+    <Compile Include="..\..\src\VentaFacil\Data\Salud.cs" Link="Real\Salud.cs" />
+    <Compile Include="..\..\src\VentaFacil\Data\ImportarProductosZ.cs" Link="Real\ImportarProductosZ.cs" />
+  </ItemGroup>
+</Project>

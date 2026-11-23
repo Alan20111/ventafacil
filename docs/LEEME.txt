@@ -43,6 +43,19 @@ CODIGOS DE BARRAS (para escanear y cobrar)
   etiqueta con su codigo corto para pegarla. Todos se cobran igual: se escanea
   y sale el precio.
 
+IMPORTAR LOS PRODUCTOS DE ZAFIRAH
+  F11 > Productos > "Importar de Zafirah..." (tambien en el menu Productos).
+  Dos formas de traer los datos:
+    - "Base de Zafirah": se conecta a su SQL Server (solo LEE, no cambia nada en
+      Zafirah), elige la tabla de articulos y la lee.
+    - "Archivo Excel o CSV": un reporte de productos exportado de Zafirah, o
+      cualquier lista.
+  El programa propone que columna es cada dato; REVISELO en pantalla (hay un
+  ejemplo junto a cada una) y corrijalo si hace falta. Abajo ve la vista
+  previa y los avisos. Nada se guarda hasta pulsar "Importar", y antes se
+  hace un respaldo automatico. Los productos conservan el codigo de Zafirah
+  (el que se teclea en caja) y su codigo de barras.
+
 INVENTARIO
   F11 > Inventario > "Conteo con Excel": exporta la hoja, cuente y escriba lo
   contado en la columna CONTADO, importela y vera los faltantes y sobrantes

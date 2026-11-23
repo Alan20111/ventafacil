@@ -163,6 +163,7 @@ namespace VentaFacil.Forms.Pos
             ms.Items.Add(Desplegable("&Productos",
                 Opcion("Catálogo de productos", "", (s, e) => Administracion("Productos")),
                 Opcion("Códigos de barras…", "", (s, e) => Administracion("Productos", "barras")),
+                Opcion("Importar de Zafirah…", "", (s, e) => Administracion("Productos", "zafirah")),
                 Opcion("Departamentos", "", (s, e) => Administracion("Departamentos"))));
             ms.Items.Add(Desplegable("&Inventario",
                 Opcion("Inventario  (entradas, conteo con Excel, kardex)", "", (s, e) => Administracion("Inventario"))));

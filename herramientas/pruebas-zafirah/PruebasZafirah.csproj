@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net11.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.IO.Packaging" Version="8.0.1" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
+    <!-- El mismo código del programa, no una copia -->
+    <Compile Include="..\..\src\VentaFacil\Core\ZafirahMapeo.cs" Link="Compartido\ZafirahMapeo.cs" />
+    <Compile Include="..\..\src\VentaFacil\Core\TablaArchivo.cs" Link="Compartido\TablaArchivo.cs" />
+    <Compile Include="..\..\src\VentaFacil\Core\Fmt.cs" Link="Compartido\Fmt.cs" />
+    <Compile Include="..\..\src\VentaFacil\Core\Dinero.cs" Link="Compartido\Dinero.cs" />
+    <Compile Include="..\..\src\VentaFacil\Core\Xlsx.cs" Link="Compartido\Xlsx.cs" />
+    <Compile Include="..\..\src\VentaFacil\Data\ZafirahSql.cs" Link="Compartido\ZafirahSql.cs" />
+  </ItemGroup>
+</Project>

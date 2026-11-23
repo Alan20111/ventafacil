@@ -17,7 +17,7 @@ namespace VentaFacil.Forms.Admin
 
         readonly string _seccionInicial, _accionInicial;
 
-        /// <summary>seccion: Productos, Departamentos, Inventario, Reportes, Usuarios, Configuración o Respaldos. accion: "barras" abre la asignación de códigos de barras.</summary>
+        /// <summary>seccion: Productos, Departamentos, Inventario, Reportes, Usuarios, Configuración o Respaldos. accion: "barras" abre la asignación de códigos de barras; "zafirah", el importador de Zafirah.</summary>
         public FormAdmin(string seccion = null, string accion = null)
         {
             _seccionInicial = seccion;
@@ -65,10 +65,11 @@ namespace VentaFacil.Forms.Admin
             Shown += (s, e) =>
             {
                 Abrir(_seccionInicial != null && _secciones.ContainsKey(_seccionInicial) ? _seccionInicial : "Productos");
-                if (_accionInicial == "barras")
+                var productos = _actual as SeccionProductos;
+                if (productos != null)
                 {
-                    var productos = _actual as SeccionProductos;
-                    if (productos != null) productos.CodigosDeBarras();
+                    if (_accionInicial == "barras") productos.CodigosDeBarras();
+                    else if (_accionInicial == "zafirah") productos.ImportarZafirah();
                 }
             };
         }

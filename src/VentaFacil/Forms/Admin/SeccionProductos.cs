@@ -58,6 +58,11 @@ namespace VentaFacil.Forms.Admin
             var barras = AdminUtil.BotonBarra("Códigos de barras…", (s, e) => CodigosDeBarras(), 190);
             barras.ForeColor = Tema.Azul;
             barra.Controls.Add(barras);
+            var zafirah = AdminUtil.BotonBarra("      Importar de Zafirah…", (s, e) => ImportarZafirah(), 250);
+            zafirah.Image = Iconos.Importar(24, Tema.Azul);
+            zafirah.ImageAlign = ContentAlignment.MiddleLeft;
+            zafirah.ForeColor = Tema.Azul;
+            barra.Controls.Add(zafirah);
             barra.Controls.Add(AdminUtil.BotonBarra("Etiqueta…", (s, e) => { var p = Seleccionado(); if (p == null) Ui.Aviso("Elija un producto de la lista."); else FormVistaEtiqueta.Mostrar(p); }, 120));
             barra.Controls.Add(AdminUtil.BotonBarra("Lista de costos (Excel)", (s, e) => ExcelSemillera.ExportarLista(FindForm()), 190));
             barra.Controls.Add(AdminUtil.BotonBarra("Importar CSV", (s, e) => Importar()));
@@ -109,6 +114,13 @@ namespace VentaFacil.Forms.Admin
                 _conteo.Text = _lista.Count >= 1000 ? "Mostrando los primeros 1000; escriba para filtrar." : _lista.Count + " productos";
             }
             catch (Exception ex) { Ui.Error(ex, "Cargar productos"); }
+        }
+
+        /// <summary>Asistente para traer los productos de Zafirah (su base de datos o un Excel/CSV).</summary>
+        public void ImportarZafirah()
+        {
+            using (var f = new FormImportarZafirah()) f.ShowDialog(FindForm());
+            Cargar();
         }
 
         /// <summary>Abre la asignación rápida de códigos de barras y, al cerrar, recarga la lista.</summary>

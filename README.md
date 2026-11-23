@@ -111,6 +111,10 @@ En *F11 → Productos*:
 - Si la base se daña, el programa lo detecta al abrir y ofrece restaurar el último respaldo bueno. La base dañada se guarda aparte, no se borra.
 - El acceso **VentaFácil - Reparar** del escritorio revisa el programa, la base, los respaldos y los accesos sin borrar datos.
 
+### Importar los productos de Zafirah
+Administración → Productos → **Importar de Zafirah…** (también en el menú *Productos*). Origen: **la base de Zafirah** (SQL Server, **solo lectura**: únicamente `SELECT`, nunca se escribe en Zafirah; probable servidor `(local)` y base `smartdatabase`, tabla `ZFRADMARTICULOS`) o **un archivo Excel/CSV** (por ejemplo un reporte exportado). Los nombres de las columnas de Zafirah se conocen por sus reportes pero **no se habían visto en una base real**, así que el asistente **no adivina en silencio**: propone qué columna es cada dato (si hay dos candidatas de costo o precio, elige la que trae más valores), muestra un **ejemplo** de cada una, permite cambiarla y enseña una **vista previa con avisos** (sin precio, precio menor al costo, códigos repetidos, niveles de mayoreo sin cantidad mínima…). Las cantidades «a partir de» de medio mayoreo/mayoreo **no se proponen**: se eligen viendo los datos. Si la tabla trae **una fila por almacén**, suma las existencias o usa un almacén elegido.
+Al importar: respaldo automático previo, **todo en una transacción**, y un resumen. Si un código ya es de **otro** producto (otro nombre) **no se pisa** (se lista; hay casilla para reemplazarlo); si el mismo **nombre** ya existe con otro código, se actualiza ese producto sin duplicarlo; un código de barras que ya es de otro producto no se duplica. Los productos conservan el código de Zafirah (el que se teclea en caja) y su código de barras. No se importan ventas, clientes ni contraseñas.
+
 ### Menú superior
 La pantalla de venta tiene arriba un **menú** (Venta · Caja · Productos · Inventario · Reportes · Sistema · Ayuda) y una **barra de botones** con las acciones más usadas (Buscar, Quitar, Precio, En espera, Descuento, Entr./Sal., Varios, Cortes, Cancelar). Los menús de Productos, Inventario, Reportes y Sistema abren la Administración directo en esa sección (piden administrador si quien cobra no lo es). Todas las teclas F siguen funcionando igual; F10 no activa el menú de Windows porque se atiende antes. Ayuda → *Teclas rápidas* muestra la lista.
 
@@ -125,8 +129,8 @@ Inventario → **Conteo con Excel**: se exporta la hoja (todo o por proveedor), 
 30 días de prueba; después una clave por computadora (permanente). Se genera con `herramientas/licencias` (ver [docs/LICENCIAS.md](docs/LICENCIAS.md)).
 
 ### Pruebas
-- [docs/PRUEBAS_WINDOWS.md](docs/PRUEBAS_WINDOWS.md): 40 pasos para la laptop.
-- `dotnet run` en `herramientas/licencias -- --probar`, `herramientas/pruebas-dinero`, `herramientas/pruebas-conteo` y `herramientas/pruebas-barras` (código de barras contra una librería independiente): pruebas automáticas (se corren en Mac o Windows).
+- [docs/PRUEBAS_WINDOWS.md](docs/PRUEBAS_WINDOWS.md): 44 pasos para la laptop.
+- `dotnet run` en `herramientas/licencias -- --probar`, `herramientas/pruebas-dinero`, `herramientas/pruebas-conteo` y `herramientas/pruebas-barras` (código de barras contra una librería independiente), `herramientas/pruebas-zafirah` (importador) y `herramientas/pruebas-datos` (**la capa de datos real contra un SQLite de verdad**: esquema, migración, cobros, cortes, dinero exacto, conteo, respaldos, base dañada, restauración e importador; usa un adaptador mínimo porque `System.Data.SQLite` solo corre en Windows): pruebas automáticas (se corren en Mac o Windows).
 
 ## Desarrollo
 

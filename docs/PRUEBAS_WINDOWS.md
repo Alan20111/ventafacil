@@ -5,7 +5,9 @@ Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y
 
 > Lo que se probó fuera de Windows (en una Mac): claves de licencia, lectura/escritura de Excel del conteo,
 > redondeo de dinero, detección de base dañada, y el código de barras Code 128 (contra una librería independiente) y la trama ESC/POS de las etiquetas.
-> **El dibujo de la etiqueta, su impresión real y la lectura con el lector NO se han probado: son el paso 36. Tampoco se ha visto en pantalla el menú superior (pasos 37 a 40).** **Nada de lo que sigue se había probado en Windows.**
+> **El dibujo de la etiqueta, su impresión real y la lectura con el lector NO se han probado: son el paso 36. Tampoco se ha visto en pantalla el menú superior (pasos 37 a 40) ni el asistente de importación (41 a 44), ni su conexión a un SQL Server real.**
+>
+> **Sí se probó con un SQLite de verdad** (herramientas/pruebas-datos, con un adaptador porque `System.Data.SQLite` solo existe para Windows): el código real de esquema, migración, productos, códigos de barras, cobros, cancelaciones, cortes, dinero exacto, conteo, respaldos, base dañada, restauración y la **aplicación** del importador. **Nada de lo que sigue se había probado en Windows.**
 
 ## A. Instalación
 | # | Qué hacer | Debe pasar |
@@ -83,4 +85,12 @@ Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y
 | 39 | Hacer una venta usando solo el menú (Venta → Buscar artículo, Cobrar) y otra solo con la barra de botones | Funcionan igual que con las teclas; al cerrar un menú el cursor vuelve a la captura y el lector sigue escaneando |
 | 40 | Pulsar **F10** con la caja abierta; luego Productos → Códigos de barras… | F10 cambia de usuario **sin** abrir el menú de Windows; la opción de Productos abre la Administración directo en la asignación de códigos |
 
-Resultado: ______ de 40 pasos bien.   Fallas anotadas: ____________________________
+## J. Importar de Zafirah
+| # | Qué hacer | Debe pasar |
+|---|-----------|-----------|
+| 41 | Productos → **Importar de Zafirah…** (botón con icono, y menú Productos) | Se abre el asistente completo (cabe en 1366x768, sin cortes). Pestaña «Archivo»: elegir un Excel o CSV de prueba | Aparecen las columnas propuestas con su ejemplo y la vista previa con avisos |
+| 42 | Si Zafirah está en esa PC: pestaña «Base de Zafirah» → servidor `(local)` (o `.\SQLEXPRESS`), **Conectar** (Windows o usuario SQL) → base `smartdatabase` → tabla `ZFRADMARTICULOS` → **Leer tabla** | Conecta sin escribir nada en Zafirah; propone Código, Nombre, Precio, Costo, Existencia… **Comprobar a ojo** que Menudeo, Costo y Existencia sean las columnas correctas; elegir «a partir de» para medio mayoreo/mayoreo si hace falta. Si falla, el mensaje debe ser claro (usuario, permiso, servidor) |
+| 43 | **Importar** | Pide confirmar, hace respaldo, muestra el resumen; los productos salen en Productos y se cobran por su código corto y por su código de barras |
+| 44 | Repetir la importación | No duplica nada; actualiza; si un código era de otro producto lo lista y no lo pisa |
+
+Resultado: ______ de 44 pasos bien.   Fallas anotadas: ____________________________
