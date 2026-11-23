@@ -19,7 +19,7 @@ namespace VentaFacil.UI
             StartPosition = autorizacion ? FormStartPosition.CenterParent : FormStartPosition.CenterScreen;
             MaximizeBox = false; MinimizeBox = !autorizacion;
             ShowInTaskbar = !autorizacion;
-            ClientSize = new Size(420, 290);
+            ClientSize = new Size(420, autorizacion ? 270 : 310);
             BackColor = Tema.Crema;
             Font = Tema.Normal;
             KeyPreview = true;
@@ -54,8 +54,13 @@ namespace VentaFacil.UI
             if (!autorizacion)
             {
                 if (UsuarioRepo.Validar("admin", "admin") != null)
-                    Controls.Add(Ui.Etiqueta("Primera vez: usuario admin, contraseña admin", 20, ClientSize.Height - 26, null, Tema.Humo));
-                var marca = Ui.Etiqueta("alanmendez.dev", ClientSize.Width - 105, ClientSize.Height - 24, new Font("Segoe UI", 8.5f), Color.FromArgb(130, 145, 168));
+                {
+                    var pista = Ui.Etiqueta("Primera vez: usuario admin, contraseña admin", 0, 246, new Font("Segoe UI", 9.5f), Tema.Humo);
+                    pista.Left = (ClientSize.Width - pista.Width) / 2;
+                    Controls.Add(pista);
+                }
+                var marca = Ui.Etiqueta("alanmendez.dev", 0, 280, new Font("Segoe UI", 8.5f), Color.FromArgb(135, 150, 170));
+                marca.Left = (ClientSize.Width - marca.Width) / 2;
                 marca.Cursor = Cursors.Hand;
                 marca.Click += (s, e) => { try { System.Diagnostics.Process.Start("https://alanmendez.dev"); } catch { } };
                 Controls.Add(marca);

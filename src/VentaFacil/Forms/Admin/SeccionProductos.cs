@@ -62,10 +62,23 @@ namespace VentaFacil.Forms.Admin
             barra.Controls.Add(AdminUtil.BotonBarra("Lista costos", (s, e) => ExcelSemillera.ExportarLista(FindForm()), 105));
             barra.Controls.Add(AdminUtil.BotonBarra("Importar CSV", (s, e) => Importar(), 105));
             barra.Controls.Add(AdminUtil.BotonBarra("Exportar CSV", (s, e) => Exportar(), 105));
-            // Botón discreto tipo icono para importar desde Zafirah sin llamar la atención
-            var zafirah = AdminUtil.BotonBarra("", (s, e) => ImportarZafirah(), 38);
-            zafirah.Image = Iconos.Importar(18, Tema.Humo);
-            zafirah.ImageAlign = ContentAlignment.MiddleCenter;
+            // Icono discreto y sin marco para importar desde Zafirah (no llama la atención)
+            var zafirah = new Button
+            {
+                Width = 28, Height = 28,
+                FlatStyle = FlatStyle.Flat,
+                BackColor = Color.Transparent,
+                Cursor = Cursors.Hand,
+                Image = Iconos.Importar(16, Tema.Ceniza),
+                Margin = new Padding(6, 6, 2, 0),
+                TabStop = false
+            };
+            zafirah.FlatAppearance.BorderSize = 0;
+            zafirah.FlatAppearance.MouseOverBackColor = Tema.Taupe;
+            zafirah.FlatAppearance.MouseDownBackColor = Tema.Piedra;
+            zafirah.Click += (s, e) => ImportarZafirah();
+            zafirah.MouseEnter += (s, e) => { zafirah.Image = Iconos.Importar(16, Tema.Azul); };
+            zafirah.MouseLeave += (s, e) => { zafirah.Image = Iconos.Importar(16, Tema.Ceniza); };
             var ttZafirah = new ToolTip();
             ttZafirah.SetToolTip(zafirah, "Importar desde Zafirah (.BK o SQL Server)");
             barra.Controls.Add(zafirah);

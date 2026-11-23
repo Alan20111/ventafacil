@@ -95,15 +95,9 @@ namespace VentaFacil.UI
         {
             _titulo = titulo;
             Dock = DockStyle.Fill; BackColor = Tema.Crema;
-            var cab = new Panel { Dock = DockStyle.Top, Height = 38, BackColor = Tema.AzulFondo };
-            cab.Controls.Add(new Label { Text = titulo.ToUpperInvariant(), Left = 12, Top = 6, AutoSize = true, Font = Tema.Mediana, ForeColor = Tema.Azul });
-            cab.Controls.Add(new Label { Text = descripcion, Left = 12 + TextRenderer.MeasureText(titulo.ToUpperInvariant(), Tema.Mediana).Width + 14, Top = 11, AutoSize = true, Font = Tema.Normal, ForeColor = Tema.Humo });
-            _estado = new Label { AutoSize = false, Width = 320, Height = 28, Top = 8, TextAlign = ContentAlignment.MiddleRight, Font = Tema.Negrita, ForeColor = Tema.Verde, Anchor = AnchorStyles.Top | AnchorStyles.Right };
-            cab.Controls.Add(_estado);
-            cab.Resize += (s, e) => _estado.Left = cab.Width - _estado.Width - 12;
+            _estado = new Label { AutoSize = false, Height = 0, Visible = false };
             Controls.Add(_cuerpo);
             Controls.Add(_barra);
-            Controls.Add(cab);
         }
 
         public Control Actual { get { return _actual; } }
