@@ -48,6 +48,9 @@ IMPORTAR LOS PRODUCTOS DE ZAFIRAH
   Dos formas de traer los datos:
     - "Base de Zafirah": se conecta a su SQL Server (solo LEE, no cambia nada en
       Zafirah), elige la tabla de articulos y la lee.
+    - "Respaldo .BK": elige un respaldo de SQL Server (.BK, .1BK, .2BK, .3BK).
+      Se restaura en una base TEMPORAL (necesita SQL Server en esta PC), se leen
+      los productos y la temporal se borra al cerrar. Zafirah no se toca.
     - "Archivo Excel o CSV": un reporte de productos exportado de Zafirah, o
       cualquier lista.
   El programa propone que columna es cada dato; REVISELO en pantalla (hay un

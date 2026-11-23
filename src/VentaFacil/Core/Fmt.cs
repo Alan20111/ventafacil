@@ -7,6 +7,7 @@ namespace VentaFacil.Core
     public static class Fmt
     {
         public static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
+        public static string Tamano(long bytes) { return bytes >= 1073741824L ? (bytes / 1073741824.0).ToString("0.00", Inv) + " GB" : bytes >= 1048576L ? (bytes / 1048576.0).ToString("0.0", Inv) + " MB" : Math.Max(1, bytes / 1024).ToString(Inv) + " KB"; }
         public static string Dinero(decimal v) { return (v < 0 ? "-$" : "$") + Math.Abs(v).ToString("#,##0.00", Inv); }
         public static string Dec(decimal v) { return v.ToString("0.###", Inv); }
         public static string Cant(decimal v, bool granel) { return granel ? v.ToString("0.000", Inv) : v.ToString("0.###", Inv); }

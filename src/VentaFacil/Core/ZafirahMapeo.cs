@@ -25,6 +25,8 @@ namespace VentaFacil.Core
         public string AlmacenElegido = "";
         /// <summary>Clave del proveedor → su nombre (si el programa de origen guarda solo un número).</summary>
         public Dictionary<string, string> ProveedoresPorClave;
+        /// <summary>Unidades que se venden a granel (kg, litro…). null = las de siempre. Se comparan sin acentos ni mayúsculas.</summary>
+        public ICollection<string> UnidadesGranel;
     }
 
     public class ProductoZ
@@ -103,6 +105,43 @@ namespace VentaFacil.Core
             { CampoZ.Minimo, new[] { "minimo", "existenciaminima", "stockminimo", "puntoreorden", "min" } },
             { CampoZ.Almacen, new[] { "numalmacen", "codigoalmacen", "idalmacen", "almacen", "sucursal" } }
         };
+
+        /// <summary>Las columnas candidatas de siempre para cada dato (una copia: sirve de base para un perfil).</summary>
+        public static Dictionary<CampoZ, string[]> CandidatasPorDefecto()
+        {
+            var copia = new Dictionary<CampoZ, string[]>();
+            foreach (var kv in Exactos) copia[kv.Key] = (string[])kv.Value.Clone();
+            return copia;
+        }
+
+        /// <summary>
+        /// De una lista de nombres candidatos, la columna de la tabla que corresponde. Si hay varias y el dato es numérico,
+        /// elige la que trae más valores mayores que cero (p. ej. UltimoCosto vs Costo1). null si ninguna existe.
+        /// </summary>
+        public static string ElegirColumna(DataTable t, IEnumerable<string> candidatas, bool conDatos)
+        {
+            var halladas = new List<string>();
+            foreach (string cand in candidatas)
+            {
+                string c = Norm(cand);
+                foreach (DataColumn col in t.Columns)
+                    if (Norm(col.ColumnName) == c && !halladas.Contains(col.ColumnName)) halladas.Add(col.ColumnName);
+            }
+            if (halladas.Count == 0) return null;
+            string elegida = halladas[0];
+            if (conDatos && halladas.Count > 1)
+            {
+                int mejor = Positivos(t, elegida);
+                foreach (string otra in halladas.Skip(1).Take(2))
+                {
+                    int p = Positivos(t, otra);
+                    if (p > mejor) { mejor = p; elegida = otra; }
+                }
+            }
+            return elegida;
+        }
+
+        public static bool EsCampoNumerico(CampoZ campo) { return ConDatos.Contains(campo); }
 
         // Campos numéricos donde, si hay dos candidatas, conviene la que trae más datos con valor
         static readonly HashSet<CampoZ> ConDatos = new HashSet<CampoZ> { CampoZ.Costo, CampoZ.Menudeo, CampoZ.Medio, CampoZ.Mayoreo, CampoZ.Existencia };
@@ -210,6 +249,7 @@ namespace VentaFacil.Core
             Func<CampoZ, string> col = c => res.Mapeados.Contains(c) ? mapeo[c] : null;
             bool sumar = op.SumarAlmacenes || col(CampoZ.Almacen) == null;
             var porCodigo = new Dictionary<string, ProductoZ>(StringComparer.OrdinalIgnoreCase);
+            var granel = op.UnidadesGranel == null ? UnidadesDeGranel : new HashSet<string>(op.UnidadesGranel.Select(u => Norm(u)));
             var sinNombreProveedor = 0;
             int numFila = 0;
 
@@ -263,7 +303,7 @@ namespace VentaFacil.Core
                     else if (pv != "" && op.ProveedoresPorClave != null && op.ProveedoresPorClave.Count > 0) sinNombreProveedor++;
                     p.Proveedor = pv.ToUpperInvariant();
                 }
-                if (col(CampoZ.Unidad) != null) p.Granel = UnidadesDeGranel.Contains(Norm(Texto(r[col(CampoZ.Unidad)])));
+                if (col(CampoZ.Unidad) != null) p.Granel = granel.Contains(Norm(Texto(r[col(CampoZ.Unidad)])));
                 if (col(CampoZ.Minimo) != null) p.Minimo = Numero(r[col(CampoZ.Minimo)]);
 
                 // Niveles de precio: solo valen con su cantidad mínima (si no, se ignoran y se avisa)

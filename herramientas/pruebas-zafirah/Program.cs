@@ -1,10 +1,12 @@
 using System.Data;
 using VentaFacil.Core;
+using VentaFacil.Data;
 
 // Pruebas del importador de Zafirah (sin SQL Server ni pantallas). Uso:  dotnet run
 // La tabla de prueba imita ZFRADMARTICULOS con los nombres de columna que salen de los reportes de Zafirah.
 System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance); // .NET moderno: la página 1252 de Windows (en .NET Framework ya viene)
 int fallas = 0;
+void Seccion(string t) { Console.WriteLine("\n== " + t); }
 void Revisar(string nombre, bool ok, string detalle = "") { Console.WriteLine((ok ? "[OK]    " : "[FALLA] ") + nombre + (ok || detalle == "" ? "" : "  -> " + detalle)); if (!ok) fallas++; }
 
 DataTable Tabla(bool ultimoCostoLleno = false)
@@ -142,6 +144,116 @@ finally { Directory.Delete(dir, true); }
     var probables = VentaFacil.Data.ZafirahSql.ServidoresProbables();
     Revisar("servidores probables: (local) primero, sin repetidos", probables[0] == "(local)" && probables.Length == probables.Distinct(StringComparer.OrdinalIgnoreCase).Count() && probables.Any(x => x.Contains("SQLEXPRESS")));
     Revisar("un error que no es de SQL se muestra tal cual", VentaFacil.Data.ZafirahSql.Explicar(new InvalidOperationException("algo")) == "algo");
+}
+
+// ================= JSON mínimo =================
+Seccion("JSON mínimo");
+{
+    var d = JsonMini.Leer("{ \"a\": 1.5, \"b\": [\"x\", \"y\"], \"c\": { \"d\": true, \"e\": null }, \"f\": \"\\u00d1andú \\\"q\\\"\\n\" }") as Dictionary<string, object>;
+    Revisar("lee números, listas, objetos anidados, true/null y textos con \\u y comillas escapadas", d != null && (double)d["a"] == 1.5 && ((List<object>)d["b"]).Count == 2 && (bool)((Dictionary<string, object>)d["c"])["d"] && ((Dictionary<string, object>)d["c"])["e"] == null && (string)d["f"] == "Ñandú \"q\"\n");
+    var c = JsonMini.Leer("// perfil\n{ \"a\": 1, /* nota */ \"b\": [1, 2,], }") as Dictionary<string, object>;
+    Revisar("perdona lo que una persona escribe a mano: comentarios // y /* */ y comas de más", c != null && ((List<object>)c["b"]).Count == 2);
+    string error = ""; try { JsonMini.Leer("{\n  \"a\": 1\n  \"b\": 2\n}"); } catch (FormatException ex) { error = ex.Message; }
+    Revisar("un error dice la línea y la columna (falta una coma en la línea 3)", error.Contains("línea 3") && error.Contains("coma"), error);
+    Revisar("textos sin cerrar, valores raros y basura al final se rechazan con mensaje claro", new[] { "{\"a\": \"sin cerrar", "{\"a\": @}", "{} sobra", "[1, 2" }.All(t => { try { JsonMini.Leer(t); return false; } catch (FormatException) { return true; } }));
+    var origen = new Dictionary<string, object> { ["nombre"] = "Ñ \"x\"\n", ["n"] = 3, ["lista"] = new List<object> { "a", "b" }, ["vacio"] = new Dictionary<string, object>(), ["si"] = true, ["nada"] = null, ["objs"] = new List<object> { new Dictionary<string, object> { ["k"] = 1 } } };
+    var ida = JsonMini.Leer(JsonMini.Escribir(origen)) as Dictionary<string, object>;
+    Revisar("escribir y volver a leer da lo mismo (ida y vuelta)", (string)ida["nombre"] == "Ñ \"x\"\n" && (double)ida["n"] == 3 && ((List<object>)ida["lista"]).Count == 2 && (bool)ida["si"] && ida["nada"] == null && ((List<object>)ida["objs"]).Count == 1);
+    Revisar("las listas de textos cortos salen en una línea y los objetos con sangría", JsonMini.Escribir(new Dictionary<string, object> { ["l"] = new List<object> { "a", "b" } }) == "{\n  \"l\": [\"a\", \"b\"]\n}");
+}
+
+// ================= Perfiles de importación =================
+Seccion("Perfiles de importación");
+{
+    var z = PerfilImportacion.Zafirah();
+    Revisar("el perfil incluido de Zafirah trae base, tablas y columnas candidatas", z.Integrado && z.Base == "smartdatabase" && z.PuntajeTabla("ZFRADMARTICULOS") == 100 && z.PuntajeTabla("zfradmarticulos") == 100 && z.Columnas[CampoZ.Menudeo].Contains("PrecioNormal"));
+    Revisar("elige la tabla de artículos: exacta 100, que contenga *ARTICULO* 49, otras 0", z.PuntajeTabla("ZFRADMARTICULOS") > z.PuntajeTabla("MisArticulosViejos") && z.PuntajeTabla("MisArticulosViejos") > 0 && z.PuntajeTabla("ZFRADMCLIENTES") == 0);
+    var sug1 = z.Sugerir(Tabla());
+    Revisar("el perfil de Zafirah propone lo mismo que las reglas generales en la tabla de prueba", sug1[CampoZ.Codigo] == "CodigoProducto" && sug1[CampoZ.Menudeo] == "PrecioNormal" && sug1[CampoZ.Costo] == "Costo1");
+
+    // Otro programa, con otros nombres, solo con un archivo de texto
+    string json = "// POS de prueba\n{ \"nombre\": \"Otro POS\", \"tablas\": [\"Articulos\"], \"columnas\": { \"Codigo\": [\"Cve_Art\"], \"Descripcion\": \"Nom_Art\", \"Menudeo\": [\"P_Publico\"], \"Costo\": [\"No_Existe\"] }, \"reglas\": { \"unidadesGranel\": [\"caja\"], \"sumarAlmacenes\": false } }";
+    var otroPos = PerfilImportacion.Desde(json, "otroPos.json");
+    var t = new DataTable(); foreach (var c in new[] { "Cve_Art", "Nom_Art", "P_Publico", "Costo1", "Existencia", "Um" }) t.Columns.Add(c, typeof(object));
+    t.Rows.Add("A1", "TORNILLO", 5.5m, 3m, 10m, "caja"); t.Rows.Add("A2", "LIJA", 8m, 4m, 5m, "pza");
+    var s2 = otroPos.Sugerir(t);
+    Revisar("un perfil escrito a mano elige las columnas que dice (y acepta un texto suelto en lugar de lista)", s2[CampoZ.Codigo] == "Cve_Art" && s2[CampoZ.Descripcion] == "Nom_Art" && s2[CampoZ.Menudeo] == "P_Publico");
+    Revisar("lo que el perfil menciona y NO encuentra se deja sin elegir (no se adivina): Costo", !s2.ContainsKey(CampoZ.Costo));
+    Revisar("lo que el perfil no menciona se detecta con las reglas generales: Existencia", s2[CampoZ.Existencia] == "Existencia");
+    Revisar("reglas del perfil: sumarAlmacenes=false", otroPos.SumarAlmacenes == false && otroPos.Nombre == "Otro POS");
+    var m = new Dictionary<CampoZ, string>(s2); m[CampoZ.Unidad] = "Um";
+    var conPerfil = ZafirahMapeo.Transformar(t, m, otroPos.AplicarA(new OpcionesZ()));
+    var sinPerfil = ZafirahMapeo.Transformar(t, m, new OpcionesZ());
+    Revisar("unidadesGranel del perfil (solo «caja») cambian qué se vende a granel", conPerfil.Productos.First(p => p.Codigo == "A1").Granel && !conPerfil.Productos.First(p => p.Codigo == "A2").Granel && !sinPerfil.Productos.First(p => p.Codigo == "A1").Granel);
+
+    // guardar desde el asistente y volver a cargar
+    var creado = PerfilImportacion.DesdeMapeo("Mi mapeo / de prueba", m, false);
+    var vuelto = PerfilImportacion.Desde(creado.ComoJson(), "x.json");
+    Revisar("guardar el mapeo como perfil y volver a leerlo da el mismo mapeo", vuelto.Nombre == "Mi mapeo / de prueba" && vuelto.Columnas[CampoZ.Codigo][0] == "Cve_Art" && vuelto.Columnas[CampoZ.Unidad][0] == "Um" && vuelto.SumarAlmacenes == false);
+    Revisar("ese perfil reproduce el mismo mapeo sobre la misma tabla", vuelto.Sugerir(t)[CampoZ.Menudeo] == "P_Publico" && vuelto.Sugerir(t)[CampoZ.Unidad] == "Um");
+    Revisar("el nombre de archivo se limpia (sin / \\ : ni puntos)", PerfilImportacion.ArchivoPara("Mi mapeo / de prueba") == "Mi mapeo _ de prueba.json" && PerfilImportacion.ArchivoPara("  ") == "perfil.json" && PerfilImportacion.ArchivoPara("a.b.c") == "a_b_c.json");
+    string errorCampo = ""; try { PerfilImportacion.Desde("{ \"columnas\": { \"Precio\": [\"x\"] } }", "p.json"); } catch (FormatException ex) { errorCampo = ex.Message; }
+    Revisar("un dato que no existe en el perfil se rechaza y se listan los válidos", errorCampo.Contains("«Precio»") && errorCampo.Contains("Menudeo"));
+
+    // carpeta de perfiles con uno bueno, uno roto y un archivo ajeno
+    string carpeta = Path.Combine(Path.GetTempPath(), "perfiles_prueba_" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(carpeta);
+    try
+    {
+        File.WriteAllText(Path.Combine(carpeta, "bueno.json"), json);
+        File.WriteAllText(Path.Combine(carpeta, "roto.json"), "{ \"nombre\": ");
+        File.WriteAllText(Path.Combine(carpeta, "notas.txt"), "no soy un perfil");
+        List<string> problemas;
+        var todos = PerfilImportacion.Cargar(carpeta, out problemas);
+        Revisar("la carpeta de perfiles: se cargan el incluido y el bueno; el roto se explica y se salta", todos.Count == 2 && todos[1].Nombre == "Otro POS" && problemas.Count == 1 && problemas[0].StartsWith("roto.json"), string.Join(" | ", problemas));
+        List<string> p2; Revisar("sin carpeta (o inexistente) queda solo el perfil incluido", PerfilImportacion.Cargar(Path.Combine(carpeta, "no_existe"), out p2).Count == 1 && p2.Count == 0);
+    }
+    finally { Directory.Delete(carpeta, true); }
+}
+
+Seccion("Respaldos .BK (ayudantes)");
+{
+    string tmp = ZafirahBk.NombreTemporal();
+    Revisar("el nombre temporal empieza con el prefijo y es válido", tmp.StartsWith("vf_import_tmp_") && ZafirahBk.EsTemporal(tmp));
+    Revisar("dos nombres temporales no se repiten", ZafirahBk.NombreTemporal() != ZafirahBk.NombreTemporal());
+    Revisar("NUNCA se acepta la base real de Zafirah ni nombres peligrosos",
+        !ZafirahBk.EsTemporal("smartdatabase") && !ZafirahBk.EsTemporal("master") && !ZafirahBk.EsTemporal("") && !ZafirahBk.EsTemporal(null)
+        && !ZafirahBk.EsTemporal("vf_import_tmp_x]; DROP DATABASE master;--") && !ZafirahBk.EsTemporal("vf_import_tmp_") && !ZafirahBk.EsTemporal("xvf_import_tmp_abc"));
+    string rechazo = ""; try { ZafirahBk.Eliminar("Server=.", "smartdatabase"); } catch (ArgumentException ex) { rechazo = ex.Message; }
+    Revisar("Eliminar se niega a borrar otra base (sin siquiera conectarse)", rechazo.Contains("temporales"));
+    string rechazo2 = ""; try { ZafirahBk.ComandoRestaurar("master", "a.bk", 1, new List<ArchivoRespaldo>(), "C:\\x"); } catch (ArgumentException ex) { rechazo2 = ex.Message; }
+    Revisar("ComandoRestaurar rechaza un destino que no sea temporal", rechazo2.Contains("vf_import_tmp_"));
+
+    Revisar("Literal duplica comillas", ZafirahBk.Literal("C:\\o'brien\\a.bk") == "N'C:\\o''brien\\a.bk'");
+    var arch = new List<ArchivoRespaldo> {
+        new ArchivoRespaldo { Logico = "Smart_Data", Tipo = "D" }, new ArchivoRespaldo { Logico = "Smart_Log", Tipo = "L" }, new ArchivoRespaldo { Logico = "Extra", Tipo = "D" } };
+    string cmd = ZafirahBk.ComandoRestaurar("vf_import_tmp_ab12cd34", "C:\\Users\\Public\\o'x.bk", 2, arch, "C:\\SQL\\DATA\\");
+    Revisar("el RESTORE trae el archivo, la posición y REPLACE", cmd.Contains("FROM DISK = N'C:\\Users\\Public\\o''x.bk'") && cmd.Contains("WITH FILE = 2") && cmd.Contains("REPLACE"), cmd);
+    Revisar("cada archivo se mueve a la carpeta de datos con extensión según su tipo",
+        cmd.Contains("MOVE N'Smart_Data' TO N'C:\\SQL\\DATA\\vf_import_tmp_ab12cd34.mdf'") && cmd.Contains("MOVE N'Smart_Log' TO N'C:\\SQL\\DATA\\vf_import_tmp_ab12cd34.ldf'") && cmd.Contains("vf_import_tmp_ab12cd34_2.ndf"), cmd);
+    Revisar("ComandosRevisar trae HEADERONLY y FILELISTONLY", ZafirahBk.ComandosRevisar("D:\\a.bk").Contains("RESTORE HEADERONLY") && ZafirahBk.ComandosRevisar("D:\\a.bk").Contains("RESTORE FILELISTONLY"));
+
+    Revisar("porcentaje en inglés", ZafirahBk.Porcentaje("35 percent processed.") == 35);
+    Revisar("porcentaje en español", ZafirahBk.Porcentaje("10 por ciento procesado.") == 10);
+    Revisar("un mensaje sin porcentaje da null", ZafirahBk.Porcentaje("RESTORE DATABASE successfully processed 1234 pages") == null);
+    Revisar("un porcentaje imposible se ignora", ZafirahBk.Porcentaje("500 percent") == null);
+
+    Revisar("nombres de versión", ZafirahBk.NombreVersion(8, 0) == "SQL Server 2000" && ZafirahBk.NombreVersion(10, 50) == "SQL Server 2008 R2" && ZafirahBk.NombreVersion(10, 0) == "SQL Server 2008" && ZafirahBk.NombreVersion(16, 0) == "SQL Server 2022" && ZafirahBk.NombreVersion(99, 1) == "SQL Server 99.1");
+    string av; bool imp;
+    Revisar("mismo servidor: compatible", ZafirahBk.Compatible(10, 10, out av, out imp) && av == "" && !imp);
+    Revisar("respaldo de 2000 en servidor 2008: compatible", ZafirahBk.Compatible(8, 10, out av, out imp) && !imp);
+    Revisar("respaldo de 2000 en servidor 2019: imposible", !ZafirahBk.Compatible(8, 15, out av, out imp) && imp && av.Contains("2005, 2008"), av);
+    Revisar("respaldo más nuevo que el servidor: imposible", !ZafirahBk.Compatible(15, 10, out av, out imp) && imp && av.Contains("MÁS NUEVA"), av);
+    Revisar("respaldo de 2005 en servidor 2019: aviso, no imposible", !ZafirahBk.Compatible(9, 15, out av, out imp) && !imp && av != "");
+    Revisar("versión desconocida (0) no bloquea", ZafirahBk.Compatible(0, 15, out av, out imp));
+
+    Revisar("error 3201 explica el permiso de la carpeta", ZafirahBk.ExplicarNumero(3201, "x").Contains("C:\\Users\\Public"));
+    Revisar("error 3241 dice que no es un respaldo válido", ZafirahBk.ExplicarNumero(3241, "x").Contains("no parece un respaldo"));
+    Revisar("error de disco lleno", ZafirahBk.ExplicarNumero(3202, "x").Contains("espacio"));
+    Revisar("un error de conexión cae al explicador general", ZafirahBk.ExplicarNumero(18456, "x").Contains("usuario o la contraseña"));
+    Revisar("un número desconocido da null", ZafirahBk.ExplicarNumero(99999, "x") == null);
+
+    var inf = new InfoRespaldo { Base = "smartdatabase", VersionMayor = 8, TamanoBytes = 5L * 1048576, Fecha = "18/07/2026 10:00", Archivos = arch };
+    Revisar("el resumen del respaldo es legible", inf.Resumen().Contains("«smartdatabase»") && inf.Resumen().Contains("SQL Server 2000") && inf.Resumen().Contains("5.0 MB") && inf.Resumen().Contains("3 archivos"), inf.Resumen());
 }
 
 Console.WriteLine(fallas == 0 ? "\nTodas las pruebas del importador pasaron." : $"\n{fallas} prueba(s) fallaron.");

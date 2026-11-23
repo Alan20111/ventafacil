@@ -96,22 +96,25 @@ namespace VentaFacil.Data
             return dt;
         }
 
+        /// <summary>Mensaje claro para un número de error de SQL Server, o null si no es uno de los conocidos.</summary>
+        public static string ExplicarNumero(int numero, string mensaje)
+        {
+            switch (numero)
+            {
+                case 18456: return "SQL Server rechazó el usuario o la contraseña. Si Zafirah entra con el usuario de Windows, deje «Usuario de Windows»; si no, escriba el usuario y la contraseña de SQL (la persona que instaló Zafirah los sabe).";
+                case 4060: return "Ese usuario no tiene permiso para abrir esa base de datos.";
+                case 229: case 230: case 262: return "Ese usuario no tiene permiso para esto. Pida a quien administra SQL Server un usuario con el permiso necesario.";
+                case -1: case 2: case 53: case 10061: case 10060: case 11001:
+                    return "No se encontró el servidor de SQL Server. Revise que esté encendido y que el nombre sea correcto (si Zafirah está en otra computadora, escriba el nombre de esa computadora; si es SQL Express, suele ser «.\\SQLEXPRESS»).";
+            }
+            return null;
+        }
+
         /// <summary>Mensaje claro en español para los errores de conexión más comunes.</summary>
         public static string Explicar(Exception ex)
         {
             var sql = ex as SqlException;
-            if (sql != null)
-            {
-                switch (sql.Number)
-                {
-                    case 18456: return "SQL Server rechazó el usuario o la contraseña. Si Zafirah entra con el usuario de Windows, deje «Usuario de Windows»; si no, escriba el usuario y la contraseña de SQL (la persona que instaló Zafirah los sabe).";
-                    case 4060: return "Ese usuario no tiene permiso para abrir esa base de datos.";
-                    case 229: case 230: case 262: return "Ese usuario no tiene permiso para leer esa tabla. Pida a quien administra SQL Server un usuario con permiso de lectura.";
-                    case -1: case 2: case 53: case 10061: case 10060: case 11001:
-                        return "No se encontró el servidor de SQL Server. Revise que esté encendido y que el nombre sea correcto (si Zafirah está en otra computadora, escriba el nombre de esa computadora; si es SQL Express, suele ser «.\\SQLEXPRESS»).";
-                }
-                return "SQL Server dijo: " + sql.Message;
-            }
+            if (sql != null) return ExplicarNumero(sql.Number, sql.Message) ?? "SQL Server dijo: " + sql.Message;
             return ex.Message;
         }
     }

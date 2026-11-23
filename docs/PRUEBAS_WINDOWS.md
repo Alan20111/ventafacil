@@ -85,7 +85,7 @@ Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y
 | 39 | Hacer una venta usando solo el menú (Venta → Buscar artículo, Cobrar) y otra solo con la barra de botones | Funcionan igual que con las teclas; al cerrar un menú el cursor vuelve a la captura y el lector sigue escaneando |
 | 40 | Pulsar **F10** con la caja abierta; luego Productos → Códigos de barras… | F10 cambia de usuario **sin** abrir el menú de Windows; la opción de Productos abre la Administración directo en la asignación de códigos |
 
-## J. Importar de Zafirah
+## J. Importar de Zafirah (pasos 41–48)
 | # | Qué hacer | Debe pasar |
 |---|-----------|-----------|
 | 41 | Productos → **Importar de Zafirah…** (botón con icono, y menú Productos) | Se abre el asistente completo (cabe en 1366x768, sin cortes). Pestaña «Archivo»: elegir un Excel o CSV de prueba | Aparecen las columnas propuestas con su ejemplo y la vista previa con avisos |
@@ -93,4 +93,9 @@ Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y
 | 43 | **Importar** | Pide confirmar, hace respaldo, muestra el resumen; los productos salen en Productos y se cobran por su código corto y por su código de barras |
 | 44 | Repetir la importación | No duplica nada; actualiza; si un código era de otro producto lo lista y no lo pisa |
 
-Resultado: ______ de 44 pasos bien.   Fallas anotadas: ____________________________
+| 45 | Pestaña **«Respaldo .BK»** → **Elegir respaldo…** (el .BK de 5 MB, 2020) | Muestra base, versión de SQL Server, tamaño y archivos; si la versión no sirve en ese servidor lo dice con claridad |
+| 46 | **Restaurar y leer** | Barra de avance y tiempo; al terminar lee los productos y propone columnas. Si falla con permiso (3201) ofrece copiar a `C:\Users\Public` |
+| 47 | **Comandos…** y, en Management Studio/`osql`, ver que `master` ya no tiene bases `vf_import_tmp_…` tras cerrar el asistente | El T-SQL se ve completo; la temporal se borró |
+| 48 | **Guardar…** un perfil, cerrar y reabrir; **Carpeta** y editar el .json con el Bloc de notas | El perfil aparece en la lista y propone las mismas columnas; un .json con error se avisa sin tumbar el asistente |
+
+Resultado: ______ de 48 pasos bien.   Fallas anotadas: ____________________________

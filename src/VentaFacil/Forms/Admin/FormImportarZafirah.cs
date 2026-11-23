@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -27,6 +29,20 @@ namespace VentaFacil.Forms.Admin
         readonly RadioButton _authWin, _authSql;
         readonly TextBox _usuario, _clave;
         readonly Label _estadoSql, _estadoArchivo, _origenActual;
+
+        // ---- origen: respaldo .BK ----
+        readonly TabControl _pestanas;
+        readonly TabPage _pagSql, _pagBk;
+        readonly Label _servidorBk, _estadoBk;
+        readonly Button _restaurarBk, _comandosBk;
+        string _rutaBk, _rutaUsada, _copiaTmp, _bdTmp;
+        InfoRespaldo _infoBk;
+
+        // ---- perfiles ----
+        readonly ComboBox _perfiles;
+        List<PerfilImportacion> _listaPerfiles = new List<PerfilImportacion>();
+        PerfilImportacion Perfil { get { return _perfiles.SelectedItem as PerfilImportacion ?? PerfilImportacion.Zafirah(); } }
+        static string CarpetaPerfiles { get { return Path.Combine(Db.Carpeta, "perfiles"); } }
 
         // ---- mapeo ----
         readonly Dictionary<CampoZ, ComboBox> _combos = new Dictionary<CampoZ, ComboBox>();
@@ -59,12 +75,16 @@ namespace VentaFacil.Forms.Admin
             Controls.Add(_origenActual);
 
             // =================== 1. ORIGEN ===================
-            var pestanas = new TabControl { Left = 16, Top = 66, Width = 560, Height = 290, Font = Tema.Negrita };
-            var pagSql = new TabPage("Base de Zafirah (SQL Server)") { BackColor = Tema.Crema, Font = Tema.Normal };
-            var pagArchivo = new TabPage("Archivo Excel o CSV") { BackColor = Tema.Crema, Font = Tema.Normal };
-            pestanas.TabPages.Add(pagSql);
-            pestanas.TabPages.Add(pagArchivo);
-            Controls.Add(pestanas);
+            _pestanas = new TabControl { Left = 16, Top = 66, Width = 560, Height = 290, Font = Tema.Negrita };
+            var pagSql = new TabPage("Base de Zafirah") { BackColor = Tema.Crema, Font = Tema.Normal };
+            _pagSql = pagSql;
+            _pagBk = new TabPage("Respaldo .BK") { BackColor = Tema.Crema, Font = Tema.Normal };
+            var pagArchivo = new TabPage("Excel o CSV") { BackColor = Tema.Crema, Font = Tema.Normal };
+            _pestanas.TabPages.Add(pagSql);
+            _pestanas.TabPages.Add(_pagBk);
+            _pestanas.TabPages.Add(pagArchivo);
+            _pestanas.SelectedIndexChanged += (s, e) => ActualizarServidorBk();
+            Controls.Add(_pestanas);
 
             pagSql.Controls.Add(Ui.Etiqueta("Servidor:", 8, 16));
             _servidor = new ComboBox { Left = 96, Top = 12, Width = 300, DropDownStyle = ComboBoxStyle.DropDown, Font = Tema.Normal };
@@ -101,6 +121,26 @@ namespace VentaFacil.Forms.Admin
             pagSql.Controls.Add(Ui.Boton("Leer tabla", 408, 202, 130, 40, (s, e) => LeerTabla()));
             tip.SetToolTip(_tabla, "En Zafirah, los productos están en «ZFRADMARTICULOS».");
 
+            // ---- pestaña del respaldo .BK ----
+            _servidorBk = new Label { Left = 8, Top = 8, Width = 424, Height = 28, Font = Tema.Negrita, ForeColor = Tema.Azul, BackColor = Color.Transparent, AutoEllipsis = true };
+            _pagBk.Controls.Add(_servidorBk);
+            _pagBk.Controls.Add(Ui.Boton("Cambiar", 440, 4, 98, 32, (s, e) => _pestanas.SelectedTab = _pagSql));
+            _pagBk.Controls.Add(Ui.Boton("Elegir respaldo…", 8, 44, 190, 42, (s, e) => ElegirRespaldo()));
+            _restaurarBk = Ui.Boton("Restaurar y leer", 206, 44, 190, 42, (s, e) => RestaurarBk());
+            Tema.Pastilla(_restaurarBk, true);
+            _restaurarBk.Enabled = false;
+            _pagBk.Controls.Add(_restaurarBk);
+            _comandosBk = Ui.Boton("Comandos…", 404, 44, 134, 42, (s, e) => { using (var f = new FormComandosBk(ComandosTexto())) f.ShowDialog(this); });
+            _comandosBk.Enabled = false;
+            _pagBk.Controls.Add(_comandosBk);
+            _estadoBk = new Label
+            {
+                Left = 8, Top = 96, Width = 530, Height = 160, Font = Tema.Normal, ForeColor = Tema.Humo, BackColor = Color.Transparent,
+                Text = "Para leer un respaldo de SQL Server (.BK, .BAK, .1BK, .2BK, .3BK) se restaura en una base TEMPORAL y se lee de ahí; al terminar se borra. La base real de Zafirah no se toca.\n\nNecesita SQL Server (Express sirve) en esta computadora y espacio libre parecido al tamaño del respaldo."
+            };
+            _pagBk.Controls.Add(_estadoBk);
+            ActualizarServidorBk();
+
             pagArchivo.Controls.Add(Ui.Boton("Elegir archivo…", 8, 16, 220, 42, (s, e) => ElegirArchivo()));
             _estadoArchivo = new Label
             {
@@ -111,7 +151,20 @@ namespace VentaFacil.Forms.Admin
             pagArchivo.Controls.Add(_estadoArchivo);
 
             // =================== 2. MAPEO ===================
-            Controls.Add(Ui.Etiqueta("2. ¿Qué columna es cada dato?   (se propone sola; cámbiela si hace falta)", 16, 362, Tema.Negrita, Tema.Azul));
+            Controls.Add(Ui.Etiqueta("2. ¿Qué columna es cada dato?", 16, 364, Tema.Negrita, Tema.Azul));
+            _perfiles = new ComboBox { Left = 262, Top = 360, Width = 168, DropDownStyle = ComboBoxStyle.DropDownList, Font = new Font("Segoe UI", 9.5f, FontStyle.Bold) };
+            _perfiles.SelectedIndexChanged += (s, e) => { if (!_cargando) CambioPerfil(); };
+            Controls.Add(_perfiles);
+            tip.SetToolTip(_perfiles, "Un perfil dice dónde buscar cada dato en un programa. Puede guardar el suyo con «Guardar…» o editar los archivos de la carpeta de perfiles.");
+            var bGuardar = Ui.Boton("Guardar…", 434, 358, 84, 28, (s, e) => GuardarPerfil());
+            bGuardar.Font = new Font("Segoe UI", 9f, FontStyle.Bold);
+            Controls.Add(bGuardar);
+            var bCarpeta = Ui.Boton("Carpeta", 522, 358, 54, 28, (s, e) => AbrirCarpetaPerfiles());
+            bCarpeta.Font = new Font("Segoe UI", 8.5f, FontStyle.Bold);
+            Controls.Add(bCarpeta);
+            tip.SetToolTip(bGuardar, "Guarda las columnas que eligió como un perfil reutilizable (para otro programa u otra base).");
+            tip.SetToolTip(bCarpeta, "Abre la carpeta de perfiles (.json). Ahí puede editar o copiar perfiles con el Bloc de notas.");
+            RecargarPerfiles(null);
             var panelMapeo = new Panel { Left = 16, Top = 388, Width = 560, Height = 262, AutoScroll = true, BackColor = Tema.Crema, BorderStyle = BorderStyle.FixedSingle };
             Controls.Add(panelMapeo);
             int y = 6;
@@ -194,6 +247,12 @@ namespace VentaFacil.Forms.Admin
             Shown += (s, e) => Actualizar();
         }
 
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+            if (!e.Cancel) LimpiarTemporales();
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing) _debounce.Dispose();
@@ -231,7 +290,7 @@ namespace VentaFacil.Forms.Admin
                 }
                 _estadoSql.ForeColor = Tema.Verde;
                 _estadoSql.Text = "✔ Conectado. Elija la base y la tabla de productos.";
-                int idx = bases.FindIndex(b => b.Equals("smartdatabase", StringComparison.OrdinalIgnoreCase));
+                int idx = Perfil.Base == "" ? -1 : bases.FindIndex(b => b.Equals(Perfil.Base, StringComparison.OrdinalIgnoreCase));
                 _base.SelectedIndex = idx >= 0 ? idx : 0; // dispara LlenarTablas
             }
             catch (Exception ex)
@@ -255,8 +314,8 @@ namespace VentaFacil.Forms.Admin
                 var tablas = ZafirahSql.Tablas(Cadena());
                 _tabla.Items.Clear();
                 foreach (var t in tablas) _tabla.Items.Add(t);
-                int idx = tablas.FindIndex(t => t.Nombre.Equals("ZFRADMARTICULOS", StringComparison.OrdinalIgnoreCase));
-                if (idx < 0) idx = tablas.FindIndex(t => t.Nombre.ToUpperInvariant().Contains("ARTICULO"));
+                int idx = -1, mejor = 0;
+                for (int i = 0; i < tablas.Count; i++) { int pt = Perfil.PuntajeTabla(tablas[i].Nombre); if (pt > mejor) { mejor = pt; idx = i; } }
                 if (_tabla.Items.Count > 0) _tabla.SelectedIndex = idx >= 0 ? idx : 0;
                 _estadoSql.ForeColor = idx >= 0 ? Tema.Verde : Tema.Rojo;
                 _estadoSql.Text = (idx >= 0 ? "✔ " : "") + tablas.Count + " tablas en «" + bd + "»." + (idx >= 0 ? " Pulse «Leer tabla»." : " No encontré la de artículos: elíjala.");
@@ -283,7 +342,7 @@ namespace VentaFacil.Forms.Admin
                 _proveedores = null;
                 try
                 {
-                    var tp = _tabla.Items.OfType<TablaSql>().FirstOrDefault(x => x.Tipo == "Tabla" && x.Nombre.Equals("ZFRADMPROVEEDORES", StringComparison.OrdinalIgnoreCase));
+                    var tp = _tabla.Items.OfType<TablaSql>().FirstOrDefault(x => x.Tipo == "Tabla" && Perfil.TablaProveedores != "" && x.Nombre.Equals(Perfil.TablaProveedores, StringComparison.OrdinalIgnoreCase));
                     if (tp != null)
                     {
                         var d = ZafirahMapeo.DiccionarioProveedores(ZafirahSql.Leer(Cadena(), tp, 20000));
@@ -300,6 +359,238 @@ namespace VentaFacil.Forms.Admin
                 Ui.Aviso(ZafirahSql.Explicar(ex), "Leer la tabla");
             }
             finally { Cursor = Cursors.Default; }
+        }
+
+        // ===================================================================
+        //  Perfiles
+        // ===================================================================
+        void RecargarPerfiles(string seleccionar)
+        {
+            List<string> problemas;
+            _listaPerfiles = PerfilImportacion.Cargar(CarpetaPerfiles, out problemas);
+            bool antes = _cargando;
+            _cargando = true;
+            _perfiles.Items.Clear();
+            foreach (var p in _listaPerfiles) _perfiles.Items.Add(p);
+            int idx = 0;
+            if (seleccionar != null) for (int i = 0; i < _listaPerfiles.Count; i++) if (_listaPerfiles[i].Nombre == seleccionar) idx = i;
+            _perfiles.SelectedIndex = idx;
+            _cargando = antes;
+            if (problemas.Count > 0) Ui.Aviso("Algunos perfiles no se pudieron leer y se omitieron:\n\n" + string.Join("\n", problemas.ToArray()), "Perfiles de importación");
+        }
+
+        void CambioPerfil()
+        {
+            if (_origen != null) UsarOrigen(_origen, _origenActual.Text);   // vuelve a proponer las columnas con el perfil nuevo
+        }
+
+        void GuardarPerfil()
+        {
+            if (_origen == null) { Ui.Aviso("Primero lea una tabla o un archivo y deje cada dato en su columna; eso es lo que se guarda."); return; }
+            var mapeo = LeerMapeo();
+            if (mapeo.Count == 0) { Ui.Aviso("No hay ninguna columna elegida para guardar."); return; }
+            string nombre = Ui.PedirTexto("Guardar perfil", "Nombre del perfil (por ejemplo, el del otro programa):", "");
+            if (string.IsNullOrWhiteSpace(nombre)) return;
+            nombre = nombre.Trim();
+            var p = PerfilImportacion.DesdeMapeo(nombre, mapeo, !_sumar.Visible || _sumar.Checked);
+            var t = _tabla.SelectedItem as TablaSql;
+            if (_pestanas.SelectedTab == _pagSql && t != null) { p.Tablas.Add(t.Nombre); }
+            var actual = Perfil;
+            if (actual.UnidadesGranel != null) p.UnidadesGranel = new List<string>(actual.UnidadesGranel);
+            if (actual.TablaProveedores != "") p.TablaProveedores = actual.TablaProveedores;
+            try
+            {
+                Directory.CreateDirectory(CarpetaPerfiles);
+                string ruta = Path.Combine(CarpetaPerfiles, PerfilImportacion.ArchivoPara(nombre));
+                if (File.Exists(ruta) && !Ui.Confirmar("Ya hay un perfil con ese nombre. ¿Reemplazarlo?")) return;
+                File.WriteAllText(ruta, p.ComoJson(), new UTF8Encoding(true));
+                RecargarPerfiles(nombre);
+                Ui.Info("Perfil «" + nombre + "» guardado.\n\nAparece en la lista y se puede editar con el Bloc de notas:\n" + ruta, "Perfil guardado");
+            }
+            catch (Exception ex) { Ui.Error(ex, "No se pudo guardar el perfil"); }
+        }
+
+        void AbrirCarpetaPerfiles()
+        {
+            try
+            {
+                Directory.CreateDirectory(CarpetaPerfiles);
+                string ejemplo = Path.Combine(CarpetaPerfiles, "_ejemplo (copielo y quite el guion bajo).json.txt");
+                if (!File.Exists(ejemplo)) File.WriteAllText(ejemplo, PerfilImportacion.Zafirah().ComoJson(), new UTF8Encoding(true));
+                Process.Start("explorer.exe", "\"" + CarpetaPerfiles + "\"");
+            }
+            catch (Exception ex) { Ui.Error(ex, "No se pudo abrir la carpeta de perfiles"); }
+        }
+
+        // ===================================================================
+        //  Respaldo .BK
+        // ===================================================================
+        string CadenaMaster() { return ZafirahSql.Cadena(_servidor.Text.Trim(), "master", Usuario(), Clave()); }
+
+        void ActualizarServidorBk()
+        {
+            _servidorBk.Text = "Servidor: " + (_servidor.Text.Trim() == "" ? "(sin escribir)" : _servidor.Text.Trim()) + " · " + (_authSql.Checked ? "usuario SQL «" + Usuario() + "»" : "usuario de Windows");
+        }
+
+        string ComandosTexto()
+        {
+            if (_rutaUsada == null) return "";
+            string tmp = "vf_import_tmp_XXXXXXXX";
+            var sb = new StringBuilder();
+            sb.AppendLine("-- 1) Revisar el respaldo (qué base trae, de qué versión, qué archivos):");
+            sb.AppendLine(ZafirahBk.ComandosRevisar(_rutaUsada));
+            if (_infoBk != null)
+            {
+                sb.AppendLine();
+                sb.AppendLine("-- 2) Restaurarlo en una base temporal (VentaFácil lo hace solo; los archivos van a la carpeta de datos de SQL Server):");
+                sb.AppendLine(ZafirahBk.ComandoRestaurar(tmp, _rutaUsada, _infoBk.Posicion, _infoBk.Archivos, "<carpeta de datos de SQL Server>"));
+                sb.AppendLine("GO");
+                sb.AppendLine();
+                sb.AppendLine("-- 3) Al terminar se borra la temporal:");
+                sb.AppendLine("DROP DATABASE [" + tmp + "]");
+                sb.AppendLine("GO");
+            }
+            return sb.ToString();
+        }
+
+        void ElegirRespaldo()
+        {
+            if (_servidor.Text.Trim() == "") { Ui.Aviso("Escriba el nombre del servidor de SQL Server en la pestaña «Base de Zafirah»."); _pestanas.SelectedTab = _pagSql; return; }
+            if (_authSql.Checked && Usuario() == "") { Ui.Aviso("Escriba el usuario de SQL, o elija «Usuario de Windows»."); _pestanas.SelectedTab = _pagSql; return; }
+            using (var d = new OpenFileDialog { Filter = "Respaldos de SQL Server (*.bk;*.bak;*.1bk;*.2bk;*.3bk;*.4bk)|*.bk;*.bak;*.1bk;*.2bk;*.3bk;*.4bk|Todos los archivos (*.*)|*.*", Title = "Elija el respaldo de la base de Zafirah" })
+            {
+                if (d.ShowDialog(this) != DialogResult.OK) return;
+                LimpiarTemporales();
+                _rutaBk = _rutaUsada = d.FileName;
+                _infoBk = null;
+                _restaurarBk.Enabled = _comandosBk.Enabled = false;
+                Inspeccionar(true);
+            }
+        }
+
+        void Inspeccionar(bool puedeCopiar)
+        {
+            try
+            {
+                Cursor = Cursors.WaitCursor;
+                _estadoBk.ForeColor = Tema.Humo;
+                _estadoBk.Text = "Revisando el respaldo…";
+                Application.DoEvents();
+                _infoBk = ZafirahBk.Inspeccionar(CadenaMaster(), _rutaUsada);
+                _estadoBk.ForeColor = _infoBk.Imposible ? Tema.Rojo : Tema.Verde;
+                _estadoBk.Text = (_infoBk.Imposible ? "✘ " : "✔ ") + Path.GetFileName(_rutaBk) + "\n" + _infoBk.Resumen() +
+                    (_infoBk.Aviso != "" ? "\n\n" + _infoBk.Aviso : "\n\nPulse «Restaurar y leer»: se restaura en una base temporal (tarda según el tamaño) y se borra al terminar.");
+                _restaurarBk.Enabled = true;
+                _comandosBk.Enabled = true;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Importar BK: revisar");
+                _estadoBk.ForeColor = Tema.Rojo;
+                _estadoBk.Text = "No se pudo leer el respaldo.\n\n" + ZafirahBk.Explicar(ex);
+                _comandosBk.Enabled = _rutaUsada != null;
+                var sql = ex as SqlException;
+                if (puedeCopiar && sql != null && sql.Number == 3201) { Cursor = Cursors.Default; if (OfrecerCopia()) Inspeccionar(false); }
+            }
+            finally { Cursor = Cursors.Default; }
+        }
+
+        /// <summary>El servicio de SQL Server a veces no puede leer el Escritorio o una USB: se ofrece copiar el respaldo a C:\Users\Public.</summary>
+        bool OfrecerCopia()
+        {
+            string destino;
+            try
+            {
+                long tam = new FileInfo(_rutaBk).Length;
+                destino = Path.Combine(Environment.GetEnvironmentVariable("PUBLIC") ?? @"C:\Users\Public", @"VentaFacil\importar");
+                if (!Ui.Confirmar("SQL Server no tiene permiso para leer el respaldo en esa carpeta.\n\n¿Copiarlo a «" + destino + "» (" + Fmt.Tamano(tam) + ") y probar desde ahí?\nLa copia se borra al terminar.")) return false;
+                Directory.CreateDirectory(destino);
+                destino = Path.Combine(destino, "respaldo_" + Guid.NewGuid().ToString("N").Substring(0, 8) + Path.GetExtension(_rutaBk));
+            }
+            catch (Exception ex) { Ui.Error(ex, "No se pudo preparar la copia"); return false; }
+            string origen = _rutaBk;
+            var err = FormProgresoBk.Ejecutar(this, "Copiando el respaldo…", prog => CopiarConAvance(origen, destino, prog));
+            if (err != null) { try { if (File.Exists(destino)) File.Delete(destino); } catch (Exception) { } Ui.Error(err.Message, "No se pudo copiar el respaldo"); return false; }
+            _copiaTmp = destino;
+            _rutaUsada = destino;
+            return true;
+        }
+
+        static void CopiarConAvance(string origen, string destino, Action<int, string> prog)
+        {
+            using (var a = new FileStream(origen, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var b = new FileStream(destino, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                var buf = new byte[1 << 20];
+                long total = a.Length, hecho = 0; int n, ultimo = -1;
+                while ((n = a.Read(buf, 0, buf.Length)) > 0)
+                {
+                    b.Write(buf, 0, n); hecho += n;
+                    int p = total > 0 ? (int)(hecho * 100 / total) : 0;
+                    if (p != ultimo) { ultimo = p; prog(p, "Copiando…"); }
+                }
+            }
+        }
+
+        void RestaurarBk()
+        {
+            if (_infoBk == null || _rutaUsada == null) return;
+            if (_infoBk.Imposible && !Ui.Confirmar(_infoBk.Aviso + "\n\nSQL Server lo rechazará casi seguro. ¿Intentar de todos modos?")) return;
+            if (!Ui.Confirmar("Se va a restaurar el respaldo en una base TEMPORAL de SQL Server para leer los productos.\n\n• Puede tardar varios minutos (el respaldo pesa " + Fmt.Tamano(_infoBk.TamanoBytes) + ").\n• Necesita espacio libre parecido en el disco de SQL Server.\n• La base real de Zafirah NO se toca, y la temporal se borra al terminar.\n\n¿Continuar?")) return;
+            QuitarTemporal();
+            string cadena = CadenaMaster(), tmp = ZafirahBk.NombreTemporal(), ruta = _rutaUsada;
+            var info = _infoBk;
+            var err = FormProgresoBk.Ejecutar(this, "Restaurando el respaldo…", prog =>
+            {
+                try { foreach (var h in ZafirahBk.Huerfanas(cadena)) { try { ZafirahBk.Eliminar(cadena, h); } catch (Exception) { } } } catch (Exception) { }
+                ZafirahBk.Restaurar(cadena, ruta, info, tmp, prog);
+            });
+            if (err != null)
+            {
+                try { ZafirahBk.Eliminar(cadena, tmp); } catch (Exception) { }   // si quedó a medias
+                var sql = err as SqlException;
+                if (sql != null && sql.Number == 3201 && _copiaTmp == null)
+                {
+                    if (OfrecerCopia()) { _estadoBk.Text = "Copiado. Pulse «Restaurar y leer» otra vez."; Inspeccionar(false); }
+                    return;
+                }
+                _estadoBk.ForeColor = Tema.Rojo;
+                _estadoBk.Text = "No se pudo restaurar el respaldo.\n\n" + ZafirahBk.Explicar(err);
+                Ui.Aviso(ZafirahBk.Explicar(err), "Restaurar el respaldo");
+                return;
+            }
+            _bdTmp = tmp;
+            _cargando = true;
+            _base.Items.Clear();
+            _tabla.Items.Clear();
+            _base.Items.Add(tmp);
+            _cargando = false;
+            _estadoBk.ForeColor = Tema.Verde;
+            _estadoBk.Text = "✔ Respaldo restaurado en una base temporal. Leyendo los productos…";
+            _base.SelectedIndex = 0;                 // llena las tablas y elige la de artículos según el perfil
+            if (_tabla.SelectedItem != null) LeerTabla();
+            else _estadoBk.Text = "Respaldo restaurado, pero no encontré la tabla de productos: elíjala en la pestaña «Base de Zafirah» y pulse «Leer tabla».";
+            if (_origen != null) _estadoBk.Text = "✔ Respaldo leído. Revise a la derecha las columnas y la vista previa.\nLa base temporal se borra al cerrar esta ventana.";
+        }
+
+        /// <summary>Borra la base temporal (si hay) sin importar si el servidor contesta.</summary>
+        void QuitarTemporal()
+        {
+            if (_bdTmp == null) return;
+            string tmp = _bdTmp; _bdTmp = null;
+            try { Cursor = Cursors.WaitCursor; ZafirahBk.Eliminar(CadenaMaster(), tmp); }
+            catch (Exception ex) { Log.Error(ex, "Importar BK: borrar temporal " + tmp); }
+            finally { Cursor = Cursors.Default; }
+        }
+
+        void LimpiarTemporales()
+        {
+            QuitarTemporal();
+            if (_copiaTmp != null)
+            {
+                try { if (File.Exists(_copiaTmp)) File.Delete(_copiaTmp); } catch (Exception ex) { Log.Error(ex, "Importar BK: borrar copia"); }
+                _copiaTmp = null;
+            }
         }
 
         // ===================================================================
@@ -337,7 +628,8 @@ namespace VentaFacil.Forms.Admin
             _origenActual.Text = descripcion;
             _cargando = true;
             var nombres = dt.Columns.Cast<DataColumn>().Select(c => (object)c.ColumnName).ToArray();
-            var sugerido = ZafirahMapeo.Sugerir(dt);
+            var sugerido = Perfil.Sugerir(dt);
+            _sumar.Checked = Perfil.SumarAlmacenes;
             foreach (var campo in ZafirahMapeo.Campos)
             {
                 var cb = _combos[campo.Campo];
@@ -408,7 +700,7 @@ namespace VentaFacil.Forms.Admin
             }
             try
             {
-                var op = new OpcionesZ { SumarAlmacenes = !_sumar.Visible || _sumar.Checked, AlmacenElegido = _almacen.Text, ProveedoresPorClave = _proveedores };
+                var op = Perfil.AplicarA(new OpcionesZ { SumarAlmacenes = !_sumar.Visible || _sumar.Checked, AlmacenElegido = _almacen.Text, ProveedoresPorClave = _proveedores });
                 var res = ZafirahMapeo.Transformar(_origen, LeerMapeo(), op);
                 _resultado = res;
                 int n = 0;
