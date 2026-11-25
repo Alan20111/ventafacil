@@ -40,6 +40,7 @@ SALIDA="$(mktemp -d)"
 ZIP="VentaFacil-$VERSION-win.zip"
 cp publish/VentaFacil.zip "$SALIDA/$ZIP"
 cp publish/VentaFacil/VentaFacil.exe "$SALIDA/"
+cp ejemplos/productos_prueba_100.csv "$SALIDA/"
 
 cat > "$SALIDA/notas.md" <<NOTAS
 ## Cambios
@@ -51,17 +52,19 @@ $CAMBIOS
 - **VentaFacil.exe**: el programa en un solo archivo. Ábralo: se instala solo en \`C:\\VentaFacil\` y crea el acceso en el escritorio. Los datos quedan en \`C:\\VentaFacil\\datos\`.
 - **$ZIP**: lo mismo en carpeta, por si prefiere copiarla a mano (\`LEEME.txt\` incluido).
 
+- **productos_prueba_100.csv**: 100 productos inventados para practicar (códigos 9001 a 9100, terminan en PRUEBA). No los importe en la base de una tienda real.
+
 ## Antes de abrirlo
 
 1. Windows 7: instalar **.NET Framework 4.8** (sin él no abre; Windows 8, 10 y 11 ya lo traen).
-2. Entrar con usuario \`admin\`, contraseña \`admin\` (cámbiela en F11 → Usuarios).
+2. Entrar con usuario \`admin\`, contraseña \`admin\` (cámbiela en **F6 Ajustes** → Usuarios).
 3. La primera vez se abre la ventana de impresora: **Detectar automáticamente** → **F3 Imprimir prueba** → **Guardar**.
-4. Para cargar los productos de la semillera: F11 → Productos → **Importar Excel semillera**.
+4. Para cargar los productos de la semillera: **F3 Catálogo** → **Importar Excel**.
 
 > Compilado con el SDK de .NET desde macOS (commit $(git rev-parse --short HEAD)).
 NOTAS
 
 echo "== Publicando $VERSION"
-gh release create "$VERSION" "$SALIDA/VentaFacil.exe" "$SALIDA/$ZIP" -R "$REPO" \
+gh release create "$VERSION" "$SALIDA/VentaFacil.exe" "$SALIDA/$ZIP" "$SALIDA/productos_prueba_100.csv" -R "$REPO" \
   --target "$(git rev-parse HEAD)" --title "VentaFácil $VERSION" --notes-file "$SALIDA/notas.md"
 rm -rf "$SALIDA"

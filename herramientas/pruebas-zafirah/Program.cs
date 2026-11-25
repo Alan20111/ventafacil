@@ -256,5 +256,17 @@ Seccion("Respaldos .BK (ayudantes)");
     Revisar("el resumen del respaldo es legible", inf.Resumen().Contains("«smartdatabase»") && inf.Resumen().Contains("SQL Server 2000") && inf.Resumen().Contains("5.0 MB") && inf.Resumen().Contains("3 archivos"), inf.Resumen());
 }
 
+Seccion("CSV de práctica (ejemplos/productos_prueba_100.csv)");
+{
+    string raiz = AppContext.BaseDirectory;
+    while (raiz != null && !File.Exists(Path.Combine(raiz, "ejemplos", "productos_prueba_100.csv"))) raiz = Path.GetDirectoryName(raiz);
+    var dt = TablaArchivo.Leer(Path.Combine(raiz, "ejemplos", "productos_prueba_100.csv"));
+    var res = ZafirahMapeo.Transformar(dt, PerfilImportacion.Zafirah().Sugerir(dt), new OpcionesZ());
+    Revisar("se leen los 100 productos con el perfil que viene elegido", res.Valido && res.Productos.Count == 100, res.Productos.Count + " " + string.Join(" | ", res.Avisos));
+    Revisar("los de granel entran por peso y los demás por pieza", res.Productos.Count(p => p.Granel) == dt.Rows.Cast<DataRow>().Count(r => r["unidad"].ToString() == "kg") && res.Productos.Any(p => !p.Granel));
+    Revisar("precio, costo, existencia y grupo vienen llenos, y el precio supera al costo", res.Productos.All(p => p.Menudeo > p.Costo && p.Costo > 0 && p.Existencia.HasValue && p.Grupo != ""));
+    Revisar("códigos 9001-9100 y nombres con PRUEBA (no chocan con la tienda)", res.Productos.All(p => int.Parse(p.Codigo) >= 9001 && int.Parse(p.Codigo) <= 9100 && p.Descripcion.EndsWith("PRUEBA")));
+}
+
 Console.WriteLine(fallas == 0 ? "\nTodas las pruebas del importador pasaron." : $"\n{fallas} prueba(s) fallaron.");
 return fallas == 0 ? 0 : 1;

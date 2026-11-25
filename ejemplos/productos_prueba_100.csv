@@ -1,0 +1,101 @@
+﻿codigo,codigo_barras,descripcion,departamento,unidad,costo,precio,existencia,minimo
+9001,,Girasol pelón PRUEBA,Semillas,kg,66.40,92.00,14,5
+9002,,Calabaza pepita PRUEBA,Semillas,kg,149.97,206.00,69,5
+9003,,Chía PRUEBA,Semillas,kg,48.07,66.00,35,5
+9004,,Linaza PRUEBA,Semillas,kg,27.24,40.00,20,5
+9005,,Ajonjolí blanco PRUEBA,Semillas,kg,171.17,258.00,12,5
+9006,,Ajonjolí negro PRUEBA,Semillas,kg,108.95,158.00,10,5
+9007,,Amaranto PRUEBA,Semillas,kg,105.52,146.00,74,5
+9008,,Alpiste PRUEBA,Semillas,kg,31.79,45.00,28,5
+9009,,Quinoa PRUEBA,Semillas,kg,29.31,44.00,17,5
+9010,,Sésamo tostado PRUEBA,Semillas,kg,104.02,142.00,31,5
+9011,,Semilla de cártamo PRUEBA,Semillas,kg,95.40,141.00,64,5
+9012,,Hierba de trigo PRUEBA,Semillas,kg,110.37,162.00,28,5
+9013,,Cacahuate japonés PRUEBA,Botanas,kg,129.43,183.00,72,5
+9014,,Pistache natural PRUEBA,Botanas,kg,95.18,137.00,14,5
+9015,,Almendra fileteada PRUEBA,Botanas,kg,31.84,46.00,24,5
+9016,,Nuez de castilla PRUEBA,Botanas,kg,168.79,246.00,14,5
+9017,,Pepita con chile PRUEBA,Botanas,kg,140.45,210.00,45,5
+9018,,Cacahuate con chile PRUEBA,Botanas,kg,69.14,99.00,63,5
+9019,,Mezcla de frutos PRUEBA,Botanas,kg,23.55,32.00,13,5
+9020,,Palomitas saladas PRUEBA,Botanas,kg,22.19,34.00,62,5
+9021,,Garbanzo botanero PRUEBA,Botanas,kg,59.81,87.00,7,5
+9022,,Habas enchiladas PRUEBA,Botanas,kg,170.03,245.00,68,5
+9023,,Chicharrón de harina PRUEBA,Botanas,kg,21.90,34.00,36,5
+9024,,Cacahuate salado PRUEBA,Botanas,kg,78.85,125.00,26,5
+9025,2900000090255,Pepitas de chocolate PRUEBA,Dulces,pza,87.46,123.50,55,5
+9026,2900000090262,Cacahuate garapiñado PRUEBA,Dulces,pza,84.33,119.00,25,5
+9027,2900000090279,Mazapán PRUEBA,Dulces,pza,126.70,174.50,8,5
+9028,2900000090286,Alegría PRUEBA,Dulces,pza,41.60,56.00,34,5
+9029,2900000090293,Obleas PRUEBA,Dulces,pza,151.62,202.50,12,5
+9030,2900000090309,Pasitas PRUEBA,Dulces,pza,82.38,113.00,11,5
+9031,2900000090316,Tamarindo con chile PRUEBA,Dulces,pza,128.00,179.50,46,5
+9032,2900000090323,Mango deshidratado PRUEBA,Dulces,pza,136.28,189.50,58,5
+9033,2900000090330,Coco rallado PRUEBA,Dulces,pza,126.34,178.50,28,5
+9034,2900000090347,Arándano seco PRUEBA,Dulces,pza,29.39,42.00,7,5
+9035,2900000090354,Plátano deshidratado PRUEBA,Dulces,pza,177.42,246.50,41,5
+9036,2900000090361,Dulce de cajeta PRUEBA,Dulces,pza,20.83,27.00,9,5
+9037,,Frijol negro PRUEBA,Granos,kg,171.42,258.00,31,5
+9038,,Frijol pinto PRUEBA,Granos,kg,115.16,160.00,49,5
+9039,,Garbanzo PRUEBA,Granos,kg,113.18,166.00,67,5
+9040,,Lenteja PRUEBA,Granos,kg,178.84,262.00,15,5
+9041,,Arroz blanco PRUEBA,Granos,kg,36.21,56.00,66,5
+9042,,Arroz integral PRUEBA,Granos,kg,151.25,210.00,72,5
+9043,,Avena PRUEBA,Granos,kg,72.77,111.00,72,5
+9044,,Maíz palomero PRUEBA,Granos,kg,62.08,94.00,38,5
+9045,,Haba seca PRUEBA,Granos,kg,99.09,156.00,33,5
+9046,,Soya PRUEBA,Granos,kg,101.48,157.00,33,5
+9047,,Alubia PRUEBA,Granos,kg,115.02,178.00,29,5
+9048,,Frijol flor de mayo PRUEBA,Granos,kg,147.42,229.00,34,5
+9049,,Canela en raja PRUEBA,Especias,kg,45.59,67.00,8,5
+9050,,Clavo entero PRUEBA,Especias,kg,144.74,212.00,49,5
+9051,,Pimienta negra PRUEBA,Especias,kg,87.13,138.00,51,5
+9052,,Comino PRUEBA,Especias,kg,25.53,35.00,48,5
+9053,,Orégano PRUEBA,Especias,kg,46.33,70.00,5,5
+9054,,Chile de árbol PRUEBA,Especias,kg,92.55,140.00,15,5
+9055,,Chile guajillo PRUEBA,Especias,kg,152.22,210.00,30,5
+9056,,Chile piquín PRUEBA,Especias,kg,92.31,129.00,47,5
+9057,,Cúrcuma PRUEBA,Especias,kg,26.57,42.00,64,5
+9058,,Anís estrella PRUEBA,Especias,kg,79.43,126.00,26,5
+9059,,Laurel PRUEBA,Especias,kg,178.84,243.00,64,5
+9060,,Achiote PRUEBA,Especias,kg,147.49,205.00,65,5
+9061,2900000090613,Té de manzanilla PRUEBA,Bebidas,pza,122.42,167.50,11,5
+9062,2900000090620,Té verde PRUEBA,Bebidas,pza,15.59,23.00,9,5
+9063,2900000090637,Té de jamaica PRUEBA,Bebidas,pza,100.47,149.50,58,5
+9064,2900000090644,Café molido PRUEBA,Bebidas,pza,44.73,66.00,16,5
+9065,2900000090651,Chocolate en polvo PRUEBA,Bebidas,pza,61.22,82.50,19,5
+9066,2900000090668,Atole de avena PRUEBA,Bebidas,pza,103.45,151.50,50,5
+9067,2900000090675,Hierbabuena seca PRUEBA,Bebidas,pza,71.44,99.50,60,5
+9068,2900000090682,Té de tila PRUEBA,Bebidas,pza,98.82,145.00,11,5
+9069,2900000090699,Té de canela PRUEBA,Bebidas,pza,101.35,142.50,31,5
+9070,2900000090705,Té negro PRUEBA,Bebidas,pza,142.45,202.50,12,5
+9071,2900000090712,Té de rooibos PRUEBA,Bebidas,pza,40.95,57.00,38,5
+9072,2900000090729,Café soluble PRUEBA,Bebidas,pza,22.37,32.00,33,5
+9073,2900000090736,Dulce surtido 01 PRUEBA,Dulces,pza,20.69,31.00,23,5
+9074,2900000090743,Dulce surtido 02 PRUEBA,Dulces,pza,22.66,34.00,17,5
+9075,2900000090750,Dulce surtido 03 PRUEBA,Dulces,pza,9.97,15.00,45,5
+9076,2900000090767,Dulce surtido 04 PRUEBA,Dulces,pza,5.84,9.00,22,5
+9077,2900000090774,Dulce surtido 05 PRUEBA,Dulces,pza,15.15,22.50,13,5
+9078,2900000090781,Dulce surtido 06 PRUEBA,Dulces,pza,20.20,30.50,18,5
+9079,2900000090798,Dulce surtido 07 PRUEBA,Dulces,pza,13.86,21.00,74,5
+9080,2900000090804,Dulce surtido 08 PRUEBA,Dulces,pza,17.12,25.50,35,5
+9081,2900000090811,Dulce surtido 09 PRUEBA,Dulces,pza,18.85,28.50,67,5
+9082,2900000090828,Dulce surtido 10 PRUEBA,Dulces,pza,15.16,22.50,71,5
+9083,2900000090835,Dulce surtido 11 PRUEBA,Dulces,pza,15.16,22.50,41,5
+9084,2900000090842,Dulce surtido 12 PRUEBA,Dulces,pza,18.98,28.50,43,5
+9085,2900000090859,Dulce surtido 13 PRUEBA,Dulces,pza,23.46,35.00,35,5
+9086,2900000090866,Dulce surtido 14 PRUEBA,Dulces,pza,21.80,32.50,27,5
+9087,2900000090873,Dulce surtido 15 PRUEBA,Dulces,pza,13.33,20.00,60,5
+9088,2900000090880,Dulce surtido 16 PRUEBA,Dulces,pza,13.84,21.00,19,5
+9089,2900000090897,Dulce surtido 17 PRUEBA,Dulces,pza,18.42,27.50,64,5
+9090,2900000090903,Dulce surtido 18 PRUEBA,Dulces,pza,6.46,9.50,48,5
+9091,2900000090910,Dulce surtido 19 PRUEBA,Dulces,pza,20.68,31.00,29,5
+9092,2900000090927,Dulce surtido 20 PRUEBA,Dulces,pza,23.79,35.50,56,5
+9093,2900000090934,Dulce surtido 21 PRUEBA,Dulces,pza,7.86,12.00,27,5
+9094,2900000090941,Dulce surtido 22 PRUEBA,Dulces,pza,24.35,36.50,38,5
+9095,2900000090958,Dulce surtido 23 PRUEBA,Dulces,pza,19.93,30.00,22,5
+9096,2900000090965,Dulce surtido 24 PRUEBA,Dulces,pza,12.97,19.50,72,5
+9097,2900000090972,Dulce surtido 25 PRUEBA,Dulces,pza,8.26,12.50,38,5
+9098,2900000090989,Dulce surtido 26 PRUEBA,Dulces,pza,8.23,12.50,65,5
+9099,2900000090996,Dulce surtido 27 PRUEBA,Dulces,pza,24.88,37.50,61,5
+9100,2900000091009,Dulce surtido 28 PRUEBA,Dulces,pza,11.78,17.50,35,5

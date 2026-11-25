@@ -11,7 +11,7 @@ namespace VentaFacil.UI
     /// </summary>
     public class BarraModulos : Control
     {
-        public class Modulo { public string Tecla, Nombre; }
+        public class Modulo { public string Tecla, Nombre; public bool Bloqueado; }
         readonly List<Modulo> _items = new List<Modulo>();
         readonly System.Windows.Forms.Timer _t = new System.Windows.Forms.Timer { Interval = 15 };
         int _activo, _sobre = -1;
@@ -27,6 +27,9 @@ namespace VentaFacil.UI
 
         public void Agregar(string tecla, string nombre) { _items.Add(new Modulo { Tecla = tecla, Nombre = nombre }); Invalidate(); }
         public int Activo { get { return _activo; } set { _activo = value; if (Tema.Animaciones && IsHandleCreated) _t.Start(); else { _lineaX = Destino(); Invalidate(); } } }
+
+        /// <summary>Marca un módulo con candado (el usuario no tiene permiso; al pulsarlo se pide autorización).</summary>
+        public void Bloquear(int i, bool bloqueado) { if (i >= 0 && i < _items.Count && _items[i].Bloqueado != bloqueado) { _items[i].Bloqueado = bloqueado; Invalidate(); } }
 
         float Ancho { get { return _items.Count == 0 ? 1 : Math.Min(210f, (Width - 16f) / _items.Count); } }
         float Destino() { return 8 + _activo * Ancho; }
@@ -60,9 +63,17 @@ namespace VentaFacil.UI
                     using (var br = new SolidBrush(activo ? Tema.Azul : Color.FromArgb(0, 58, 134)))
                     using (var ruta = Redondo(r, 8)) g.FillPath(br, ruta);
                 TextRenderer.DrawText(g, _items[i].Tecla, new Font("Segoe UI", 9.5f, FontStyle.Bold), new Rectangle(r.X + 10, r.Y, 40, r.Height), activo ? Tema.AzulClaro2 : Tema.Piedra, TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.NoPadding);
-                TextRenderer.DrawText(g, _items[i].Nombre, new Font("Segoe UI", 13f, FontStyle.Bold), new Rectangle(r.X + 48, r.Y, r.Width - 52, r.Height), Color.White, TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
+                TextRenderer.DrawText(g, _items[i].Nombre, new Font("Segoe UI", 13f, FontStyle.Bold), new Rectangle(r.X + 48, r.Y, r.Width - (_items[i].Bloqueado ? 74 : 52), r.Height), _items[i].Bloqueado && !activo ? Color.FromArgb(140, 160, 195) : Color.White, TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
+                if (_items[i].Bloqueado) Candado(g, r.Right - 22, r.Y + r.Height / 2 - 7);
             }
             using (var br = new SolidBrush(Color.White)) g.FillRectangle(br, _lineaX + 14, Height - 5, w - 30, 3);
+        }
+
+        /// <summary>Candado de 12x14 dibujado a mano (Windows 7 no trae bien los emojis).</summary>
+        static void Candado(Graphics g, int x, int y)
+        {
+            using (var pluma = new Pen(Tema.Piedra, 2f)) g.DrawArc(pluma, x + 2, y, 8, 10, 180, 180);
+            using (var br = new SolidBrush(Tema.Piedra)) g.FillRectangle(br, x, y + 6, 12, 8);
         }
 
         static System.Drawing.Drawing2D.GraphicsPath Redondo(Rectangle r, int d)

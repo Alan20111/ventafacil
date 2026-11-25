@@ -434,7 +434,7 @@ namespace VentaFacil.Forms.Pos
     }
 
     // =========================================================================
-    //  F7 Entradas y salidas de efectivo
+    //  Entradas y salidas de efectivo
     // =========================================================================
     public class FormMovimiento : Dialogo
     {
@@ -444,7 +444,7 @@ namespace VentaFacil.Forms.Pos
         public decimal Monto { get; private set; }
         public string Concepto { get { return _concepto.Text.Trim(); } }
 
-        public FormMovimiento() : base("F7 - Entradas y salidas de efectivo", 480, 290)
+        public FormMovimiento() : base("Entradas y salidas de efectivo", 480, 290)
         {
             _salida = new RadioButton { Text = "F3 Salida / Retiro (gasto o proveedor)", Left = 16, Top = 14, Width = 440, Checked = true, Font = Tema.Negrita };
             _entrada = new RadioButton { Text = "F2 Entrada de efectivo (fondo o cambio)", Left = 16, Top = 42, Width = 440, Font = Tema.Negrita };

@@ -74,6 +74,10 @@ namespace VentaFacil.UI
                     "Ctrl+D ........... abrir cajón",
                     "Ctrl+I ........... elegir / detectar impresora",
                     "",
+                    "CATÁLOGO, ALMACÉN, RESULTADOS Y AJUSTES",
+                    "Ctrl+N nuevo   Ctrl+M modificar   Ctrl+E eliminar",
+                    "Ctrl+B buscar (Almacén)   Ctrl+R consultar (Resultados)",
+                    "",
                     "Los demás módulos: Ctrl+F1, Ctrl+F2… son los botones",
                     "que se ven arriba de cada uno (cambian de vista o hacen algo)." })
             };

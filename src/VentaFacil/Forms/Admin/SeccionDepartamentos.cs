@@ -22,9 +22,9 @@ namespace VentaFacil.Forms.Admin
             Controls.Add(_grid);
 
             var barra = AdminUtil.Barra();
-            barra.Controls.Add(AdminUtil.BotonBarra("F3 Nuevo", (s, e) => Nuevo(), 95));
-            barra.Controls.Add(AdminUtil.BotonBarra("F4 Renombrar", (s, e) => Renombrar(), 115));
-            barra.Controls.Add(AdminUtil.BotonBarra("F5 Eliminar", (s, e) => Eliminar(), 95));
+            barra.Controls.Add(AdminUtil.BotonBarra("Nuevo (Ctrl+N)", (s, e) => Nuevo(), 140));
+            barra.Controls.Add(AdminUtil.BotonBarra("Renombrar (Ctrl+M)", (s, e) => Renombrar(), 175));
+            barra.Controls.Add(AdminUtil.BotonBarra("Eliminar (Ctrl+E)", (s, e) => Eliminar(), 155));
             Controls.Add(barra);
             Controls.Add(AdminUtil.TituloSeccion("Departamentos"));
             Load += (s, e) => { Cargar(); _grid.Focus(); };
@@ -34,9 +34,9 @@ namespace VentaFacil.Forms.Admin
         {
             switch (keyData)
             {
-                case Keys.F3: Nuevo(); return true;
-                case Keys.F4: Renombrar(); return true;
-                case Keys.F5: Eliminar(); return true;
+                case Keys.Control | Keys.N: Nuevo(); return true;
+                case Keys.Control | Keys.M: Renombrar(); return true;
+                case Keys.Control | Keys.E: Eliminar(); return true;
             }
             return base.ProcessCmdKey(ref msg, keyData);
         }

@@ -29,6 +29,11 @@ MODULOS (barra azul de arriba; tambien con el raton)
   Esc regresa a Caja.  F10 cambia de usuario.
   Dentro de cada modulo, Ctrl+F1, Ctrl+F2... son los botones que se ven arriba.
 
+USUARIOS Y PERMISOS (F6 Ajustes > Usuarios)
+  Administrador: todo. Cajero: cobrar, Turno y su propio corte. Las casillas
+  "Puede usar" le dan o quitan modulos y acciones. Los modulos con candado
+  piden la clave de alguien que si tenga permiso.
+
 TECLAS DE LA CAJA
   Codigo + Enter ... agregar articulo          3*  ... cantidad 3
   + o Ctrl+F1 ...... COBRAR                     Ctrl+F2 ... buscar

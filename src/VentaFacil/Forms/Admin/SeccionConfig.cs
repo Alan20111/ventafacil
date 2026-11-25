@@ -191,7 +191,7 @@ namespace VentaFacil.Forms.Admin
             _fondo = Casilla(p, "Pedir fondo de caja (cambio inicial) al abrir el turno", ref y);
             _declarar = Casilla(p, "Pedir el efectivo contado al hacer el corte (muestra faltante / sobrante)", ref y);
             _sinExistencia = Casilla(p, "Permitir vender productos sin existencia", ref y);
-            _cajeroCancela = Casilla(p, "Los cajeros pueden cancelar tickets y hacer descuentos sin autorización", ref y);
+            _cajeroCancela = Casilla(p, "Los cajeros pueden cancelar y hacer descuentos (salvo los que tengan permisos propios)", ref y);
             _avisar = Casilla(p, "Mostrar aviso cuando un código no se encuentra", ref y);
             return p;
         }

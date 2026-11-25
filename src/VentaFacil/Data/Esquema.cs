@@ -156,6 +156,13 @@ CREATE TABLE IF NOT EXISTS suspendidas (
                 catch (System.Data.SQLite.SQLiteException) { /* ya existe */ }
                 Db.Exec(cn, null, "PRAGMA user_version = 3");
             }
+            if (v < 4)
+            {
+                // v4: permisos por usuario (ver Core.Permisos). Vacío = los de su tipo: nadie gana ni pierde nada al actualizar
+                if (System.Convert.ToInt64(Db.Scalar(cn, null, "SELECT COUNT(*) FROM pragma_table_info('usuarios') WHERE name='permisos'")) == 0)
+                    Db.Exec(cn, null, "ALTER TABLE usuarios ADD COLUMN permisos TEXT NOT NULL DEFAULT ''");
+                Db.Exec(cn, null, "PRAGMA user_version = 4");
+            }
         }
     }
 }

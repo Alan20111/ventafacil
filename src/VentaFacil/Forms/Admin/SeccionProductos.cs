@@ -49,9 +49,9 @@ namespace VentaFacil.Forms.Admin
             Controls.Add(filtro);
 
             var barra = AdminUtil.Barra();
-            barra.Controls.Add(AdminUtil.BotonBarra("F3 Nuevo", (s, e) => Nuevo(), 95));
-            barra.Controls.Add(AdminUtil.BotonBarra("F4 Modificar", (s, e) => Modificar(), 105));
-            barra.Controls.Add(AdminUtil.BotonBarra("F5 Eliminar", (s, e) => Eliminar(), 95));
+            barra.Controls.Add(AdminUtil.BotonBarra("Nuevo", (s, e) => Nuevo(), 95));
+            barra.Controls.Add(AdminUtil.BotonBarra("Modificar", (s, e) => Modificar(), 105));
+            barra.Controls.Add(AdminUtil.BotonBarra("Eliminar", (s, e) => Eliminar(), 95));
             var impXls = AdminUtil.BotonBarra("Importar Excel", (s, e) => { if (ExcelSemillera.Importar(FindForm())) Cargar(); }, 120);
             impXls.ForeColor = Tema.Verde;
             barra.Controls.Add(impXls);
@@ -99,9 +99,9 @@ namespace VentaFacil.Forms.Admin
         {
             switch (keyData)
             {
-                case Keys.F3: Nuevo(); return true;
-                case Keys.F4: Modificar(); return true;
-                case Keys.F5: Eliminar(); return true;
+                case Keys.Control | Keys.N: Nuevo(); return true;
+                case Keys.Control | Keys.M: Modificar(); return true;
+                case Keys.Control | Keys.E: Eliminar(); return true;
             }
             return base.ProcessCmdKey(ref msg, keyData);
         }

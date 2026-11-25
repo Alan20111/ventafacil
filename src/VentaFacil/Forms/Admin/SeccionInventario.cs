@@ -55,7 +55,7 @@ namespace VentaFacil.Forms.Admin
                 arriba.Controls.Add(Ui.Etiqueta("Costo nuevo (opcional):", 350, 10));
                 _costo = Ui.Caja(350, 32, 120, Tema.Mediana); _costo.TextAlign = HorizontalAlignment.Right; arriba.Controls.Add(_costo);
                 arriba.Controls.Add(Ui.Boton("Agregar (Enter)", 480, 30, 130, 34, (s, e) => Agregar(), true));
-                arriba.Controls.Add(Ui.Boton("Buscar (F2)", 616, 30, 105, 34, (s, e) => Buscar()));
+                arriba.Controls.Add(Ui.Boton("Buscar (Ctrl+B)", 616, 30, 130, 34, (s, e) => Buscar()));
                 arriba.Controls.Add(Ui.Etiqueta("Escanee el código, escriba la cantidad y presione Enter. Al terminar presione \"Aplicar entrada\".", 10, 70, null, Tema.Humo));
                 Controls.Add(arriba);
 
@@ -80,7 +80,7 @@ namespace VentaFacil.Forms.Admin
                 Controls.Add(abajo);
                 _grid.BringToFront();
 
-                _codigo.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; _cantidad.Focus(); _cantidad.SelectAll(); } else if (e.KeyCode == Keys.F2) { e.SuppressKeyPress = true; Buscar(); } };
+                _codigo.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; _cantidad.Focus(); _cantidad.SelectAll(); } else if (e.KeyData == (Keys.Control | Keys.B)) { e.SuppressKeyPress = true; Buscar(); } };
                 _cantidad.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; Agregar(); } };
                 _costo.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; Agregar(); } };
             }
@@ -198,9 +198,9 @@ namespace VentaFacil.Forms.Admin
 
             public PanelAjuste()
             {
-                Controls.Add(Ui.Etiqueta("1. Escanee o escriba el código (F2 para buscar):", 16, 16, Tema.Negrita));
+                Controls.Add(Ui.Etiqueta("1. Escanee o escriba el código (Ctrl+B para buscar):", 16, 16, Tema.Negrita));
                 _codigo = Ui.Caja(16, 42, 260, Tema.Mediana); Controls.Add(_codigo);
-                Controls.Add(Ui.Boton("Buscar (F2)", 286, 40, 110, 34, (s, e) => Elegir("")));
+                Controls.Add(Ui.Boton("Buscar (Ctrl+B)", 286, 40, 130, 34, (s, e) => Elegir("")));
                 _info = Ui.Etiqueta("", 16, 86, Tema.Mediana, Tema.Azul);
                 Controls.Add(_info);
                 Controls.Add(Ui.Etiqueta("2. Existencia contada físicamente:", 16, 150, Tema.Negrita));
@@ -214,7 +214,7 @@ namespace VentaFacil.Forms.Admin
                 _codigo.KeyDown += (s, e) =>
                 {
                     if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; Elegir(_codigo.Text); }
-                    else if (e.KeyCode == Keys.F2) { e.SuppressKeyPress = true; Elegir(""); }
+                    else if (e.KeyData == (Keys.Control | Keys.B)) { e.SuppressKeyPress = true; Elegir(""); }
                 };
                 _contado.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; _motivo.Focus(); } };
                 _motivo.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; Guardar(); } };

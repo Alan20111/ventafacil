@@ -30,7 +30,7 @@ namespace VentaFacil.Forms.Pos
         Panel _host, _panelCaja;
         ModuloVista _modulo;
         int _modActivo;
-        bool _adminOk;
+        Usuario _autoriza;   // quien prestó su clave para entrar a un módulo (se olvida al salir a Caja/Turno o al cambiar de usuario)
 
         public FormVenta()
         {
@@ -162,19 +162,23 @@ namespace VentaFacil.Forms.Pos
         // ---------------------------------------------------------------------
         //  Módulos: cada uno con su barra de atajos (Ctrl+F1, Ctrl+F2…)
         // ---------------------------------------------------------------------
+        static readonly string[] PermisoDeModulo = { null, Permisos.Turno, Permisos.Catalogo, Permisos.Almacen, Permisos.Resultados, Permisos.Ajustes };
+
+        /// <summary>El usuario de la sesión, o quien prestó su clave para entrar al módulo, tiene el permiso.</summary>
+        bool Puede(string permiso) { return Permisos.Tiene(Sesion.Usuario, permiso) || Permisos.Tiene(_autoriza, permiso); }
+
         void IrAModulo(int n)
         {
             if (n == _modActivo) { if (n == 0) _captura.Focus(); return; }
-            if (n >= 2)
+            if (n >= 2 && _lineas.Count > 0) { Ui.Aviso("Termine la venta actual antes de entrar a este módulo."); return; }
+            string permiso = PermisoDeModulo[n];
+            var autoriza = n <= 1 ? null : _autoriza;
+            if (n > 0 && !Permisos.Tiene(Sesion.Usuario, permiso) && !Permisos.Tiene(autoriza, permiso))
             {
-                if (_lineas.Count > 0) { Ui.Aviso("Termine la venta actual antes de entrar a este módulo."); return; }
-                if (!_adminOk)
-                {
-                    if (Ui.AutorizarAdmin("Se requiere un administrador") == null) { _captura.Focus(); return; }
-                    _adminOk = true;
-                }
+                autoriza = Ui.Autorizar(permiso, "Este módulo requiere autorización");
+                if (autoriza == null) { if (_modActivo == 0) _captura.Focus(); return; }
             }
-            else _adminOk = false;
+            _autoriza = autoriza;
 
             if (_modulo != null) { _host.Controls.Remove(_modulo); _modulo.Dispose(); _modulo = null; }
             _modActivo = n;
@@ -209,7 +213,7 @@ namespace VentaFacil.Forms.Pos
                     m.AgregarAccion("Cortes X / Z", Y(Cortes));
                     m.AgregarAccion("Abrir cajón", AbrirCajon);
                     m.AgregarAccion("Reimprimir ticket", ReimprimirUltimo);
-                    m.AgregarAccion("Cambiar usuario (F10)", Y(CambiarUsuario));
+                    m.AgregarAccion("Cambiar usuario (F10)", CambiarUsuario);
                     break;
                 case 2:
                     m = new ModuloVista("Catálogo", "productos, precios y códigos");
@@ -228,8 +232,11 @@ namespace VentaFacil.Forms.Pos
                 default:
                     m = new ModuloVista("Ajustes", "configuración del sistema");
                     m.AgregarVista("Negocio", () => new Admin.SeccionConfig());
-                    m.AgregarVista("Usuarios", () => new Admin.SeccionUsuarios());
-                    m.AgregarVista("Respaldos", () => new Admin.SeccionRespaldos());
+                    if (Puede(Permisos.SoloAdmin))
+                    {
+                        m.AgregarVista("Usuarios", () => new Admin.SeccionUsuarios());
+                        m.AgregarVista("Respaldos", () => new Admin.SeccionRespaldos());
+                    }
                     m.AgregarAccion("Impresora", ConfigurarImpresora);
                     m.AgregarAccion("Licencia", () => Licenciamiento.FormLicencia.Mostrar(Licencia.Evaluar(), true));
                     m.AgregarAccion("Teclas rápidas", () => { using (var f = new FormAyudaTeclas()) f.ShowDialog(this); });
@@ -308,6 +315,7 @@ namespace VentaFacil.Forms.Pos
             _lblUsuario.Text = "Cajero: " + Sesion.Usuario.Nombre + (Sesion.Usuario.EsAdmin ? " (Admin)" : "");
             _lblBanner.Text = c.Banner;
             _lblBanner.Visible = !string.IsNullOrWhiteSpace(c.Banner);
+            for (int i = 1; i < PermisoDeModulo.Length; i++) _barraMod.Bloquear(i, !Permisos.Tiene(Sesion.Usuario, PermisoDeModulo[i]));
             UbicarEncabezado();
         }
 
@@ -627,7 +635,7 @@ namespace VentaFacil.Forms.Pos
         void Descuento()
         {
             if (_lineas.Count == 0) { Mensaje("No hay artículos en la venta."); return; }
-            if (!Config.Actual.CajeroPuedeCancelar && Ui.AutorizarAdmin("Descuentos: se requiere autorización") == null) { _captura.Focus(); return; }
+            if (Ui.Autorizar(Permisos.Descuentos, "Descuentos: se requiere autorización") == null) { _captura.Focus(); return; }
             var l = LineaSeleccionada();
             using (var f = new FormDescuento(l, Total))
             {
@@ -687,6 +695,7 @@ namespace VentaFacil.Forms.Pos
 
         void MovimientoCaja()
         {
+            if (Ui.Autorizar(Permisos.Movimientos, "Entradas y salidas: se requiere autorización") == null) { _captura.Focus(); return; }
             using (var f = new FormMovimiento())
             {
                 if (f.ShowDialog(this) != DialogResult.OK) { _captura.Focus(); return; }
@@ -729,7 +738,14 @@ namespace VentaFacil.Forms.Pos
                 if (f.ShowDialog(this) == DialogResult.OK)
                 {
                     Sesion.Usuario = f.UsuarioValido;
+                    _autoriza = null;       // el nuevo usuario no hereda la autorización del anterior
                     ActualizarEncabezado();
+                    // Sale a Caja después de que termine el clic (el botón que se pulsó vive dentro del módulo que se va a cerrar)
+                    if (_modActivo != 0)
+                    {
+                        if (_modulo != null) _modulo.Visible = false;
+                        BeginInvoke((Action)(() => IrAModulo(0)));
+                    }
                     Mensaje("Bienvenido(a), " + Sesion.Usuario.Nombre);
                 }
             }
@@ -738,7 +754,7 @@ namespace VentaFacil.Forms.Pos
 
         void CancelarTicket()
         {
-            if (!Config.Actual.CajeroPuedeCancelar && Ui.AutorizarAdmin("Cancelar ticket: se requiere autorización") == null) { _captura.Focus(); return; }
+            if (Ui.Autorizar(Permisos.Cancelar, "Cancelar ticket: se requiere autorización") == null) { _captura.Focus(); return; }
             var folio = Ui.PedirNumero("Cancelar ticket", "Número de ticket a cancelar:", VentaRepo.UltimoTicket(Config.Actual.Caja));
             if (!folio.HasValue) { _captura.Focus(); return; }
             try
@@ -775,7 +791,7 @@ namespace VentaFacil.Forms.Pos
 
         void ConfigurarImpresora()
         {
-            if (Ui.AutorizarAdmin("Impresora: se requiere un administrador") == null) { _captura.Focus(); return; }
+            if (!Puede(Permisos.Ajustes) && Ui.Autorizar(Permisos.Ajustes, "Impresora: se requiere autorización") == null) { _captura.Focus(); return; }
             if (FormImpresoras.Configurar(this)) { Config.Cargar(); Mensaje("Impresora guardada."); }
             _captura.Focus();
         }
@@ -790,6 +806,7 @@ namespace VentaFacil.Forms.Pos
 
         void AbrirCajon()
         {
+            if (Ui.Autorizar(Permisos.Cajon, "Abrir cajón: se requiere autorización") == null) { _captura.Focus(); return; }
             try { Cajon.Abrir(Config.Actual); Mensaje("Cajón abierto."); }
             catch (Exception ex) { Ui.Error(ex, "No se pudo abrir el cajón"); }
         }

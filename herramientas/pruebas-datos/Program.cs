@@ -52,7 +52,7 @@ ResultadoZ Traducir(System.Data.DataTable t) { return ZafirahMapeo.Transformar(t
 // ================================================================ 1. Esquema y migración
 Seccion("Esquema y migración");
 Limpiar();
-Revisar("la base nueva se crea, es de la versión 3 y pasa la revisión de integridad", Cuenta("PRAGMA user_version") == 3 && Salud.Revisar(Db.Archivo) == "ok");
+Revisar("la base nueva se crea, es de la versión 4 y pasa la revisión de integridad", Cuenta("PRAGMA user_version") == 4 && Salud.Revisar(Db.Archivo) == "ok");
 Revisar("existen las 10 tablas del programa", Cuenta("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name IN ('config','usuarios','departamentos','productos','turnos','ventas','venta_detalle','movimientos_caja','movimientos_inv','suspendidas')") == 10);
 Revisar("el usuario admin/admin existe y entra; una clave mala no", admin() != null && UsuarioRepo.Validar("admin", "mala") == null);
 Revisar("la columna sin_barras (v3) existe", Cuenta("SELECT COUNT(*) FROM pragma_table_info('productos') WHERE name='sin_barras'") == 1);
@@ -60,7 +60,34 @@ Revisar("la columna sin_barras (v3) existe", Cuenta("SELECT COUNT(*) FROM pragma
 ProductoRepo.Guardar(new Producto { Codigo = "1", Descripcion = "VIEJO", Precio = 10m, Costo = 6m }, admin().Id);
 Db.Exec("ALTER TABLE productos DROP COLUMN sin_barras"); Db.Exec("PRAGMA user_version = 2");
 Db.Inicializar();
-Revisar("migración v2 → v3: agrega la columna y no pierde el producto", Cuenta("PRAGMA user_version") == 3 && Cuenta("SELECT COUNT(*) FROM pragma_table_info('productos') WHERE name='sin_barras'") == 1 && ProductoRepo.PorCodigo("1") != null);
+Revisar("migración v2 → v4: agrega la columna y no pierde el producto", Cuenta("PRAGMA user_version") == 4 && Cuenta("SELECT COUNT(*) FROM pragma_table_info('productos') WHERE name='sin_barras'") == 1 && ProductoRepo.PorCodigo("1") != null);
+
+// Una base de la versión 3 (la de la v1.17, con usuarios ya creados) pasa a la 4 sin que nadie gane ni pierda acceso
+UsuarioRepo.Guardar(new Usuario { Login = "caja1", Nombre = "Cajera Uno", Rol = "CAJERO" }, "1234");
+Db.Exec("ALTER TABLE usuarios DROP COLUMN permisos"); Db.Exec("PRAGMA user_version = 3");
+Db.Inicializar(); Db.Inicializar();   // dos veces: no debe fallar al volver a abrir
+Revisar("migración v3 → v4: agrega permisos, conserva usuarios y claves", Cuenta("PRAGMA user_version") == 4 && admin() != null && UsuarioRepo.Validar("caja1", "1234") != null);
+
+Seccion("Permisos por usuario");
+{
+    var adm = admin(); var caj = UsuarioRepo.Validar("caja1", "1234");
+    Func<Usuario, string, bool> P = (u, k) => Permisos.Tiene(u, k, false);
+    Revisar("el administrador puede todo, incluso lo exclusivo", Permisos.Todos.All(i => P(adm, i.Clave)) && P(adm, Permisos.SoloAdmin));
+    Revisar("el cajero de fábrica: solo Turno, entradas/salidas y cajón", string.Join(",", Permisos.Todos.Where(i => P(caj, i.Clave)).Select(i => i.Clave)) == "turno,movimientos,cajon");
+    Revisar("el cajero no tiene corte de caja, corte Z ni lo exclusivo de administrador", !P(caj, Permisos.CorteCaja) && !P(caj, Permisos.CorteZ) && !P(caj, Permisos.SoloAdmin));
+    Revisar("el ajuste general da cancelar y descuentos al cajero de fábrica, y nada más", Permisos.Tiene(caj, Permisos.Cancelar, true) && Permisos.Tiene(caj, Permisos.Descuentos, true) && !Permisos.Tiene(caj, Permisos.Catalogo, true));
+    caj.Permisos = Permisos.Guardar(new[] { Permisos.Turno, Permisos.Almacen }, false); UsuarioRepo.Guardar(caj, null);
+    caj = UsuarioRepo.Obtener(caj.Id);
+    Revisar("las casillas propias se guardan y mandan (dan Almacén, quitan el cajón)", P(caj, Permisos.Almacen) && P(caj, Permisos.Turno) && !P(caj, Permisos.Cajon) && !P(caj, Permisos.Catalogo));
+    Revisar("con casillas propias, el ajuste general ya no da cancelar", !Permisos.Tiene(caj, Permisos.Cancelar, true));
+    Revisar("guardar permisos no cambia la contraseña", UsuarioRepo.Validar("caja1", "1234") != null);
+    caj.Permisos = Permisos.Guardar(new string[0], false); UsuarioRepo.Guardar(caj, null); caj = UsuarioRepo.Obtener(caj.Id);
+    Revisar("sin ninguna casilla no puede nada (no vuelve a lo de fábrica)", caj.Permisos == "=" && Permisos.Todos.All(i => !P(caj, i.Clave)));
+    Revisar("marcar justo lo de fábrica se guarda como «de fábrica»", Permisos.Guardar(new[] { Permisos.Cajon, Permisos.Turno, Permisos.Movimientos }, false) == "");
+    Revisar("todas las casillas no dan lo exclusivo de administrador, ni escribiéndolo a mano", !P(new Usuario { Permisos = Permisos.Guardar(Permisos.Todos.Select(i => i.Clave).ToList(), false) }, Permisos.SoloAdmin) && !P(new Usuario { Permisos = "=solo_admin" }, Permisos.SoloAdmin));
+    Revisar("un nombre parecido no cuenta (corte_zz, turnos)", !P(new Usuario { Permisos = "=corte_zz,turnos" }, Permisos.CorteZ) && !P(new Usuario { Permisos = "=corte_zz,turnos" }, Permisos.Turno));
+    Revisar("un usuario inactivo o nulo no puede nada", !P(new Usuario { Rol = "ADMIN", Activo = false }, Permisos.Turno) && !P(null, Permisos.Turno));
+}
 
 // ================================================================ 2. Productos y códigos de barras
 Seccion("Productos y códigos de barras");

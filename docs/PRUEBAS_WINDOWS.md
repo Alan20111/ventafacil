@@ -99,4 +99,16 @@ Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y
 | 47 | **Comandos…** y, en Management Studio/`osql`, ver que `master` ya no tiene bases `vf_import_tmp_…` tras cerrar el asistente | El T-SQL se ve completo; la temporal se borró |
 | 48 | **Guardar…** un perfil, cerrar y reabrir; **Carpeta** y editar el .json con el Bloc de notas | El perfil aparece en la lista y propone las mismas columnas; un .json con error se avisa sin tumbar el asistente |
 
-Resultado: ______ de 48 pasos bien.   Fallas anotadas: ____________________________
+## K. Usuarios y permisos
+| # | Qué hacer | Debe pasar |
+|---|-----------|-----------|
+| 49 | Entrar como cajero | Catálogo, Almacén, Resultados y Ajustes salen con candado; F3–F6 piden clave |
+| 50 | Cajero: F2 Turno → Cortes | Abre **su** corte; la lista solo trae su nombre; corte de caja y Z piden clave |
+| 51 | Administrador dentro de Catálogo → F10 → entrar como cajero | Regresa a Caja; F3 vuelve a pedir clave |
+| 52 | Cajero entra a Ajustes con clave de admin, vuelve a Caja y pulsa F6 | Vuelve a pedir clave |
+| 53 | Ajustes → Usuarios → un cajero: marcar Almacén, quitar cajón; entrar con él | Almacén abre sin clave; abrir cajón la pide |
+| 54 | Dar Ajustes a un cajero y entrar con él | No ve Usuarios ni Respaldos |
+| 55 | En Catálogo, Grupos y Usuarios: F1–F6 y Ctrl+N / Ctrl+M / Ctrl+E | F1–F6 cambian de módulo siempre (F5 ya **no** elimina); Ctrl+letra hace la acción |
+| 56 | Abrir con la base de la v1.17 | Siguen todos los usuarios con su clave |
+
+Resultado: ______ de 56 pasos bien.   Fallas anotadas: ____________________________

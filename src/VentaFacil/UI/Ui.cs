@@ -259,16 +259,16 @@ namespace VentaFacil.UI
         }
 
         /// <summary>
-        /// Si el usuario actual no es administrador, pide usuario y clave de un administrador.
+        /// Si el usuario actual tiene el permiso, él mismo. Si no, pide usuario y clave de alguien que sí lo tenga.
         /// Devuelve el usuario que autoriza o null.
         /// </summary>
-        public static Usuario AutorizarAdmin(string motivo)
+        public static Usuario Autorizar(string permiso, string motivo)
         {
-            if (Sesion.Usuario != null && Sesion.Usuario.EsAdmin) return Sesion.Usuario;
+            if (Permisos.Tiene(Sesion.Usuario, permiso)) return Sesion.Usuario;
             using (var f = new FormLogin(true, motivo))
             {
                 if (f.ShowDialog() != DialogResult.OK) return null;
-                if (!f.UsuarioValido.EsAdmin) { Aviso("Ese usuario no es administrador."); return null; }
+                if (!Permisos.Tiene(f.UsuarioValido, permiso)) { Aviso("Ese usuario no tiene permiso para esto."); return null; }
                 return f.UsuarioValido;
             }
         }

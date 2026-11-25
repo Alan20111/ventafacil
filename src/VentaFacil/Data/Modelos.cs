@@ -10,12 +10,13 @@ namespace VentaFacil.Data
         public string Login = "";
         public string Nombre = "";
         public string Rol = "CAJERO";
+        public string Permisos = "";   // ver Core.Permisos
         public bool Activo = true;
         public bool EsAdmin { get { return Rol == "ADMIN"; } }
 
         internal static Usuario De(IDataRecord r)
         {
-            return new Usuario { Id = Db.L(r, "id"), Login = Db.S(r, "usuario"), Nombre = Db.S(r, "nombre"), Rol = Db.S(r, "rol"), Activo = Db.B(r, "activo") };
+            return new Usuario { Id = Db.L(r, "id"), Login = Db.S(r, "usuario"), Nombre = Db.S(r, "nombre"), Rol = Db.S(r, "rol"), Permisos = Db.S(r, "permisos"), Activo = Db.B(r, "activo") };
         }
     }
 

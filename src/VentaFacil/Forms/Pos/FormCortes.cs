@@ -10,7 +10,7 @@ using VentaFacil.UI;
 namespace VentaFacil.Forms.Pos
 {
     /// <summary>
-    /// F9 Cortes.
+    /// Cortes.
     ///  - Corte X de cajero: parcial, solo lo de un cajero. No cierra nada.
     ///  - Corte X de caja: parcial de toda la caja. No cierra nada.
     ///  - Corte Z: cierre del turno/día. Pide el efectivo contado y calcula sobrante/faltante.
@@ -22,14 +22,14 @@ namespace VentaFacil.Forms.Pos
         Ticket _ticket;
         public bool TurnoCerrado { get; private set; }
 
-        public FormCortes() : base("F9 - Cortes de caja", 760, 600)
+        public FormCortes() : base("Cortes de caja", 760, 600)
         {
             var t = Sesion.Turno;
             Controls.Add(Ui.Etiqueta("Turno " + t.Id + "  ·  abierto el " + t.Apertura.ToString("dd/MM/yyyy HH:mm") + "  ·  fondo " + Fmt.Dinero(t.Fondo), 16, 12, Tema.Negrita, Tema.Azul));
 
             Controls.Add(Ui.Etiqueta("Cajero:", 16, 48, Tema.Negrita));
             _cajeros = new ComboBox { Left = 90, Top = 44, Width = 200, DropDownStyle = ComboBoxStyle.DropDownList, Font = Tema.Normal };
-            foreach (var u in TurnoRepo.CajerosDelTurno(t.Id)) _cajeros.Items.Add(new ItemUsuario(u));
+            if (Permisos.Tiene(Sesion.Usuario, Permisos.CorteCaja)) foreach (var u in TurnoRepo.CajerosDelTurno(t.Id)) _cajeros.Items.Add(new ItemUsuario(u));
             if (!_cajeros.Items.Cast<ItemUsuario>().Any(i => i.U.Id == Sesion.Usuario.Id)) _cajeros.Items.Add(new ItemUsuario(Sesion.Usuario));
             _cajeros.SelectedItem = _cajeros.Items.Cast<ItemUsuario>().First(i => i.U.Id == Sesion.Usuario.Id);
             Controls.Add(_cajeros);
@@ -55,7 +55,7 @@ namespace VentaFacil.Forms.Pos
                 else if (e.KeyCode == Keys.F2) { e.Handled = true; CorteZ(); }
                 else if (e.KeyData == (Keys.Control | Keys.P)) { e.Handled = true; Imprimir(); }
             };
-            Shown += (s, e) => CorteXCaja();
+            Shown += (s, e) => { if (Permisos.Tiene(Sesion.Usuario, Permisos.CorteCaja)) CorteXCaja(); else CorteXCajero(); };
         }
 
         class ItemUsuario
@@ -71,7 +71,7 @@ namespace VentaFacil.Forms.Pos
         {
             var item = _cajeros.SelectedItem as ItemUsuario;
             if (item == null) return;
-            if (item.U.Id != Sesion.Usuario.Id && Ui.AutorizarAdmin("Corte de otro cajero: se requiere autorización") == null) return;
+            if (item.U.Id != Sesion.Usuario.Id && Ui.Autorizar(Permisos.CorteCaja, "Corte de otro cajero: se requiere autorización") == null) return;
             try
             {
                 var r = TurnoRepo.Resumen(Sesion.Turno.Id, item.U.Id);
@@ -84,6 +84,7 @@ namespace VentaFacil.Forms.Pos
 
         void CorteXCaja()
         {
+            if (Ui.Autorizar(Permisos.CorteCaja, "Corte de caja: se requiere autorización") == null) return;
             try
             {
                 var r = TurnoRepo.Resumen(Sesion.Turno.Id);
@@ -95,7 +96,7 @@ namespace VentaFacil.Forms.Pos
 
         void CorteZ()
         {
-            var autoriza = Ui.AutorizarAdmin("Corte Z: se requiere un administrador");
+            var autoriza = Ui.Autorizar(Permisos.CorteZ, "Corte Z: se requiere autorización");
             if (autoriza == null) return;
             if (SuspendidaRepo.Todas().Count > 0 && !Ui.Confirmar("Hay ventas en espera sin cobrar. Seguirán guardadas para el siguiente turno.\n¿Continuar con el corte Z?")) return;
             try

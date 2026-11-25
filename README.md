@@ -26,7 +26,7 @@ Cada cambio al proyecto publica un release nuevo.
 2. Copie la carpeta `VentaFacil` a `C:\VentaFacil` (no a *Archivos de programa*, para que pueda guardar los datos ahí mismo).
 3. Abra `VentaFacil.exe`: se instala solo en `C:\VentaFacil` y crea el acceso en el escritorio.
 4. Entre con el usuario **admin** y la contraseña **admin**. **Cámbiela de inmediato** en *F6 Ajustes → Usuarios*.
-5. La primera vez se abre sola la ventana **Impresora de tickets**: detecta las impresoras instaladas en Windows, marca las de tickets y recomienda una. Pulse **F3 Imprimir prueba** y **Guardar**. Se puede volver a abrir en cualquier momento con **Ctrl+I** o en *F11 → Configuración → Impresora*.
+5. La primera vez se abre sola la ventana **Impresora de tickets**: detecta las impresoras instaladas en Windows, marca las de tickets y recomienda una. Pulse **F3 Imprimir prueba** y **Guardar**. Se puede volver a abrir en cualquier momento con **Ctrl+I** o en *F6 Ajustes → Impresora*.
 6. En *F6 Ajustes → Negocio*, capture los datos del negocio.
 
 Los datos quedan en `C:\VentaFacil\datos\ventafacil.db`. Cada día, y después de cada corte Z, se hace un respaldo automático en `datos\respaldos\` (se guardan los últimos 30).
@@ -131,6 +131,9 @@ La barra azul de arriba tiene los módulos, que se cambian con **F1–F6** o con
 | F6 | **Ajustes** | Negocio · Usuarios · Respaldos · Impresora · Licencia · Teclas rápidas · Acerca de · Salir |
 
 Cada módulo declara arriba sus botones con su atajo. Los módulos F3–F6 piden administrador (una vez) si quien cobra no lo es, y no se entra a ellos con una venta a medias. Los botones tienen borde de 2 px, transición de color al pasar el ratón y un pequeño hundido al pulsar.
+
+### Usuarios y permisos
+En *F6 Ajustes → Usuarios*. El **administrador** puede todo. El **cajero**, de fábrica, solo cobra, ve *Turno*, registra entradas y salidas, abre el cajón y saca **su propio corte X**. Con las casillas *Puede usar* se le da o quita cada módulo (Turno, Catálogo, Almacén, Resultados, Ajustes) y cada acción (descuentos, cancelar, corte X de caja, corte Z…). Cobrar y el corte propio no se pueden quitar; *Usuarios* y *Respaldos* son solo del administrador. Los módulos sin permiso salen con candado y se abren únicamente con la clave de alguien que sí lo tenga; esa autorización se olvida al volver a Caja o al cambiar de usuario (F10), que siempre regresa a Caja. Al actualizar nadie pierde su cuenta: el corte X de caja, que antes veía cualquiera, ahora pide permiso.
 
 ### Códigos de barras y etiquetas
 La lista de la semillera no trae códigos de barras, así que lo importado se cobra con su **código corto** (1, 2, 3…). Para escanear: Administración → Productos → **Códigos de barras…**. Se toma el producto, se pasa el lector por su empaque y el código se guarda solo (en el *código alterno*; el código corto no se toca) y salta al siguiente. `F2` saltar · `F3` «sin código de barras» · `F4` quitar · `F5` etiqueta. Un código no puede ser de dos productos: si ya existe, avisa de quién es y ofrece pasarlo.

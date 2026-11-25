@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using VentaFacil.Core;
 using VentaFacil.Data;
@@ -25,8 +26,8 @@ namespace VentaFacil.Forms.Admin
             Controls.Add(_grid);
 
             var barra = AdminUtil.Barra();
-            barra.Controls.Add(AdminUtil.BotonBarra("F3 Nuevo", (s, e) => Nuevo(), 95));
-            barra.Controls.Add(AdminUtil.BotonBarra("F4 Modificar", (s, e) => Modificar(), 105));
+            barra.Controls.Add(AdminUtil.BotonBarra("Nuevo (Ctrl+N)", (s, e) => Nuevo(), 140));
+            barra.Controls.Add(AdminUtil.BotonBarra("Modificar (Enter)", (s, e) => Modificar(), 155));
             barra.Controls.Add(AdminUtil.BotonBarra("Mi contraseña", (s, e) => MiClave(), 125));
             Controls.Add(barra);
             Controls.Add(AdminUtil.TituloSeccion("Usuarios"));
@@ -35,8 +36,8 @@ namespace VentaFacil.Forms.Admin
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            if (keyData == Keys.F3) { Nuevo(); return true; }
-            if (keyData == Keys.F4) { Modificar(); return true; }
+            if (keyData == (Keys.Control | Keys.N)) { Nuevo(); return true; }
+            if (keyData == (Keys.Control | Keys.M)) { Modificar(); return true; }
             return base.ProcessCmdKey(ref msg, keyData);
         }
 
@@ -47,7 +48,7 @@ namespace VentaFacil.Forms.Admin
                 _grid.Rows.Clear();
                 foreach (var u in UsuarioRepo.Todos())
                 {
-                    int i = _grid.Rows.Add(u.Login, u.Nombre, u.EsAdmin ? "Administrador" : "Cajero", u.Activo ? "Sí" : "No");
+                    int i = _grid.Rows.Add(u.Login, u.Nombre, u.EsAdmin ? "Administrador" : u.Permisos == "" ? "Cajero" : "Cajero (permisos propios)", u.Activo ? "Sí" : "No");
                     _grid.Rows[i].Tag = u;
                     if (!u.Activo) _grid.Rows[i].DefaultCellStyle.ForeColor = Tema.Humo;
                 }
@@ -95,8 +96,9 @@ namespace VentaFacil.Forms.Admin
         readonly TextBox _login, _nombre, _clave, _clave2;
         readonly ComboBox _rol;
         readonly CheckBox _activo;
+        readonly System.Collections.Generic.Dictionary<string, CheckBox> _casillas = new System.Collections.Generic.Dictionary<string, CheckBox>();
 
-        public FormUsuario(Usuario u) : base(u == null ? "Nuevo usuario" : "Modificar usuario", 460, 330)
+        public FormUsuario(Usuario u) : base(u == null ? "Nuevo usuario" : "Modificar usuario", 760, 440)
         {
             _u = u ?? new Usuario();
             int x = 170, y = 16;
@@ -122,11 +124,34 @@ namespace VentaFacil.Forms.Admin
             _activo = new CheckBox { Text = "Activo", Left = 16, Top = y + 12, AutoSize = true, Checked = _u.Id == 0 || _u.Activo };
             Controls.Add(_activo);
 
-            var ok = Ui.Boton("Guardar", 186, ClientSize.Height - 50, 130, 38, (s, e) => Guardar());
-            var no = Ui.Boton("Cancelar", 322, ClientSize.Height - 50, 120, 38, (s, e) => { DialogResult = DialogResult.Cancel; });
+            // ---- permisos (solo para cajeros; el administrador puede todo) ----
+            var grupo = new GroupBox { Text = "Puede usar", Left = 456, Top = 10, Width = 288, Height = 360, Font = Tema.Negrita, BackColor = Color.Transparent };
+            int py = 26;
+            foreach (var p in Permisos.Todos)
+            {
+                var c = new CheckBox { Text = p.Nombre, Left = 14, Top = py, Width = 264, Height = 26, Font = Tema.Normal };
+                _casillas[p.Clave] = c;
+                grupo.Controls.Add(c);
+                py += 28;
+            }
+            Controls.Add(grupo);
+            Controls.Add(Ui.Etiqueta("Cobrar y su propio corte siempre puede.", 16, 336, null, Tema.Humo));
+            _rol.SelectedIndexChanged += (s, e) => MostrarPermisos();
+            MostrarPermisos();
+
+            var ok = Ui.Boton("Guardar", 486, ClientSize.Height - 50, 130, 38, (s, e) => Guardar());
+            var no = Ui.Boton("Cancelar", 622, ClientSize.Height - 50, 120, 38, (s, e) => { DialogResult = DialogResult.Cancel; });
             Controls.Add(ok); Controls.Add(no);
             AcceptButton = ok; CancelButton = no;
             Shown += (s, e) => _login.Focus();
+        }
+
+        /// <summary>Administrador: todo marcado y fijo. Cajero: lo que tiene hoy (o lo de fábrica), editable.</summary>
+        void MostrarPermisos()
+        {
+            bool admin = _rol.SelectedIndex == 1;
+            var cajero = new Usuario { Rol = "CAJERO", Permisos = _u.Permisos };
+            foreach (var kv in _casillas) { kv.Value.Checked = admin || Permisos.Tiene(cajero, kv.Key); kv.Value.Enabled = !admin; }
         }
 
         void Guardar()
@@ -147,9 +172,10 @@ namespace VentaFacil.Forms.Admin
                 _u.Login = _login.Text.Trim();
                 _u.Nombre = _nombre.Text.Trim();
                 _u.Rol = rol;
+                if (rol != "ADMIN") _u.Permisos = Permisos.Guardar(_casillas.Where(k => k.Value.Checked).Select(k => k.Key).ToList(), Config.Actual.CajeroPuedeCancelar);
                 _u.Activo = _activo.Checked;
                 UsuarioRepo.Guardar(_u, _clave.Text == "" ? null : _clave.Text);
-                if (Sesion.Usuario != null && Sesion.Usuario.Id == _u.Id) { Sesion.Usuario.Nombre = _u.Nombre; Sesion.Usuario.Login = _u.Login; }
+                if (Sesion.Usuario != null && Sesion.Usuario.Id == _u.Id) { Sesion.Usuario.Nombre = _u.Nombre; Sesion.Usuario.Login = _u.Login; Sesion.Usuario.Rol = _u.Rol; Sesion.Usuario.Permisos = _u.Permisos; Sesion.Usuario.Activo = _u.Activo; }
                 DialogResult = DialogResult.OK;
             }
             catch (Exception ex) { Ui.Error(ex, "Guardar usuario (¿el usuario ya existe?)"); }

@@ -77,7 +77,7 @@ namespace VentaFacil.Forms.Admin
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            if (keyData == Keys.F5) { Consultar(); return true; }
+            if (keyData == (Keys.Control | Keys.R)) { Consultar(); return true; }
             return base.ProcessCmdKey(ref msg, keyData);
         }
 

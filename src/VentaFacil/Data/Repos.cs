@@ -43,11 +43,11 @@ namespace VentaFacil.Data
         public static void Guardar(Usuario u, string claveNueva)
         {
             if (u.Id == 0)
-                u.Id = Convert.ToInt64(Db.Scalar("INSERT INTO usuarios(usuario,nombre,clave_hash,rol,activo) VALUES(@p0,@p1,@p2,@p3,@p4); SELECT last_insert_rowid();",
-                    u.Login.Trim(), u.Nombre.Trim(), Core.Seguridad.Hash(claveNueva ?? ""), u.Rol, u.Activo ? 1 : 0));
+                u.Id = Convert.ToInt64(Db.Scalar("INSERT INTO usuarios(usuario,nombre,clave_hash,rol,activo,permisos) VALUES(@p0,@p1,@p2,@p3,@p4,@p5); SELECT last_insert_rowid();",
+                    u.Login.Trim(), u.Nombre.Trim(), Core.Seguridad.Hash(claveNueva ?? ""), u.Rol, u.Activo ? 1 : 0, u.Permisos ?? ""));
             else
             {
-                Db.Exec("UPDATE usuarios SET usuario=@p0, nombre=@p1, rol=@p2, activo=@p3 WHERE id=@p4", u.Login.Trim(), u.Nombre.Trim(), u.Rol, u.Activo ? 1 : 0, u.Id);
+                Db.Exec("UPDATE usuarios SET usuario=@p0, nombre=@p1, rol=@p2, activo=@p3, permisos=@p5 WHERE id=@p4", u.Login.Trim(), u.Nombre.Trim(), u.Rol, u.Activo ? 1 : 0, u.Id, u.Permisos ?? "");
                 if (!string.IsNullOrEmpty(claveNueva))
                     Db.Exec("UPDATE usuarios SET clave_hash=@p0 WHERE id=@p1", Core.Seguridad.Hash(claveNueva), u.Id);
             }
