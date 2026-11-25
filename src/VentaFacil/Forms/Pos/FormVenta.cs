@@ -31,7 +31,6 @@ namespace VentaFacil.Forms.Pos
         Panel _host, _panelCaja;
         ModuloVista _modulo;
         int _modActivo;
-        Usuario _autoriza;   // quien prestó su clave para entrar a un módulo (se olvida al salir a Caja/Turno o al cambiar de usuario)
 
         public FormVenta()
         {
@@ -57,6 +56,8 @@ namespace VentaFacil.Forms.Pos
             };
             FormClosing += AlCerrar;
         }
+
+        protected override void OnHandleCreated(EventArgs e) { base.OnHandleCreated(e); Tema.VentanaModerna(this); }
 
         // =====================================================================
         //  Construcción de la pantalla
@@ -94,11 +95,11 @@ namespace VentaFacil.Forms.Pos
             panelCaptura.Controls.Add(_lblCantidad);
             _lblArticulos = Ui.Etiqueta("Artículos: 0", 200, 86, Tema.Mediana, Tema.Texto);
             panelCaptura.Controls.Add(_lblArticulos);
-            _lblMensaje = Ui.Etiqueta("", 10, 120, Tema.Negrita, Tema.Rojo);
+            _lblMensaje = new EtiquetaEstado { Left = 10, Top = 118, AutoSize = false, Height = 30, Font = Tema.Negrita, TextAlign = ContentAlignment.MiddleLeft, AutoEllipsis = true };
             panelCaptura.Controls.Add(_lblMensaje);
             _lblUltimo = new Label { AutoSize = false, Width = 260, Height = 58, Top = 84, Font = Tema.Mediana, ForeColor = Tema.Verde, TextAlign = ContentAlignment.MiddleRight };
             panelCaptura.Controls.Add(_lblUltimo);
-            panelCaptura.Resize += (s, e) => { _captura.Width = Math.Max(120, panelCaptura.ClientSize.Width - 24); _lblUltimo.Width = Math.Max(0, Math.Min(280, panelCaptura.ClientSize.Width - 392)); _lblUltimo.Left = panelCaptura.ClientSize.Width - _lblUltimo.Width - 12; };
+            panelCaptura.Resize += (s, e) => { _captura.Width = Math.Max(120, panelCaptura.ClientSize.Width - 24); _lblUltimo.Width = Math.Max(0, Math.Min(280, panelCaptura.ClientSize.Width - 392)); _lblUltimo.Left = panelCaptura.ClientSize.Width - _lblUltimo.Width - 12; _lblMensaje.Width = Math.Max(120, _lblUltimo.Left - 18); };
             abajo.Controls.Add(panelCaptura);
             abajo.Controls.Add(new Panel { Dock = DockStyle.Right, Width = 8, BackColor = Tema.AzulFondo });
             abajo.Controls.Add(panelTotal);   // al final: el total aparta su lugar y la captura usa el resto
@@ -108,7 +109,7 @@ namespace VentaFacil.Forms.Pos
             // ---- Centro: el ticket en pantalla ----
             var centro = new Panel { Dock = DockStyle.Fill, Padding = new Padding(8, 8, 0, 0), BackColor = Tema.AzulFondo };
             _grid = new DataGridView { Dock = DockStyle.Fill };
-            Ui.EstiloGrid(_grid);
+            Ui.EstiloGrid(_grid, "Escanee un producto o escriba su nombre");
             _grid.Font = new Font("Segoe UI", 13f, FontStyle.Bold);
             _grid.RowTemplate.Height = 30;
             _grid.ColumnHeadersHeight = 32;
@@ -177,22 +178,14 @@ namespace VentaFacil.Forms.Pos
         // ---------------------------------------------------------------------
         static readonly string[] PermisoDeModulo = { null, Permisos.Turno, Permisos.Catalogo, Permisos.Almacen, Permisos.Resultados, Permisos.Ajustes };
 
-        /// <summary>El usuario de la sesión, o quien prestó su clave para entrar al módulo, tiene el permiso.</summary>
-        bool Puede(string permiso) { return Permisos.Tiene(Sesion.Usuario, permiso) || Permisos.Tiene(_autoriza, permiso); }
+        /// <summary>A un módulo solo entra quien lo tiene permitido; para los demás no existe.</summary>
+        static bool PuedeEntrar(int n) { return n >= 0 && n < PermisoDeModulo.Length && (n == 0 || Permisos.Tiene(Sesion.Usuario, PermisoDeModulo[n])); }
 
         void IrAModulo(int n)
         {
+            if (!PuedeEntrar(n)) return;
             if (n == _modActivo) { if (n == 0) _captura.Focus(); return; }
             if (n >= 2 && _lineas.Count > 0) { Ui.Aviso("Termine la venta actual antes de entrar a este módulo."); return; }
-            string permiso = PermisoDeModulo[n];
-            var autoriza = n <= 1 ? null : _autoriza;
-            if (n > 0 && !Permisos.Tiene(Sesion.Usuario, permiso) && !Permisos.Tiene(autoriza, permiso))
-            {
-                autoriza = Ui.Autorizar(permiso, "Este módulo requiere autorización");
-                if (autoriza == null) { if (_modActivo == 0) _captura.Focus(); return; }
-            }
-            _autoriza = autoriza;
-
             if (_modulo != null) { _host.Controls.Remove(_modulo); _modulo.Dispose(); _modulo = null; }
             _modActivo = n;
             _barraMod.Activo = n;
@@ -269,7 +262,7 @@ namespace VentaFacil.Forms.Pos
                     m = new ModuloVista("Ajustes", "configuración del sistema");
                     m.AgregarVista("Negocio", () => new Admin.SeccionConfig(false));
                     m.AgregarVista("Equipos", () => new Admin.SeccionConfig(true));
-                    if (Puede(Permisos.SoloAdmin))
+                    if (Permisos.Tiene(Sesion.Usuario, Permisos.SoloAdmin))
                     {
                         m.AgregarVista("Usuarios", () => new Admin.SeccionUsuarios());
                         m.AgregarVista("Respaldos", () => new Admin.SeccionRespaldos());
@@ -289,23 +282,21 @@ namespace VentaFacil.Forms.Pos
             var p = new Panel { BackColor = Tema.Crema };
             var t = Sesion.Turno;
             var c = Config.Actual;
-            int y = 24;
-            Action<string, string> fila = (k, v) =>
+            var datos = new List<Tarjeta>();
+            string fecha = t == null ? "" : t.Apertura.ToString("dd/MM/yyyy");
+            datos.Add(new Tarjeta("Cajero", Sesion.Usuario != null ? Sesion.Usuario.Nombre : "", "Caja " + c.Caja, 0, 24, 100));
+            datos.Add(new Tarjeta("Turno", t == null ? "—" : t.Id.ToString(), t == null ? "No hay un turno abierto" : "Abierto el " + fecha, 0, 24, 100));
+            datos.Add(new Tarjeta("Desde las", t == null ? "—" : t.Apertura.ToString("HH:mm"), t == null ? "" : fecha, 0, 24, 100));
+            datos.Add(new Tarjeta("Fondo inicial", t == null ? "—" : Fmt.Dinero(t.Fondo), "Efectivo al abrir", 0, 24, 100));
+            foreach (var d in datos) p.Controls.Add(d);
+            var nota = new Banda(Tono.Info, "Entradas y salidas de efectivo, cortes X y Z, el cajón y el cambio de usuario están en los botones de arriba.", 24, 160, 400);
+            p.Controls.Add(nota);
+            p.Resize += (s, e) =>
             {
-                p.Controls.Add(Ui.Etiqueta(k, 24, y, Tema.Negrita, Tema.Humo));
-                p.Controls.Add(Ui.Etiqueta(v, 220, y - 3, Tema.Mediana, Tema.Texto));
-                y += 44;
+                int w = (p.ClientSize.Width - 48 - 16 * 3) / 4;
+                for (int i = 0; i < 4; i++) datos[i].SetBounds(24 + i * (w + 16), 24, w, 112);
+                nota.Width = p.ClientSize.Width - 48;
             };
-            fila("Cajero:", Sesion.Usuario != null ? Sesion.Usuario.Nombre : "");
-            fila("Caja:", c.Caja.ToString());
-            if (t == null) fila("Turno:", "No hay un turno abierto");
-            else
-            {
-                fila("Turno número:", t.Id.ToString());
-                fila("Abierto el:", t.Apertura.ToString("dd/MM/yyyy HH:mm"));
-                fila("Fondo inicial:", Fmt.Dinero(t.Fondo));
-            }
-            p.Controls.Add(Ui.Etiqueta("Entradas y salidas de efectivo, cortes X y Z, el cajón y el cambio de usuario están en los botones de arriba.", 24, y + 16, Tema.Normal, Tema.Humo));
             return p;
         }
 
@@ -333,7 +324,7 @@ namespace VentaFacil.Forms.Pos
             var v = typeof(FormVenta).Assembly.GetName().Version;
             var l = Licencia.Evaluar();
             string estado = l.Estado == EstadoLicencia.Activa ? "Activada" : l.Estado == EstadoLicencia.Prueba ? "Prueba: " + l.DiasRestantes + " días" : "Vencida";
-            Ui.Info("VentaFácil  " + v.Major + "." + v.Minor + "\nPunto de venta para tiendas.\n\nLicencia: " + estado + "\nDatos: " + Db.Carpeta, "Acerca de VentaFácil");
+            Ui.Nota("VentaFácil  " + v.Major + "." + v.Minor + "\nPunto de venta para tiendas.\n\nLicencia: " + estado + "\nDatos: " + Db.Carpeta, "Acerca de VentaFácil");
             _captura.Focus();
         }
 
@@ -352,7 +343,8 @@ namespace VentaFacil.Forms.Pos
             _lblUsuario.Text = "Cajero: " + Sesion.Usuario.Nombre + (Sesion.Usuario.EsAdmin ? " (Admin)" : "");
             _lblBanner.Text = c.Banner;
             _lblBanner.Visible = !string.IsNullOrWhiteSpace(c.Banner);
-            for (int i = 1; i < PermisoDeModulo.Length; i++) _barraMod.Bloquear(i, !Permisos.Tiene(Sesion.Usuario, PermisoDeModulo[i]));
+            for (int i = 1; i < PermisoDeModulo.Length; i++) _barraMod.Mostrar(i, PuedeEntrar(i));
+            if (!PuedeEntrar(_modActivo)) BeginInvoke((Action)(() => { if (!IsDisposed) IrAModulo(0); }));   // le quitaron el permiso estando dentro
             UbicarEncabezado();
         }
 
@@ -502,7 +494,7 @@ namespace VentaFacil.Forms.Pos
                     }
                     System.Media.SystemSounds.Hand.Play();
                     if (Config.Actual.AvisarNoEncontrado) Ui.Aviso("El artículo \"" + texto + "\" no está registrado.");
-                    else Mensaje("Artículo no encontrado: " + texto);
+                    else Mensaje("Artículo no encontrado: " + texto, true);
                     _captura.SelectAll();
                     return;
                 }
@@ -606,7 +598,13 @@ namespace VentaFacil.Forms.Pos
             _lblCantidad.ForeColor = _multiplicador != 1 ? Tema.Rojo : Tema.Texto;
         }
 
-        void Mensaje(string t) { _lblMensaje.Text = t; if (_modulo != null) _modulo.Estado(t); }
+        /// <summary>Aviso corto bajo la captura. Fuera de la Caja sale como aviso que se va solo.</summary>
+        void Mensaje(string t, bool mal = false)
+        {
+            _lblMensaje.ForeColor = mal ? Tema.Rojo : Tema.Azul;
+            _lblMensaje.Text = t;
+            if (_modActivo != 0 && t != "") Tostada.Mostrar(t, mal ? Tono.Cuidado : Tono.Bien);
+        }
 
         LineaVenta LineaSeleccionada()
         {
@@ -636,7 +634,7 @@ namespace VentaFacil.Forms.Pos
         void QuitarArticulo()
         {
             var l = LineaSeleccionada();
-            if (l == null) { Mensaje("No hay artículos en la venta."); return; }
+            if (l == null) { Mensaje("No hay artículos en la venta.", true); return; }
             int i = _lineas.IndexOf(l);
             if (!l.Granel && l.Cantidad > 1)
             {
@@ -673,7 +671,7 @@ namespace VentaFacil.Forms.Pos
 
         void Descuento()
         {
-            if (_lineas.Count == 0) { Mensaje("No hay artículos en la venta."); return; }
+            if (_lineas.Count == 0) { Mensaje("No hay artículos en la venta.", true); return; }
             if (Ui.Autorizar(Permisos.Descuentos, "Descuentos: se requiere autorización") == null) { _captura.Focus(); return; }
             var l = LineaSeleccionada();
             using (var f = new FormDescuento(l, Total))
@@ -793,7 +791,7 @@ namespace VentaFacil.Forms.Pos
         {
             if (!Envios.EsOficina) { Ui.Aviso("Los acuses se leen en la computadora de la oficina."); return; }
             if (Ui.Autorizar(Permisos.Almacen, "Leer el acuse requiere autorización") == null) return;
-            try { Ui.Info(Envios.LeerAcuse(ruta), "Acuse"); } catch (Exception ex) { Ui.Error(ex, "Leer acuse"); }
+            try { Ui.Nota(Envios.LeerAcuse(ruta), "Acuse"); } catch (Exception ex) { Ui.Error(ex, "Leer acuse"); }
             if ((_modActivo == 3 || _modActivo == 4) && _modulo != null) _modulo.Recargar();
         }
 
@@ -864,7 +862,6 @@ namespace VentaFacil.Forms.Pos
                 if (f.ShowDialog(this) == DialogResult.OK)
                 {
                     Sesion.Usuario = f.UsuarioValido;
-                    _autoriza = null;       // el nuevo usuario no hereda la autorización del anterior
                     ActualizarEncabezado();
                     // Sale a Caja después de que termine el clic (el botón que se pulsó vive dentro del módulo que se va a cerrar)
                     if (_modActivo != 0)
@@ -908,7 +905,7 @@ namespace VentaFacil.Forms.Pos
             try
             {
                 long id = VentaRepo.UltimoTicket(Config.Actual.Caja);
-                if (id == 0) { Mensaje("Todavía no hay tickets."); return; }
+                if (id == 0) { Mensaje("Todavía no hay tickets.", true); return; }
                 Impresora.Imprimir(Tickets.Venta(VentaRepo.Obtener(id), Config.Actual, true));
                 Mensaje("Se reimprimió el ticket " + id + ".");
             }
@@ -917,7 +914,7 @@ namespace VentaFacil.Forms.Pos
 
         void ConfigurarImpresora()
         {
-            if (!Puede(Permisos.Ajustes) && Ui.Autorizar(Permisos.Ajustes, "Impresora: se requiere autorización") == null) { _captura.Focus(); return; }
+            if (Ui.Autorizar(Permisos.Ajustes, "Impresora: se requiere autorización") == null) { _captura.Focus(); return; }
             if (FormImpresoras.Configurar(this)) { Config.Cargar(); Mensaje("Impresora guardada."); }
             _captura.Focus();
         }
@@ -943,7 +940,7 @@ namespace VentaFacil.Forms.Pos
         void Cobrar()
         {
             if (Envios.EsOficina) { Ui.Aviso("Este equipo es la oficina: aquí no se cobra.\n\nLas ventas se hacen en la caja de la tienda."); _captura.Focus(); return; }
-            if (_lineas.Count == 0) { Mensaje("No hay artículos para cobrar."); _captura.Focus(); return; }
+            if (_lineas.Count == 0) { Mensaje("No hay artículos para cobrar.", true); _captura.Focus(); return; }
             decimal total = Total;
             using (var f = new FormCobro(total))
             {

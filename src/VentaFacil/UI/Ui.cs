@@ -46,7 +46,7 @@ namespace VentaFacil.UI
         public static readonly Color Suave = Color.FromArgb(214, 227, 246);
 
         /// <summary>Animaciones de botones y de la barra de módulos (ninguna dura más de ~150 ms).</summary>
-        public static bool Animaciones = true;
+        public static bool Animaciones { get { return Config.Actual == null || Config.Actual.Animaciones; } }
 
         /// <summary>
         /// Botón plano: sin borde, esquinas suaves y texto SIEMPRE centrado. Se dibuja completo a mano, así que no
@@ -73,7 +73,23 @@ namespace VentaFacil.UI
             b.Paint += Dibujar;
         }
 
-        static Color Fondo(Control c)
+        [System.Runtime.InteropServices.DllImport("dwmapi.dll")] static extern int DwmSetWindowAttribute(IntPtr h, int atributo, ref int valor, int tam);
+
+        /// <summary>Windows 11: barra de título del azul de VentaFácil y esquinas redondas. En los demás no hace nada.</summary>
+        public static void VentanaModerna(Form f)
+        {
+            try
+            {
+                int esquinas = 2, azul = ColorTranslator.ToWin32(AzulOscuro), blanco = ColorTranslator.ToWin32(Color.White);
+                DwmSetWindowAttribute(f.Handle, 33, ref esquinas, 4);
+                DwmSetWindowAttribute(f.Handle, 35, ref azul, 4);
+                DwmSetWindowAttribute(f.Handle, 36, ref blanco, 4);
+            }
+            catch (DllNotFoundException) { }
+            catch (EntryPointNotFoundException) { }
+        }
+
+        public static Color FondoDe(Control c)
         {
             for (var p = c.Parent; p != null; p = p.Parent) if (p.BackColor.A == 255) return p.BackColor;
             return Crema;
@@ -88,7 +104,7 @@ namespace VentaFacil.UI
             Color fondo = !b.Enabled ? Color.FromArgb(228, 232, 238) : f.Actual;
             if (b.Enabled && b.Focused && b.TabStop && !f.Oprimido) fondo = FundidoBoton.Mezcla(fondo, f.Abajo, 0.45f);   // foco del teclado: más oscuro, sin borde
             Color tinta = !b.Enabled ? Color.FromArgb(140, 148, 160) : fondo.GetBrightness() < 0.5f ? Color.White : AzulOscuro;
-            g.Clear(Fondo(b));
+            g.Clear(FondoDe(b));
             g.SmoothingMode = SmoothingMode.AntiAlias;
             using (var br = new SolidBrush(fondo))
             using (var ruta = Forma(b.Width, b.Height, 8)) g.FillPath(br, ruta);
@@ -125,15 +141,14 @@ namespace VentaFacil.UI
 
     }
 
-    /// <summary>Hover y clic con transición suave de color y garantía de alto contraste de texto.</summary>
+    /// <summary>Color de un botón: pasa suave de reposo a «encima» y de un estado a otro. Usa el motor único de animaciones.</summary>
     public class FundidoBoton
     {
         static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Control, FundidoBoton> Tabla = new System.Runtime.CompilerServices.ConditionalWeakTable<Control, FundidoBoton>();
         public Color Reposo = Tema.Crema, Hover = Color.FromArgb(230, 240, 252), Abajo = Tema.Piedra;
         readonly Button _b;
-        readonly System.Windows.Forms.Timer _t = new System.Windows.Forms.Timer { Interval = 15 };
-        float _x;          // 0 = reposo, 1 = hover
-        int _dir;
+        float _x;               // 0 = reposo, 1 = encima
+        Color _antes; float _cambio = 1f;   // paso de un estilo a otro (p. ej. vista elegida)
         bool _abajo;
         public Color Actual { get; private set; }
         public bool Oprimido { get { return _abajo; } }
@@ -149,39 +164,38 @@ namespace VentaFacil.UI
         FundidoBoton(Button b)
         {
             _b = b;
-            _t.Tick += (s, e) => Paso();
-            b.MouseEnter += (s, e) => { _dir = 1; Empezar(); };
-            b.MouseLeave += (s, e) => { _dir = -1; _abajo = false; Empezar(); };
+            b.MouseEnter += (s, e) => Hacia(1f, 120);
+            b.MouseLeave += (s, e) => { _abajo = false; Hacia(0f, 180); };
             b.MouseDown += (s, e) => { _abajo = true; Aplicar(); };
             b.MouseUp += (s, e) => { _abajo = false; Aplicar(); };
             b.GotFocus += (s, e) => b.Invalidate();
             b.LostFocus += (s, e) => b.Invalidate();
-            b.Disposed += (s, e) => _t.Dispose();
         }
 
         public void Definir(Color reposo, Color hover, Color abajo)
         {
+            bool nuevo = Actual.IsEmpty || !_b.IsHandleCreated;
+            _antes = Actual;
             Reposo = reposo; Hover = hover; Abajo = abajo;
-            _x = 0; _dir = 0; _t.Stop();
             _b.FlatAppearance.MouseDownBackColor = abajo;
-            _b.BackColor = reposo;
-            Aplicar();
+            if (nuevo) { _cambio = 1f; Aplicar(); return; }
+            Animacion.Ejecutar(_b, "estilo", 160, p => { _cambio = p; Aplicar(); });
         }
 
-        void Empezar() { if (Tema.Animaciones) _t.Start(); else { _x = _dir > 0 ? 1 : 0; Aplicar(); } }
-        void Paso()
+        void Hacia(float destino, int ms)
         {
-            _x += _dir * 0.25f;
-            if (_x >= 1) { _x = 1; _t.Stop(); }
-            if (_x <= 0) { _x = 0; _t.Stop(); }
-            Aplicar();
+            float desde = _x;
+            Animacion.Ejecutar(_b, "encima", ms, p => { _x = Animacion.Entre(desde, destino, p); Aplicar(); });
         }
 
         void Aplicar()
         {
-            Actual = _abajo ? Abajo : Mezcla(Reposo, Hover, _x);
-            _b.BackColor = Actual;
-            _b.FlatAppearance.MouseOverBackColor = Actual;
+            var c = _abajo ? Abajo : Mezcla(Reposo, Hover, _x);
+            if (_cambio < 1f && !_antes.IsEmpty) c = Mezcla(_antes, c, _cambio);
+            if (c == Actual) return;
+            Actual = c;
+            _b.BackColor = c;
+            _b.FlatAppearance.MouseOverBackColor = c;
             _b.Invalidate();
         }
 
@@ -191,9 +205,10 @@ namespace VentaFacil.UI
         }
     }
 
-    /// <summary>Encabezado azul con título blanco y grueso.</summary>
+    /// <summary>Encabezado azul con el billete, título blanco y grueso.</summary>
     public class PanelTitulo : Panel
     {
+        public bool ConLogo = true;
         public string Titulo = "";
         public string Subtitulo = "";
         public PanelTitulo() { DoubleBuffered = true; Height = 64; Dock = DockStyle.Top; BackColor = Tema.Azul; }
@@ -206,12 +221,19 @@ namespace VentaFacil.UI
             var letra = Height >= 60 ? Tema.Grande : Tema.Mediana;
             var tam = TextRenderer.MeasureText(Titulo, letra);
             int y = (Height - tam.Height) / 2;
-            TextRenderer.DrawText(e.Graphics, Titulo, letra, new Point(16, y), Color.White);
+            int x0 = 16;
+            if (ConLogo && Iconos.Billete != null)
+            {
+                int ancho = Height >= 60 ? 56 : 40;
+                Marca.Blanco(e.Graphics, 14, (Height - ancho * 5 / 8) / 2, ancho);
+                x0 += ancho + 4;
+            }
+            TextRenderer.DrawText(e.Graphics, Titulo, letra, new Point(x0, y), Color.White);
             if (!string.IsNullOrEmpty(Subtitulo))
             {
                 var chica = Height >= 60 ? Tema.Mediana : Tema.Normal;
                 var t2 = TextRenderer.MeasureText(Subtitulo, chica);
-                TextRenderer.DrawText(e.Graphics, Subtitulo, chica, new Point(24 + tam.Width, y + tam.Height - t2.Height - (letra == Tema.Grande ? 4 : 1)), Color.FromArgb(220, 235, 255));
+                TextRenderer.DrawText(e.Graphics, Subtitulo, chica, new Point(x0 + 8 + tam.Width, y + tam.Height - t2.Height - (letra == Tema.Grande ? 4 : 1)), Color.FromArgb(220, 235, 255));
             }
         }
         protected override void OnResize(EventArgs e) { base.OnResize(e); Invalidate(); }
@@ -235,15 +257,18 @@ namespace VentaFacil.UI
 
     public static class Ui
     {
-        public static void Info(string msg, string titulo = "VentaFácil") { MessageBox.Show(msg, titulo, MessageBoxButtons.OK, MessageBoxIcon.Information); }
-        public static void Aviso(string msg, string titulo = "VentaFácil") { MessageBox.Show(msg, titulo, MessageBoxButtons.OK, MessageBoxIcon.Warning); }
-        public static void Error(string msg, string titulo = "VentaFácil") { MessageBox.Show(msg, titulo, MessageBoxButtons.OK, MessageBoxIcon.Error); }
+        public static void Info(string msg, string titulo = "VentaFácil") { FormMensaje.Mostrar(msg, titulo, Tono.Bien, false); }
+        /// <summary>Dato o explicación, sin decir que algo «salió bien».</summary>
+        public static void Nota(string msg, string titulo) { FormMensaje.Mostrar(msg, titulo, Tono.Info, false); }
+        /// <summary>Aviso breve de que algo salió bien: se va solo.</summary>
+        public static void Listo(string msg) { Tostada.Mostrar(msg); }
+        public static void Aviso(string msg, string titulo = "VentaFácil") { FormMensaje.Mostrar(msg, titulo, Tono.Cuidado, false); }
+        public static void Error(string msg, string titulo = "VentaFácil") { FormMensaje.Mostrar(msg, titulo, Tono.Error, false); }
         public static void Error(Exception ex, string contexto = "") { Log.Error(ex, contexto); Error((contexto == "" ? "" : contexto + "\n\n") + ex.Message); }
         public static bool Confirmar(string msg, string titulo = "VentaFácil")
         {
-            return MessageBox.Show(msg, titulo, MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxButtonDefaultButton()) == DialogResult.Yes;
+            return FormMensaje.Mostrar(msg, titulo, Tono.Info, true);
         }
-        static MessageBoxDefaultButton MessageBoxButtonDefaultButton() { return MessageBoxDefaultButton.Button2; }
 
         /// <summary>Pide un texto. Devuelve null si se cancela.</summary>
         public static string PedirTexto(string titulo, string etiqueta, string valor = "", bool clave = false)
@@ -296,7 +321,7 @@ namespace VentaFacil.UI
         }
 
         /// <summary>Configura una cuadrícula de sólo lectura, cómoda para teclado.</summary>
-        public static void EstiloGrid(DataGridView g)
+        public static void EstiloGrid(DataGridView g, string vacia = "No hay nada que mostrar")
         {
             g.ReadOnly = true;
             g.AllowUserToAddRows = false;
@@ -329,6 +354,7 @@ namespace VentaFacil.UI
             g.SizeChanged += (s, e) => Repartir(g);
             g.ColumnAdded += (s, e) => Repartir(g);
             g.ColumnStateChanged += (s, e) => { if (e.StateChanged == DataGridViewElementStates.Visible) Repartir(g); };
+            Marca.Tabla(g, vacia);
             foreach (Control h in g.Controls) if (h is VScrollBar) h.VisibleChanged += (s, e) => Repartir(g);
         }
 
@@ -398,7 +424,16 @@ namespace VentaFacil.UI
             var f = b == null ? null : FundidoBoton.Buscar(b);
             if (f != null && f.Reposo == Tema.Suave) Tema.Pastilla(b, true);
             base.OnLoad(e);
+            if (Animacion.Activas) Opacity = 0;      // aparece en ~120 ms
         }
+
+        protected override void OnShown(EventArgs e)
+        {
+            if (Opacity < 1) Animacion.Ejecutar(this, "aparece", 120, p => { try { Opacity = p; } catch (Exception) { } }, () => Opacity = 1);
+            base.OnShown(e);
+        }
+
+        protected override void OnHandleCreated(EventArgs e) { base.OnHandleCreated(e); Tema.VentanaModerna(this); }
 
         protected override void OnKeyDown(KeyEventArgs e)
         {

@@ -108,7 +108,7 @@ namespace VentaFacil.Forms.Admin
             _authSql.CheckedChanged += (s, e) => { _usuario.Enabled = _clave.Enabled = _authSql.Checked; };
 
             pagSql.Controls.Add(Ui.Boton("Conectar", 8, 120, 130, 38, (s, e) => Conectar()));
-            _estadoSql = new Label { Left = 150, Top = 122, Width = 390, Height = 40, Font = Tema.Negrita, ForeColor = Tema.Humo, BackColor = Color.Transparent, Text = "Solo se LEE; no se cambia nada en Zafirah." };
+            _estadoSql = new EtiquetaEstado { Left = 150, Top = 122, Width = 390, Height = 40, Font = Tema.Negrita, ForeColor = Tema.Humo, BackColor = Color.Transparent, Text = "Solo se LEE; no se cambia nada en Zafirah." };
             pagSql.Controls.Add(_estadoSql);
 
             pagSql.Controls.Add(Ui.Etiqueta("Base:", 8, 176));
@@ -133,7 +133,7 @@ namespace VentaFacil.Forms.Admin
             _comandosBk = Ui.Boton("Comandos…", 404, 44, 134, 42, (s, e) => { using (var f = new FormComandosBk(ComandosTexto())) f.ShowDialog(this); });
             _comandosBk.Enabled = false;
             _pagBk.Controls.Add(_comandosBk);
-            _estadoBk = new Label
+            _estadoBk = new EtiquetaEstado
             {
                 Left = 8, Top = 96, Width = 530, Height = 160, Font = Tema.Normal, ForeColor = Tema.Humo, BackColor = Color.Transparent,
                 Text = "Para leer un respaldo de SQL Server (.BK, .BAK, .1BK, .2BK, .3BK) se restaura en una base TEMPORAL y se lee de ahí; al terminar se borra. La base real de Zafirah no se toca.\n\nNecesita SQL Server (Express sirve) en esta computadora y espacio libre parecido al tamaño del respaldo."
@@ -226,7 +226,7 @@ namespace VentaFacil.Forms.Admin
             _avisos = new TextBox
             {
                 Left = 596, Top = 404, Width = 628, Height = 112, Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical,
-                Font = new Font("Segoe UI", 10f, FontStyle.Bold), BackColor = Tema.Crema, ForeColor = Tema.Rojo
+                Font = new Font("Segoe UI", 10f, FontStyle.Bold), BackColor = Tema.Crema, ForeColor = Tonos.Tinta(Tono.Cuidado)
             };
             Controls.Add(_avisos);
 
@@ -290,7 +290,7 @@ namespace VentaFacil.Forms.Admin
                     return;
                 }
                 _estadoSql.ForeColor = Tema.Verde;
-                _estadoSql.Text = "✔ Conectado. Elija la base y la tabla de productos.";
+                _estadoSql.Text = "Conectado. Elija la base y la tabla de productos.";
                 int idx = Perfil.Base == "" ? -1 : bases.FindIndex(b => b.Equals(Perfil.Base, StringComparison.OrdinalIgnoreCase));
                 _base.SelectedIndex = idx >= 0 ? idx : 0; // dispara LlenarTablas
             }
@@ -319,7 +319,7 @@ namespace VentaFacil.Forms.Admin
                 for (int i = 0; i < tablas.Count; i++) { int pt = Perfil.PuntajeTabla(tablas[i].Nombre); if (pt > mejor) { mejor = pt; idx = i; } }
                 if (_tabla.Items.Count > 0) _tabla.SelectedIndex = idx >= 0 ? idx : 0;
                 _estadoSql.ForeColor = idx >= 0 ? Tema.Verde : Tema.Rojo;
-                _estadoSql.Text = (idx >= 0 ? "✔ " : "") + tablas.Count + " tablas en «" + bd + "»." + (idx >= 0 ? " Pulse «Leer tabla»." : " No encontré la de artículos: elíjala.");
+                _estadoSql.Text = tablas.Count + " tablas en «" + bd + "»." + (idx >= 0 ? " Pulse «Leer tabla»." : " No encontré la de artículos: elíjala.");
             }
             catch (Exception ex)
             {
@@ -479,7 +479,7 @@ namespace VentaFacil.Forms.Admin
                 Application.DoEvents();
                 _infoBk = ZafirahBk.Inspeccionar(CadenaMaster(), _rutaUsada);
                 _estadoBk.ForeColor = _infoBk.Imposible ? Tema.Rojo : Tema.Verde;
-                _estadoBk.Text = (_infoBk.Imposible ? "✘ " : "✔ ") + Path.GetFileName(_rutaBk) + "\n" + _infoBk.Resumen() +
+                _estadoBk.Text = Path.GetFileName(_rutaBk) + "\n" + _infoBk.Resumen() +
                     (_infoBk.Aviso != "" ? "\n\n" + _infoBk.Aviso : "\n\nPulse «Restaurar y leer»: se restaura en una base temporal (tarda según el tamaño) y se borra al terminar.");
                 _restaurarBk.Enabled = true;
                 _comandosBk.Enabled = true;
@@ -567,11 +567,11 @@ namespace VentaFacil.Forms.Admin
             _base.Items.Add(tmp);
             _cargando = false;
             _estadoBk.ForeColor = Tema.Verde;
-            _estadoBk.Text = "✔ Respaldo restaurado en una base temporal. Leyendo los productos…";
+            _estadoBk.Text = "Respaldo restaurado en una base temporal. Leyendo los productos…";
             _base.SelectedIndex = 0;                 // llena las tablas y elige la de artículos según el perfil
             if (_tabla.SelectedItem != null) LeerTabla();
             else _estadoBk.Text = "Respaldo restaurado, pero no encontré la tabla de productos: elíjala en la pestaña «Base de Zafirah» y pulse «Leer tabla».";
-            if (_origen != null) _estadoBk.Text = "✔ Respaldo leído. Revise a la derecha las columnas y la vista previa.\nLa base temporal se borra al cerrar esta ventana.";
+            if (_origen != null) _estadoBk.Text = "Respaldo leído. Revise a la derecha las columnas y la vista previa.\nLa base temporal se borra al cerrar esta ventana.";
         }
 
         /// <summary>Borra la base temporal (si hay) sin importar si el servidor contesta.</summary>

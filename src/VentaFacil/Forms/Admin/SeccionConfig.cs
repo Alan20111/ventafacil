@@ -29,7 +29,7 @@ namespace VentaFacil.Forms.Admin
         TextBox _basComando;
         Label _peso;
         // Operación
-        CheckBox _fondo, _declarar, _sinExistencia, _cajeroCancela, _avisar;
+        CheckBox _fondo, _declarar, _sinExistencia, _cajeroCancela, _avisar, _animar;
 
         /// <param name="equipos">true: impresora, cajón y báscula. false: negocio y forma de trabajar.</param>
         public SeccionConfig(bool equipos)
@@ -70,7 +70,7 @@ namespace VentaFacil.Forms.Admin
         }
 
         // ---------------- construcción de pestañas ----------------
-        static TabPage Pagina(string t) { return new TabPage(t) { BackColor = Tema.Crema, Font = Tema.Normal, AutoScroll = true }; }
+        static TabPage Pagina(string t) { return new TabPage(t) { BackColor = Tema.Crema, Font = Tema.Normal, AutoScroll = true }.ConBillete(); }
 
         /// <summary>Donde empiezan los campos: caben todas las etiquetas de la izquierda.</summary>
         const int Columna2 = 260;
@@ -210,6 +210,7 @@ namespace VentaFacil.Forms.Admin
             _sinExistencia = Casilla(p, "Permitir vender productos sin existencia", ref y);
             _cajeroCancela = Casilla(p, "Los cajeros pueden cancelar y hacer descuentos (salvo los que tengan permisos propios)", ref y);
             _avisar = Casilla(p, "Mostrar aviso cuando un código no se encuentra", ref y);
+            _animar = Casilla(p, "Animaciones (apáguelas si la computadora es lenta)", ref y);
             return p;
         }
 
@@ -257,7 +258,7 @@ namespace VentaFacil.Forms.Admin
             _basComando.Text = _c.BasculaComando;
 
             _fondo.Checked = _c.PedirFondoAlAbrir; _declarar.Checked = _c.DeclararEfectivoEnCorte; _sinExistencia.Checked = _c.PermitirVentaSinExistencia;
-            _cajeroCancela.Checked = _c.CajeroPuedeCancelar; _avisar.Checked = _c.AvisarNoEncontrado;
+            _cajeroCancela.Checked = _c.CajeroPuedeCancelar; _avisar.Checked = _c.AvisarNoEncontrado; _animar.Checked = _c.Animaciones;
         }
 
         /// <summary>Pasa lo capturado a la copia de configuración.</summary>
@@ -292,7 +293,7 @@ namespace VentaFacil.Forms.Admin
             _c.BasculaComando = _basComando.Text;
 
             _c.PedirFondoAlAbrir = _fondo.Checked; _c.DeclararEfectivoEnCorte = _declarar.Checked; _c.PermitirVentaSinExistencia = _sinExistencia.Checked;
-            _c.CajeroPuedeCancelar = _cajeroCancela.Checked; _c.AvisarNoEncontrado = _avisar.Checked;
+            _c.CajeroPuedeCancelar = _cajeroCancela.Checked; _c.AvisarNoEncontrado = _avisar.Checked; _c.Animaciones = _animar.Checked;
             return true;
         }
 
@@ -311,7 +312,7 @@ namespace VentaFacil.Forms.Admin
             try
             {
                 _c.Copia().Guardar();
-                Ui.Info("Configuración guardada.");
+                Ui.Listo("Configuración guardada");
             }
             catch (Exception ex) { Ui.Error(ex, "Guardar configuración"); }
         }
@@ -366,7 +367,7 @@ namespace VentaFacil.Forms.Admin
             _c.Impresora = g.Impresora; _c.ModoImpresion = g.ModoImpresion; _c.AnchoTicket = g.AnchoTicket; _c.Columnas = g.Columnas;
             _c.TamanoFuente = g.TamanoFuente; _c.Cortar = g.Cortar; _c.CajonPin = g.CajonPin; _c.ImpresoraRevisada = true;
             Llenar();
-            Ui.Info("Impresora guardada.");
+            Ui.Listo("Impresora guardada");
         }
 
         void LeerPeso()

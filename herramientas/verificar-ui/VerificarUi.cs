@@ -49,6 +49,7 @@ namespace VentaFacil
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             Application.ThreadException += (s, e) => Falla("(excepción)", e.Exception.ToString());
             CerrarAvisos(GetCurrentThreadId());
+            FormMensaje.Interceptar = (texto, titulo) => { lock (_rep) _rep.AppendLine("AVISO: [" + titulo + "] " + texto.Replace("\r", "").Replace("\n", " / ")); return false; };
             try { Correr(); }
             catch (Exception ex) { Falla("(general)", ex.ToString()); }
             _fin = true;
@@ -134,10 +135,13 @@ namespace VentaFacil
             Form1("01 asistente nueva", () => new FormAsistente(true), f => Asistente((FormAsistente)f, "01 asistente nueva"));
             Sembrar();
             Form1("02 login", () => new FormLogin(false, null), null);
+            Form1("02 login error", () => new FormLogin(false, null), f => { ((TextBox)Campo(f, "_usuario")).Text = "nadie"; ((TextBox)Campo(f, "_clave")).Text = "x"; int x = f.Left; Llamar(f, "Entrar"); Llamar(f, "Entrar"); Esperar(500); Foto(f, "02 login error"); if (f.Left != x) Falla("02 login error", "la ventana no regresó a su lugar"); });
             Form1("02 login autorizacion", () => new FormLogin(true, "Este módulo requiere autorización"), null);
             Principal("10 caja");
             Principal("70 caja 1024", 1008);
             Dialogos();
+            Mensajes();
+            SinPermiso();
             Form1("60 asistente actualizar", () => new FormAsistente(false), f => Asistente((FormAsistente)f, "60 asistente actualizar"));
             Form1("61 actualizado", () => new FormActualizado("1.24"), null);
 
@@ -253,6 +257,57 @@ namespace VentaFacil
             Form1("24 importar zafirah", () => new FormImportarZafirah(), f => Pestanas(f, f, "24 importar zafirah"));
             Form1("24 comandos bk", () => new FormComandosBk("RESTORE DATABASE [vf_import_tmp] FROM DISK = 'C:\\x.bk'"), null);
             Form1("24 reparar", () => (Form)Nuevo(Type.GetType("VentaFacil.Forms.Reparar.FormReparar")), null);
+        }
+
+        static void Mensajes()
+        {
+            string largo = "No se pudo imprimir el ticket 1234.\n\nLa impresora «EPSON TM-T20II» no responde. Revise que esté encendida, que tenga papel y que el cable esté bien conectado.\n\nLa venta SÍ quedó guardada.";
+            foreach (Tono t in Enum.GetValues(typeof(Tono)))
+            {
+                Tono tt = t;
+                Form1("30 mensaje " + t, () => (Form)Nuevo(typeof(FormMensaje), largo, "VentaFácil", tt, false), null);
+            }
+            Form1("30 mensaje corto", () => (Form)Nuevo(typeof(FormMensaje), "Escriba el nombre del negocio.", "VentaFácil", Tono.Cuidado, false), null);
+            Form1("30 mensaje pregunta", () => (Form)Nuevo(typeof(FormMensaje), "¿Dejar la configuración para después?\n\nLo que ya pasó con «Siguiente» quedó guardado.", "VentaFácil", Tono.Info, true), null);
+            Form1("30 mensaje enorme", () => (Form)Nuevo(typeof(FormMensaje), "Hubo problemas.\n\n" + string.Join("\n", Enumerable.Range(1, 60).Select(i => "Renglón " + i + ": el producto no existe").ToArray()), "VentaFácil", Tono.Error, false), null);
+            Form1("30 tostada", () => (Form)Nuevo(typeof(Tostada), "Configuración guardada", Tono.Bien), null);
+            Form1("30 licencia vencida", () => (Form)Nuevo(typeof(FormLicencia), new InfoLicencia { Estado = EstadoLicencia.Vencida, Motivo = "El período de prueba terminó. Escriba su clave para seguir usando VentaFácil." }, false), null);
+        }
+
+        /// <summary>Quien no tiene permiso no ve el módulo, ni lo abre con su tecla, ni con un clic.</summary>
+        static void SinPermiso()
+        {
+            const string n = "35 cajera";
+            var antes = Sesion.Usuario;
+            FormVenta f = null;
+            try
+            {
+                foreach (var perfil in new[] { "=", "=turno", "=turno,almacen", "*" })
+                {
+                    Sesion.Usuario = new Usuario { Id = antes.Id, Login = "x", Nombre = "María Fernanda", Rol = "CAJERO", Permisos = perfil, Activo = true };
+                    f = new FormVenta { StartPosition = FormStartPosition.Manual, Location = new Point(0, 0) };
+                    f.Show(); f.WindowState = FormWindowState.Normal; f.ClientSize = new Size(1366, 705); Esperar(700);
+                    var b = (BarraModulos)Campo(f, "_barraMod");
+                    Foto(f, n + " " + perfil.Replace("*", "encargado").Replace("=", "permisos "));
+                    string[] claves = { null, "turno", "catalogo", "almacen", "resultados", "ajustes" };
+                    for (int i = 1; i < 6; i++)
+                    {
+                        bool debe = perfil == "*" || perfil.Contains(claves[i]);
+                        if (b.Visto(i) != debe) Falla(n, perfil + ": F" + (i + 1) + (debe ? " no aparece" : " sí aparece"));
+                        Llamar(f, "IrAModulo", i); Esperar(60);
+                        if (((int)Campo(f, "_modActivo") == i) != debe) Falla(n, perfil + ": F" + (i + 1) + (debe ? " no abre" : " abre sin permiso"));
+                    }
+                    Llamar(f, "IrAModulo", 0);
+                    // el clic cae en el módulo que se ve, no en el escondido
+                    var elegidos = new HashSet<int>();
+                    for (int x = 0; x < b.Width; x += 20) { int c = (int)Llamar(b, "Cual", new Point(x, 20)); if (c >= 0) elegidos.Add(c); }
+                    foreach (int c in elegidos) if (!b.Visto(c)) Falla(n, "el clic alcanza un módulo escondido: " + c);
+                    Llamar(f, "Mensaje", "Artículo no encontrado: 7501234567890", true); Foto(f, n + " mensaje " + perfil.Length);
+                    PonerCampo(f, "_forzarSalida", true); f.Close(); f.Dispose(); f = null;
+                }
+            }
+            catch (Exception ex) { Falla(n, ex.ToString()); }
+            finally { if (f != null) { PonerCampo(f, "_forzarSalida", true); f.Close(); f.Dispose(); } Sesion.Usuario = antes; }
         }
 
         static void Principal(string n, int ancho = 1366)

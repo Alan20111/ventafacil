@@ -136,7 +136,7 @@ namespace VentaFacil.Forms.Admin
                         }
                         tx.Commit();
                     }
-                    Ui.Info("Entrada aplicada.");
+                    Ui.Listo("Entrada aplicada");
                     _lista.Clear(); _referencia.Text = "";
                     Pintar();
                     _codigo.Focus();

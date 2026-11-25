@@ -27,7 +27,7 @@ namespace VentaFacil.Forms.Admin
             if (_v.Estado == "PAGADA")
             {
                 var cancelar = Ui.Boton("Cancelar ticket", 150, 546, 150, 40, (s, e) => Cancelar());
-                cancelar.ForeColor = Tema.Rojo;
+                Tema.BotonPeligro(cancelar);
                 Controls.Add(cancelar);
             }
             var cerrar = Ui.Boton("Cerrar (Esc)", 338, 546, 130, 40, (s, e) => { DialogResult = DialogResult.Cancel; });
@@ -64,7 +64,7 @@ namespace VentaFacil.Forms.Admin
                     Impresora.Imprimir(Tickets.Cancelacion(_v, c), c);
                 }
                 catch (Exception ex) { Ui.Error(ex, "El ticket se canceló, pero no se pudo imprimir el comprobante"); }
-                Ui.Info("Ticket " + _v.Id + " cancelado.");
+                Ui.Listo("Ticket " + _v.Id + " cancelado");
                 DialogResult = DialogResult.OK;
             }
             catch (Exception ex) { Ui.Error(ex, "Cancelar ticket"); }

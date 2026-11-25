@@ -7,45 +7,84 @@ namespace VentaFacil.UI
 {
     /// <summary>
     /// Barra de módulos de arriba: F1 Caja · F2 Turno · F3 Catálogo · F4 Almacén · F5 Resultados · F6 Ajustes.
-    /// La línea blanca de abajo se desliza hacia el módulo elegido.
+    /// La pastilla se desliza hacia el módulo elegido. Un módulo sin permiso no existe: ni se dibuja ni responde.
     /// </summary>
     public class BarraModulos : Control
     {
-        public class Modulo { public string Tecla, Nombre; public bool Bloqueado; }
+        class Modulo { public string Tecla, Nombre; public bool Visible = true; public float Encima; }
+        static readonly Font LetraTecla = new Font("Segoe UI", 9.5f, FontStyle.Bold), LetraNombre = new Font("Segoe UI", 13f, FontStyle.Bold);
+        static readonly Color Realce = Color.FromArgb(0, 58, 134);
         readonly List<Modulo> _items = new List<Modulo>();
-        readonly System.Windows.Forms.Timer _t = new System.Windows.Forms.Timer { Interval = 15 };
         int _activo, _sobre = -1;
-        float _lineaX = -1;       // posición animada de la línea
+        float _x;            // dónde va la pastilla mientras se desliza
+        bool _desliza;
         public event Action<int> Elegido;
 
         public BarraModulos()
         {
             SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.ResizeRedraw, true);
-            Dock = DockStyle.Top; Height = 52; BackColor = Tema.AzulOscuro; Cursor = Cursors.Hand; TabStop = false;
-            _t.Tick += (s, e) => Paso();
+            Dock = DockStyle.Top; Height = 52; BackColor = Tema.AzulOscuro; TabStop = false;
         }
 
         public void Agregar(string tecla, string nombre) { _items.Add(new Modulo { Tecla = tecla, Nombre = nombre }); Invalidate(); }
-        public int Activo { get { return _activo; } set { _activo = value; if (Tema.Animaciones && IsHandleCreated) _t.Start(); else { _lineaX = Destino(); Invalidate(); } } }
 
-        /// <summary>Marca un módulo con candado (el usuario no tiene permiso; al pulsarlo se pide autorización).</summary>
-        public void Bloquear(int i, bool bloqueado) { if (i >= 0 && i < _items.Count && _items[i].Bloqueado != bloqueado) { _items[i].Bloqueado = bloqueado; Invalidate(); } }
-
-        float Ancho { get { return _items.Count == 0 ? 1 : Math.Min(210f, (Width - 16f) / _items.Count); } }
-        float Destino() { return 8 + _activo * Ancho; }
-
-        void Paso()
+        public int Activo
         {
-            float d = Destino();
-            if (_lineaX < 0) _lineaX = d;
-            _lineaX += (d - _lineaX) * 0.35f;
-            if (Math.Abs(d - _lineaX) < 1) { _lineaX = d; _t.Stop(); }
+            get { return _activo; }
+            set
+            {
+                float desde = _desliza ? _x : Lugar(_activo);
+                _activo = value;
+                if (!IsHandleCreated) { Invalidate(); return; }
+                _desliza = true; _x = desde;
+                Animacion.Ejecutar(this, "pastilla", 200, p => { _x = Animacion.Entre(desde, Lugar(_activo), p); Invalidate(); }, () => { _desliza = false; Invalidate(); });
+            }
+        }
+
+        public bool Visto(int i) { return i >= 0 && i < _items.Count && _items[i].Visible; }
+
+        /// <summary>Quita o pone un módulo. Los demás se recorren, pero cada quien conserva su tecla.</summary>
+        public void Mostrar(int i, bool visible)
+        {
+            if (i < 0 || i >= _items.Count || _items[i].Visible == visible) return;
+            _items[i].Visible = visible;
+            _items[i].Encima = 0;
+            _sobre = -1;
+            Animacion.Parar(this, "pastilla");
+            _desliza = false;
             Invalidate();
         }
 
-        int Cual(Point p) { int i = (int)((p.X - 8) / Ancho); return p.X < 8 || i < 0 || i >= _items.Count ? -1 : i; }
-        protected override void OnMouseMove(MouseEventArgs e) { int i = Cual(e.Location); if (i != _sobre) { _sobre = i; Invalidate(); } base.OnMouseMove(e); }
-        protected override void OnMouseLeave(EventArgs e) { _sobre = -1; Invalidate(); base.OnMouseLeave(e); }
+        int Cuantos { get { int n = 0; foreach (var m in _items) if (m.Visible) n++; return Math.Max(1, n); } }
+        float Ancho { get { return Math.Min(210f, (Width - 16f) / Cuantos); } }
+        float Lugar(int i) { int n = 0; for (int k = 0; k < i && k < _items.Count; k++) if (_items[k].Visible) n++; return 8 + n * Ancho; }
+
+        int Cual(Point p)
+        {
+            if (p.X < 8) return -1;
+            int n = (int)((p.X - 8) / Ancho);
+            for (int i = 0; i < _items.Count; i++) if (_items[i].Visible && n-- == 0) return i;
+            return -1;
+        }
+
+        void Sobre(int i)
+        {
+            if (i == _sobre) return;
+            int antes = _sobre;
+            _sobre = i;
+            Cursor = i >= 0 ? Cursors.Hand : Cursors.Default;
+            if (antes >= 0) Encender(_items[antes], 0, 180);
+            if (i >= 0) Encender(_items[i], 1, 120);
+        }
+
+        void Encender(Modulo m, float hasta, int ms)
+        {
+            float desde = m.Encima;
+            Animacion.Ejecutar(this, "encima" + m.Tecla, ms, p => { m.Encima = Animacion.Entre(desde, hasta, p); Invalidate(); });
+        }
+
+        protected override void OnMouseMove(MouseEventArgs e) { Sobre(Cual(e.Location)); base.OnMouseMove(e); }
+        protected override void OnMouseLeave(EventArgs e) { Sobre(-1); base.OnMouseLeave(e); }
         protected override void OnMouseClick(MouseEventArgs e) { int i = Cual(e.Location); if (i >= 0 && Elegido != null) Elegido(i); base.OnMouseClick(e); }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -53,38 +92,23 @@ namespace VentaFacil.UI
             var g = e.Graphics;
             g.Clear(Tema.AzulOscuro);
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            if (_lineaX < 0) _lineaX = Destino();
             float w = Ancho;
+            float px = _desliza ? _x : Lugar(_activo);
+            for (int i = 0; i < _items.Count; i++)
+                if (_items[i].Visible && _items[i].Encima > 0.01f && i != _activo)
+                    using (var br = new SolidBrush(FundidoBoton.Mezcla(Tema.AzulOscuro, Realce, _items[i].Encima)))
+                    using (var ruta = Tonos.Redondo(new RectangleF(Lugar(i), 4, w - 2, Height - 8), 8)) g.FillPath(br, ruta);
+            using (var br = new SolidBrush(Tema.Azul))
+            using (var ruta = Tonos.Redondo(new RectangleF(px, 4, w - 2, Height - 8), 8)) g.FillPath(br, ruta);
+            using (var br = new SolidBrush(Color.White)) g.FillRectangle(br, px + 14, Height - 8, w - 30, 3);
             for (int i = 0; i < _items.Count; i++)
             {
-                var r = new Rectangle((int)(8 + i * w), 4, (int)w - 2, Height - 8);
-                bool activo = i == _activo;
-                if (activo || i == _sobre)
-                    using (var br = new SolidBrush(activo ? Tema.Azul : Color.FromArgb(0, 58, 134)))
-                    using (var ruta = Redondo(r, 8)) g.FillPath(br, ruta);
-                TextRenderer.DrawText(g, _items[i].Tecla, new Font("Segoe UI", 9.5f, FontStyle.Bold), new Rectangle(r.X + 10, r.Y, 40, r.Height), activo ? Tema.AzulClaro2 : Tema.Piedra, TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.NoPadding);
-                TextRenderer.DrawText(g, _items[i].Nombre, new Font("Segoe UI", 13f, FontStyle.Bold), new Rectangle(r.X + 48, r.Y, r.Width - (_items[i].Bloqueado ? 74 : 52), r.Height), _items[i].Bloqueado && !activo ? Color.FromArgb(140, 160, 195) : Color.White, TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
-                if (_items[i].Bloqueado) Candado(g, r.Right - 22, r.Y + r.Height / 2 - 7);
+                if (!_items[i].Visible) continue;
+                var r = new Rectangle((int)Lugar(i), 2, (int)w - 2, Height - 8);
+                TextRenderer.DrawText(g, _items[i].Tecla, LetraTecla, new Rectangle(r.X + 10, r.Y, 40, r.Height), i == _activo ? Tema.AzulClaro2 : Tema.Piedra, TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.NoPadding);
+                TextRenderer.DrawText(g, _items[i].Nombre, LetraNombre, new Rectangle(r.X + 48, r.Y, r.Width - 52, r.Height), Color.White, TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
             }
-            using (var br = new SolidBrush(Color.White)) g.FillRectangle(br, _lineaX + 14, Height - 5, w - 30, 3);
         }
-
-        /// <summary>Candado de 12x14 dibujado a mano (Windows 7 no trae bien los emojis).</summary>
-        static void Candado(Graphics g, int x, int y)
-        {
-            using (var pluma = new Pen(Tema.Piedra, 2f)) g.DrawArc(pluma, x + 2, y, 8, 10, 180, 180);
-            using (var br = new SolidBrush(Tema.Piedra)) g.FillRectangle(br, x, y + 6, 12, 8);
-        }
-
-        static System.Drawing.Drawing2D.GraphicsPath Redondo(Rectangle r, int d)
-        {
-            var p = new System.Drawing.Drawing2D.GraphicsPath();
-            p.AddArc(r.X, r.Y, d * 2, d * 2, 180, 90); p.AddArc(r.Right - d * 2, r.Y, d * 2, d * 2, 270, 90);
-            p.AddArc(r.Right - d * 2, r.Bottom - d * 2, d * 2, d * 2, 0, 90); p.AddArc(r.X, r.Bottom - d * 2, d * 2, d * 2, 90, 90);
-            p.CloseFigure(); return p;
-        }
-
-        protected override void Dispose(bool disposing) { if (disposing) _t.Dispose(); base.Dispose(disposing); }
     }
 
     /// <summary>
@@ -172,6 +196,7 @@ namespace VentaFacil.UI
                 if (_actual != null) { _cuerpo.Controls.Remove(_actual); _actual.Dispose(); _actual = null; }
                 _actual = _items[indice].Vista();
                 _actual.Dock = DockStyle.Fill;
+                FondoConBillete(_actual);
                 _cuerpo.Controls.Add(_actual);
                 _cuerpo.ResumeLayout();
                 _vistaActual = indice;
@@ -181,6 +206,15 @@ namespace VentaFacil.UI
             }
             catch (Exception ex) { Ui.Error(ex, "Abrir " + _items[indice].Nombre); }
             finally { Cursor = Cursors.Default; }
+        }
+
+        /// <summary>El billete tenue va en la hoja de la vista (o en el panel que la cubre por completo).</summary>
+        static void FondoConBillete(Control v)
+        {
+            var hoja = v;
+            foreach (Control h in v.Controls) if (h is Panel && h.Dock == DockStyle.Fill) hoja = h;
+            if (hoja is TabControl) return;
+            Marca.Fondo(hoja);
         }
 
         /// <summary>Vuelve a crear la vista actual (para refrescar los datos).</summary>

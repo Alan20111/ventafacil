@@ -45,18 +45,18 @@ namespace VentaFacil.Forms.Pos
     /// <summary>¿Salir de VentaFácil? Con lo que se perdería, si hay algo. Esc = seguir trabajando.</summary>
     public class FormSalir : Dialogo
     {
-        public FormSalir(IList<string> avisos) : base("Salir", 560, 230 + avisos.Count * 34)
+        public FormSalir(IList<string> avisos) : base("Salir", 560, 230 + avisos.Count * 52)
         {
             StartPosition = FormStartPosition.CenterParent;
-            Controls.Add(new PanelTitulo { Titulo = "VentaFácil", Subtitulo = "cerrar el programa", Height = 64 });
+            Controls.Add(new PanelTitulo { Titulo = "VentaFácil", Subtitulo = "cerrar el programa", Height = 64, ConLogo = false });
             Controls.Add(new Billete { Left = 24, Top = 84, Width = 80, Height = 80 });
             Controls.Add(Ui.Etiqueta("¿Salir de VentaFácil?", 124, 86, Tema.Mediana, Tema.Azul));
             Controls.Add(Ui.Etiqueta("Antes de cerrar se hace un respaldo de sus datos.", 124, 120));
             int y = 154;
             foreach (var a in avisos)
             {
-                Controls.Add(Ui.Etiqueta("•  " + a, 124, y, null, Tema.Rojo));
-                y += 34;
+                Controls.Add(new Banda(Tono.Cuidado, a, 124, y, 412));
+                y += 52;
             }
             int by = ClientSize.Height - 62;
             var seguir = Ui.Boton("Seguir trabajando (Esc)", 124, by, 230, 46, (s, e) => { DialogResult = DialogResult.Cancel; }, true);

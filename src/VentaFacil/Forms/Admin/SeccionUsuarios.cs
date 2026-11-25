@@ -83,7 +83,7 @@ namespace VentaFacil.Forms.Admin
             {
                 var u = UsuarioRepo.Obtener(yo.Id);
                 UsuarioRepo.Guardar(u, n1);
-                Ui.Info("Contraseña cambiada.");
+                Ui.Listo("Contraseña cambiada");
             }
             catch (Exception ex) { Ui.Error(ex, "Cambiar contraseña"); }
         }

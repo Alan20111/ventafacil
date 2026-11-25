@@ -39,8 +39,8 @@ ENVIOS DE LA OFICINA POR USB (F6 Ajustes > Envios, solo administrador)
 USUARIOS Y PERMISOS (F6 Ajustes > Usuarios)
   Perfiles: Administrador (todo), Encargado (todo menos Usuarios, Respaldos
   y el enlace de Envios), Cajero (cobrar, Turno y su corte). Las casillas
-  "Puede usar" le dan o quitan modulos y acciones. Los modulos con candado
-  piden la clave de alguien que si tenga permiso.
+  "Puede usar" le dan o quitan modulos y acciones. Los modulos que no
+  tenga permitidos no le aparecen.
 
 TECLAS DE LA CAJA
   Codigo + Enter ... agregar articulo          3*  ... cantidad 3

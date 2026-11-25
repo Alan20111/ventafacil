@@ -43,7 +43,7 @@ namespace VentaFacil.UI
             detectar.Click += (s, e) => DetectarAuto();
             Tema.Pastilla(detectar, true);
             Controls.Add(detectar);
-            _resultado = new Label { Left = 428, Top = 92, Width = 496, Height = 50, Font = Tema.Negrita, ForeColor = Tema.Verde, TextAlign = ContentAlignment.MiddleLeft };
+            _resultado = new EtiquetaEstado { Left = 428, Top = 92, Width = 496, Height = 50, Font = Tema.Negrita, ForeColor = Tema.Verde, TextAlign = ContentAlignment.MiddleLeft };
             Controls.Add(_resultado);
 
             _auto = new RadioButton { Text = "Automático: usar siempre la impresora PREDETERMINADA de Windows", Left = 16, Top = 152, Width = 820, Font = Tema.Negrita };
@@ -239,7 +239,7 @@ namespace VentaFacil.UI
                     string sugerencia = c.ModoImpresion == "ESCPOS"
                         ? "Cambie a \"Normal (controlador de Windows)\" y pruebe otra vez."
                         : "Si salió cortado o muy chico, cambie el ancho del papel. Si no salió nada, pruebe \"Directo térmica (ESC/POS)\" o elija otra impresora de la lista.";
-                    Ui.Info(sugerencia, "Sugerencia");
+                    Ui.Nota(sugerencia, "Sugerencia");
                 }
             }
             catch (Exception ex) { Cursor = Cursors.Default; Ui.Error(ex, "No se pudo imprimir la prueba"); }

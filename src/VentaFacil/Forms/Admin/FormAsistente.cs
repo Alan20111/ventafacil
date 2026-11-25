@@ -14,19 +14,26 @@ namespace VentaFacil.Forms.Admin
     /// <summary>Después de una actualización: configurar o seguir igual.</summary>
     public class FormActualizado : Dialogo
     {
-        public FormActualizado(string version) : base("VentaFácil " + version, 620, 300)
+        public FormActualizado(string version) : base("VentaFácil " + version, 660, 300)
         {
             StartPosition = FormStartPosition.CenterScreen;
             ShowInTaskbar = true;
-            Controls.Add(Ui.Etiqueta("VentaFácil se actualizó a la versión " + version, 20, 18, Tema.Mediana, Tema.Azul));
-            Controls.Add(new Label { Left = 20, Top = 58, Width = 580, Height = 50, Font = Tema.Normal, BackColor = Color.Transparent,
-                Text = "Sus productos, ventas, usuarios y configuración se conservaron. Puede entrar así, o revisar la configuración." });
-            var faltan = PrimeraVez.Revision().Where(p => !p.Bien).Select(p => "•  " + p.Texto).ToArray();
+            Controls.Add(new PanelTitulo { Titulo = "VentaFácil " + version, Subtitulo = "actualizado", Height = 64 });
+            var bien = new Banda(Tono.Bien, "Sus productos, ventas, usuarios y configuración se conservaron. Puede entrar así, o revisar la configuración.", 20, 82, 620);
+            Controls.Add(bien);
+            int y = bien.Bottom + 14;
+            var faltan = PrimeraVez.Revision().Where(p => !p.Bien).Take(5).ToArray();
             if (faltan.Length > 0)
-                Controls.Add(new Label { Left = 20, Top = 112, Width = 580, Height = 110, Font = Tema.Normal, ForeColor = Tema.Rojo, BackColor = Color.Transparent, Text = string.Join("\n", faltan.Take(5).ToArray()) });
-            var no = Ui.Boton("No configurar, entrar", 20, 236, 280, 48, (s, e) => { DialogResult = DialogResult.No; }, true);
-            var si = Ui.Boton("Configurar", 320, 236, 280, 48, (s, e) => { DialogResult = DialogResult.Yes; });
+            {
+                Controls.Add(Ui.Etiqueta("Conviene revisar:", 20, y, Tema.Negrita, Tema.Humo));
+                y += 30;
+                foreach (var f in faltan) { Controls.Add(new FilaRevision(false, f.Texto, 20, y, 620)); y += 46; }
+            }
+            y += 8;
+            var no = Ui.Boton("No configurar, entrar", 20, y, 300, 48, (s, e) => { DialogResult = DialogResult.No; }, true);
+            var si = Ui.Boton("Configurar", 340, y, 300, 48, (s, e) => { DialogResult = DialogResult.Yes; });
             Controls.Add(no); Controls.Add(si);
+            ClientSize = new Size(660, y + 66);
             AcceptButton = no;
         }
     }
@@ -55,6 +62,12 @@ namespace VentaFacil.Forms.Admin
             _nueva = nueva;
             _oficina = Envios.EsOficina;
             _lista = new Panel { Left = 0, Top = 0, Width = 220, Height = 640, BackColor = Tema.AzulOscuro };
+            _lista.Paint += (s, e) =>
+            {
+                if (Iconos.Billete == null) return;
+                Marca.Blanco(e.Graphics, 16, 27, 56);
+                TextRenderer.DrawText(e.Graphics, "VentaFácil", Tema.Mediana, new Rectangle(76, 20, 144, 48), Color.White, TextFormatFlags.VerticalCenter);
+            };
             Controls.Add(_lista);
             _titulo = Ui.Etiqueta("", 240, 16, Tema.Grande, Tema.Azul);
             Controls.Add(_titulo);
@@ -132,7 +145,7 @@ namespace VentaFacil.Forms.Admin
         void PintarLista()
         {
             foreach (Control c in _lista.Controls.Cast<Control>().ToArray()) { _lista.Controls.Remove(c); c.Dispose(); }
-            int y = 20;
+            int y = 92;
             for (int i = 0; i < _pasos.Count; i++)
             {
                 if (!_pasos[i].Visible()) continue;
@@ -146,7 +159,7 @@ namespace VentaFacil.Forms.Admin
             }
         }
 
-        static Panel Hoja() { return new Panel { Width = 720, Height = 480, BackColor = Tema.Crema }; }
+        static Panel Hoja() { var p = new Panel { Width = 720, Height = 480, BackColor = Tema.Crema }; Marca.Fondo(p, 220); return p; }
         static Label Parrafo(string t, int y, int alto, Color? color = null) { return new Label { Text = t, Left = 8, Top = y, Width = 700, Height = alto, Font = Tema.Normal, ForeColor = color ?? Tema.Texto, BackColor = Color.Transparent }; }
         static TextBox Campo(Panel p, string etiqueta, string valor, ref int y, int ancho = 420, bool clave = false)
         {
@@ -182,8 +195,8 @@ namespace VentaFacil.Forms.Admin
             else
             {
                 p.Controls.Add(Parrafo("Nada es obligatorio: use la lista de la izquierda para ir directo a lo que quiera cambiar, o pase con «Siguiente». Cada paso se guarda al salir de él.", 8, 56));
-                p.Controls.Add(Ui.Etiqueta("Cómo está ahora:", 8, 84, Tema.Mediana, Tema.Azul));
-                Revision(p, 122);
+                p.Controls.Add(Ui.Etiqueta("Cómo está ahora:", 8, 74, Tema.Mediana, Tema.Azul));
+                Revision(p, 112);
             }
             return p;
         }
@@ -195,9 +208,8 @@ namespace VentaFacil.Forms.Admin
             l.Add(new PrimeraVez.Punto { Bien = lic.Estado == EstadoLicencia.Activa, Texto = lic.Estado == EstadoLicencia.Activa ? "Licencia activada" : lic.Estado == EstadoLicencia.Prueba ? "Licencia de prueba: quedan " + lic.DiasRestantes + " días" : "Licencia vencida" });
             foreach (var x in l)
             {
-                p.Controls.Add(Ui.Etiqueta(x.Bien ? "Listo" : "Falta", 8, y, Tema.Negrita, x.Bien ? Tema.Verde : Tema.Rojo));
-                p.Controls.Add(new Label { Text = x.Texto, Left = 80, Top = y, Width = 630, Height = 24, AutoEllipsis = true, Font = Tema.Normal, BackColor = Color.Transparent });
-                y += 34;
+                p.Controls.Add(new FilaRevision(x.Bien, x.Texto, 8, y, 704));
+                y += 45;
             }
             return y;
         }

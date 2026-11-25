@@ -84,7 +84,7 @@ Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y
 | # | Qué hacer | Debe pasar |
 |---|-----------|-----------|
 | 37 | Abrir la pantalla de venta | Se ven el encabezado, la **barra de módulos** (F1 Caja … F6 Ajustes) y la barra de 8 botones «Ctrl+F#»; nada se encima ni se corta con 1366x768 |
-| 38 | Pulsar F2, F3, F4, F5, F6 y F1 con el teclado, y luego con el ratón | Cambia de módulo; la línea blanca se desliza; F1 regresa a Caja con el cursor en la captura |
+| 38 | Pulsar F2, F3, F4, F5, F6 y F1 con el teclado, y luego con el ratón | Cambia de módulo; la pastilla se desliza; F1 regresa a Caja con el cursor en la captura |
 | 39 | En cada módulo, ver la barra de atajos de arriba y probar Ctrl+F1, Ctrl+F2… | Cada botón hace lo que dice (cambia de vista o abre su diálogo); Esc regresa a Caja |
 | 40 | En Caja: Ctrl+F1 cobra (y también «+»), Ctrl+F2 busca, Ctrl+F8 cancela; F10 cambia de usuario | Funcionan; con una venta a medias, F3–F6 avisan y no entran |
 | 40b | Pasar el ratón y pulsar botones secundarios y principales | Sin borde, texto centrado, el color cambia suave |
@@ -105,11 +105,11 @@ Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y
 ## K. Usuarios y permisos
 | # | Qué hacer | Debe pasar |
 |---|-----------|-----------|
-| 49 | Entrar como cajero | Catálogo, Almacén, Resultados y Ajustes salen con candado; F3–F6 piden clave |
+| 49 | Entrar como cajero | Solo aparecen Caja y Turno; F3–F6 no hacen nada |
 | 50 | Cajero: F2 Turno → Cortes | Abre **su** corte; la lista solo trae su nombre; corte de caja y Z piden clave |
-| 51 | Administrador dentro de Catálogo → F10 → entrar como cajero | Regresa a Caja; F3 vuelve a pedir clave |
-| 52 | Cajero entra a Ajustes con clave de admin, vuelve a Caja y pulsa F6 | Vuelve a pedir clave |
-| 53 | Ajustes → Usuarios: elegir cada **Perfil** y ver las casillas; luego un cajero: marcar Almacén y quitar cajón; entrar con él | El perfil marca las casillas; al tocarlas pasa solo a Personalizado; las 12 casillas se ven completas. Almacén abre sin clave; abrir cajón la pide |
+| 51 | Administrador dentro de Catálogo → F10 → entrar como cajero | Regresa a Caja; Catálogo desaparece de la barra |
+| 52 | Cajero: descuento o abrir cajón sin permiso | Pide la clave de alguien que sí pueda; solo vale para esa acción |
+| 53 | Ajustes → Usuarios: elegir cada **Perfil** y ver las casillas; luego un cajero: marcar Almacén y quitar cajón; entrar con él | El perfil marca las casillas; al tocarlas pasa solo a Personalizado; las 12 casillas se ven completas. Almacén aparece (con F4); abrir cajón pide clave |
 | 54 | Crear un **Encargado** y entrar con él | Entra a todo sin clave, pero no ve Usuarios, Respaldos ni Envíos en Ajustes |
 | 55 | En Catálogo, Grupos y Usuarios: F1–F6 y Ctrl+N / Ctrl+M / Ctrl+E | F1–F6 cambian de módulo siempre (F5 ya **no** elimina); Ctrl+letra hace la acción |
 | 56 | Abrir con la base de la v1.17 | Siguen todos los usuarios con su clave y sus permisos |

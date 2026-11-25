@@ -21,13 +21,12 @@ namespace VentaFacil.Forms.Licenciamiento
             Controls.Add(Ui.Etiqueta("Licencia de VentaFácil", 16, 12, Tema.Grande, Tema.Azul));
 
             string estado;
-            Color color = Tema.Texto;
             if (info.Estado == EstadoLicencia.Activa)
                 estado = "Activada en este equipo." + (info.Vence.HasValue ? " Vence el " + info.Vence.Value.ToString("dd/MM/yyyy") + "." : " No vence.");
             else if (info.Estado == EstadoLicencia.Prueba)
                 estado = "Período de prueba: le quedan " + info.DiasRestantes + (info.DiasRestantes == 1 ? " día." : " días.");
-            else { estado = info.Motivo; color = Tema.Rojo; }
-            Controls.Add(new Label { Text = estado, Left = 16, Top = 62, Width = 688, Height = 56, Font = Tema.Mediana, ForeColor = color, BackColor = Color.Transparent });
+            else estado = info.Motivo;
+            Controls.Add(new Banda(info.Estado == EstadoLicencia.Activa ? Tono.Bien : info.Estado == EstadoLicencia.Prueba ? (info.DiasRestantes <= 7 ? Tono.Cuidado : Tono.Info) : Tono.Error, estado, 16, 64, 688));
 
             Controls.Add(Ui.Etiqueta("Código de este equipo (envíeselo a su proveedor):", 16, 126));
             var codigo = new TextBox { Left = 16, Top = 156, Width = 380, ReadOnly = true, Font = Tema.Mono, Text = Licencia.CodigoInstalacion(), BackColor = Tema.Crema };

@@ -173,7 +173,7 @@ namespace VentaFacil.Forms.Admin
             if (repetidos > 0) avisos.Append(repetidos + " códigos repetidos (se usó el primero).   ");
             if (noEncontrados.Count > 0) avisos.Append("Códigos que no existen: " + string.Join(", ", noEncontrados.Take(5).ToArray()) + (noEncontrados.Count > 5 ? "…" : "") + ".   ");
             if (invalidos.Count > 0) avisos.Append("Cantidades no válidas en: " + string.Join(", ", invalidos.Take(5).ToArray()) + (invalidos.Count > 5 ? "…" : "") + ".");
-            Controls.Add(new Label { Text = avisos.ToString(), Left = 16, Top = 488, Width = 968, Height = 44, Font = Tema.Normal, ForeColor = Tema.Rojo, BackColor = Color.Transparent });
+            if (avisos.Length > 0) Controls.Add(new Label { Text = avisos.ToString().Trim(), Left = 16, Top = 488, Width = 968, Height = 44, Font = Tema.Normal, ForeColor = Tonos.Tinta(Tono.Cuidado), BackColor = Tonos.Fondo(Tono.Cuidado), Padding = new Padding(10, 0, 10, 0), TextAlign = ContentAlignment.MiddleLeft });
             Controls.Add(Ui.Etiqueta("Al aplicar, la existencia de cada producto queda igual a lo contado. Si hubo ventas después de contar, cuéntelo de nuevo o ajuste a mano.", 16, 534, null, Tema.Humo));
 
             var ok = Ui.Boton("Aplicar " + dif.Count + " ajustes", 440, 580, 220, 44, (s, e) => { DialogResult = DialogResult.OK; });

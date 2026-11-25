@@ -322,7 +322,7 @@ namespace VentaFacil.Forms.Admin
             Controls.Add(_actualizar);
             y += 30;
             Controls.Add(Ui.Etiqueta("Los renglones en gris no tienen precio y no se importarán. Cada proveedor/grupo del Excel se vuelve un grupo en VentaFácil.", 16, y, null, Tema.Humo));
-            if (avisos.Count > 0) Controls.Add(Ui.Etiqueta(string.Join("  ", avisos), 16, y + 20, null, Tema.Rojo));
+            if (avisos.Count > 0) Controls.Add(Ui.Etiqueta(string.Join("  ", avisos), 16, y + 20, null, Tonos.Fuerte(Tono.Cuidado)));
 
             var ok = Ui.Boton("Importar " + datos.Count + " productos", 620, ClientSize.Height - 56, 200, 42, (s, e) => { DialogResult = DialogResult.OK; }, true);
             var no = Ui.Boton("Cancelar (Esc)", 830, ClientSize.Height - 56, 134, 42, (s, e) => { DialogResult = DialogResult.Cancel; });

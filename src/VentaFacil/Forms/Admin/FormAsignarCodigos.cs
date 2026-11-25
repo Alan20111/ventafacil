@@ -44,7 +44,7 @@ namespace VentaFacil.Forms.Admin
             abajo.Controls.Add(_producto);
             _escaner = new TextBox { Left = 12, Top = 52, Width = 480, Font = Tema.Captura, MaxLength = 40, BorderStyle = BorderStyle.FixedSingle };
             abajo.Controls.Add(_escaner);
-            _mensaje = new Label { Left = 508, Top = 52, Width = 480, Height = 43, AutoEllipsis = true, Font = Tema.Negrita, ForeColor = Tema.Verde, BackColor = Color.Transparent, TextAlign = ContentAlignment.MiddleLeft };
+            _mensaje = new EtiquetaEstado { Left = 508, Top = 52, Width = 480, Height = 43, AutoEllipsis = true, Font = Tema.Negrita, ForeColor = Tema.Verde, BackColor = Color.Transparent, TextAlign = ContentAlignment.MiddleLeft };
             abajo.Controls.Add(_mensaje);
             abajo.Controls.Add(Ui.Etiqueta("Pase el lector: se guarda solo y sigue con el siguiente (↑ ↓ para moverse).", 12, 102, null, Tema.Humo));
             _resumen = new Label { Left = 600, Top = 100, Width = 390, Height = 24, TextAlign = ContentAlignment.MiddleLeft, Font = Tema.Normal, ForeColor = Tema.Azul, BackColor = Color.Transparent };
@@ -326,7 +326,7 @@ namespace VentaFacil.Forms.Admin
                 Cursor = Cursors.WaitCursor;
                 Etiquetas.Imprimir(new List<Producto> { _p }, (int)_copias.Value);
                 Cursor = Cursors.Default;
-                Ui.Info("Etiqueta enviada a la impresora.", "Etiquetas");
+                Ui.Listo("Etiqueta enviada a la impresora");
             }
             catch (Exception ex) { Cursor = Cursors.Default; Ui.Error(ex, "No se pudo imprimir la etiqueta"); }
         }

@@ -110,7 +110,7 @@ namespace VentaFacil.Forms.Admin
             Controls.Add(Ui.Boton("Buscar en USB", 650, 10, 150, 36, (s, e) => BuscarUsb()));
             Controls.Add(Ui.Boton("Otro archivo…", 808, 10, 176, 36, (s, e) => Otro()));
             _datos = Ui.Etiqueta("", 16, 56, null, Tema.Humo); Controls.Add(_datos);
-            _resumen = new Label { Left = 16, Top = 80, Width = 968, Height = 50, Font = Tema.Mediana, ForeColor = Tema.Azul, BackColor = Color.Transparent }; Controls.Add(_resumen);
+            _resumen = new EtiquetaEstado { Left = 16, Top = 80, Width = 968, Height = 50, Font = Tema.Mediana, ForeColor = Tema.Azul, BackColor = Color.Transparent }; Controls.Add(_resumen);
             _cuerpo = new Panel { Left = 16, Top = 134, Width = 968, Height = 340 };
             _grid = EnvioUtil.GridLineas(); _grid.Font = new Font("Segoe UI", 10f, FontStyle.Bold);
             _cuerpo.Controls.Add(_grid);
@@ -553,7 +553,7 @@ namespace VentaFacil.Forms.Admin
             var enUsb = EnvioUtil.BuscarEnUsb("*.vfacuse");
             string f = enUsb.Count == 1 ? enUsb[0] : EnvioUtil.PedirArchivo(FindForm(), "Elija el acuse de la tienda", "Acuse de VentaFácil (*.vfacuse)|*.vfacuse");
             if (f == null) return;
-            try { Ui.Info(Envios.LeerAcuse(f), "Acuse"); } catch (Exception ex) { Ui.Error(ex, "Leer acuse"); }
+            try { Ui.Nota(Envios.LeerAcuse(f), "Acuse"); } catch (Exception ex) { Ui.Error(ex, "Leer acuse"); }
             Cargar();
         }
 

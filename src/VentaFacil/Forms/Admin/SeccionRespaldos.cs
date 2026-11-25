@@ -33,10 +33,11 @@ namespace VentaFacil.Forms.Admin
             p.Controls.Add(Ui.Boton("Carpeta de datos", 396, y, 170, 42, (s, e) => AbrirCarpeta()));
             y += 66;
 
-            p.Controls.Add(Ui.Etiqueta("Restaurar", 16, y, Tema.Mediana, Tema.Rojo));
+            p.Controls.Add(Ui.Etiqueta("Restaurar", 16, y, Tema.Mediana, Tema.Azul));
             y += 28;
-            p.Controls.Add(Ui.Etiqueta("Reemplaza TODOS los datos actuales por los de un respaldo. Úselo sólo si se dañó la información o cambió de computadora.", 16, y, null, Tema.Humo));
-            y += 26;
+            var ojo = new Banda(Tono.Cuidado, "Reemplaza TODOS los datos actuales por los de un respaldo. Úselo sólo si se dañó la información o cambió de computadora.", 16, y + 4, 720);
+            p.Controls.Add(ojo);
+            y = ojo.Bottom + 14;
             var restaurar = Ui.Boton("Restaurar respaldo…", 16, y, 200, 42, (s, e) => { if (Restaurar()) Application.Exit(); });
             Tema.BotonPeligro(restaurar);
             p.Controls.Add(restaurar);

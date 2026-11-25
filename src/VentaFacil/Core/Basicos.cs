@@ -74,6 +74,7 @@ namespace VentaFacil.Core
         public bool PermitirVentaSinExistencia = true;
         public bool CajeroPuedeCancelar = false;   // cancelar tickets / descuentos sin admin
         public bool AvisarNoEncontrado = true;
+        public bool Animaciones = true;            // apagarlas en computadoras lentas
         public string Banner = "";
         public string VersionVista = "";           // última versión en la que se configuró (o se dijo «no configurar»)
         public bool EnviosPedirClave = false;      // pedir clave de administrador para aplicar cada envío de la oficina

@@ -112,7 +112,7 @@ Al importar: respaldo automático previo, **todo en una transacción**, y un res
 - No probado contra un SQL Server real ni en Windows (solo la lógica pura y la compilación): ver pasos 45–48 de `docs/PRUEBAS_WINDOWS.md`.
 
 ### Módulos (barra de arriba)
-La barra azul de arriba tiene los módulos, que se cambian con **F1–F6** o con el ratón; la línea blanca se desliza al elegido:
+La barra azul de arriba tiene los módulos, que se cambian con **F1–F6** o con el ratón; la pastilla se desliza al elegido:
 
 | Tecla | Módulo | Vistas y atajos (Ctrl+F1, Ctrl+F2…) |
 |---|---|---|
@@ -123,10 +123,10 @@ La barra azul de arriba tiene los módulos, que se cambian con **F1–F6** o con
 | F5 | **Resultados** | Ventas por día · Tickets · Más vendidos · Por cajero · Forma de pago · Por grupo · Cortes de caja · Movimientos (se consultan solos al elegir fechas). En la oficina: ventas, existencias, cortes y diferencias de la tienda |
 | F6 | **Ajustes** | Negocio · Equipos (impresora, cajón y báscula) · Usuarios · Respaldos · Envíos · Licencia · Teclas rápidas · Acerca de · Salir |
 
-Cada módulo declara arriba sus botones con su atajo. Los módulos sin permiso piden la clave de alguien que sí lo tenga, y no se entra a F3–F6 con una venta a medias. Los botones son planos (sin borde): se distinguen por contraste, con el texto centrado.
+Cada módulo declara arriba sus botones con su atajo. Los módulos que el usuario no tiene permitidos **no aparecen** ni responden a su tecla, y no se entra a F3–F6 con una venta a medias. Los botones son planos (sin borde): se distinguen por contraste, con el texto centrado.
 
 ### Usuarios y permisos
-En *F6 Ajustes → Usuarios*. Cada quien tiene un **perfil** que marca sus casillas: **Cajero**, **Encargado** (todo menos Usuarios, Respaldos y el enlace de Envíos), **Administrador** (todo, siempre) o **Personalizado** (cuando se ajustan a mano). El **cajero**, de fábrica, solo cobra, ve *Turno*, registra entradas y salidas, abre el cajón y saca **su propio corte X**. Con las casillas *Puede usar* se le da o quita cada módulo (Turno, Catálogo, Almacén, Resultados, Ajustes) y cada acción (descuentos, cancelar, corte X de caja, corte Z…). Cobrar y el corte propio no se pueden quitar; *Usuarios* y *Respaldos* son solo del administrador. Los módulos sin permiso salen con candado y se abren únicamente con la clave de alguien que sí lo tenga; esa autorización se olvida al volver a Caja o al cambiar de usuario (F10), que siempre regresa a Caja. Al actualizar nadie pierde su cuenta: el corte X de caja, que antes veía cualquiera, ahora pide permiso.
+En *F6 Ajustes → Usuarios*. Cada quien tiene un **perfil** que marca sus casillas: **Cajero**, **Encargado** (todo menos Usuarios, Respaldos y el enlace de Envíos), **Administrador** (todo, siempre) o **Personalizado** (cuando se ajustan a mano). El **cajero**, de fábrica, solo cobra, ve *Turno*, registra entradas y salidas, abre el cajón y saca **su propio corte X**. Con las casillas *Puede usar* se le da o quita cada módulo (Turno, Catálogo, Almacén, Resultados, Ajustes) y cada acción (descuentos, cancelar, corte X de caja, corte Z…). Cobrar y el corte propio no se pueden quitar; *Usuarios* y *Respaldos* son solo del administrador. Un módulo sin permiso **no aparece** y no hay forma de abrirlo con ese usuario: quien lo necesite entra con su cuenta (F10). Las acciones sueltas (descuento, cancelar, cajón, cortes) sí pueden pedir en el momento la clave de alguien con permiso. Al actualizar nadie pierde su cuenta: el corte X de caja, que antes veía cualquiera, ahora pide permiso.
 
 ### Envíos de la oficina a la tienda (USB)
 Para que los cambios de la oficina no se capturen a mano en la caja. En *F6 Ajustes → Envíos* (solo administrador) la **caja** crea un *archivo de enlace* (protegido con contraseña) y la **computadora de la oficina** —instalación nueva, con su propia licencia— lo abre y queda como OFICINA: ahí no se cobra.
