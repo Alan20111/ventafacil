@@ -239,7 +239,7 @@ for (int i = 0; i < 300; i++)
     VentaRepo.Guardar(v, uid);
 }
 var c2 = TurnoRepo.Resumen(turno.Id);
-Revisar("300 ventas de $0.10 suman EXACTAMENTE $30.00 en el corte (sin ruido de decimales)", c2.VentasEfectivo == 30.00m && c2.EfectivoEsperado == 500m + 30m + 100.10m - 20.25m, c2.VentasEfectivo.ToString("R"));
+Revisar("300 ventas de $0.10 suman EXACTAMENTE $30.00 en el corte (sin ruido de decimales)", c2.VentasEfectivo == 30.00m && c2.EfectivoEsperado == 500m + 30m + 100.10m - 20.25m, c2.VentasEfectivo.ToString());
 Revisar("la suma por SQL sobre los renglones también es exacta", Db.Dec(Db.Scalar("SELECT SUM(total) FROM ventas WHERE estado='PAGADA'")) == 30.00m);
 
 // ================================================================ 5. Conteo físico
@@ -286,7 +286,7 @@ void En(string m)      // «sentarse» en la otra computadora
     if (m == maquina) return;
     System.Data.SQLite.SQLiteConnection.ClearAllPools();
     foreach (var x in new[] { "-wal", "-shm" }) if (File.Exists(Db.Archivo + x)) throw new Exception("quedó " + x + " sin cerrar");
-    File.Move(Db.Archivo, De(maquina), true);
+    if (File.Exists(De(maquina))) File.Delete(De(maquina)); File.Move(Db.Archivo, De(maquina));
     if (File.Exists(De(m))) File.Move(De(m), Db.Archivo);
     maquina = m;
     Db.Inicializar(); Config.Cargar();

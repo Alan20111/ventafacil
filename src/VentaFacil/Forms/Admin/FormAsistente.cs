@@ -176,8 +176,8 @@ namespace VentaFacil.Forms.Admin
                 var ofi = new RadioButton { Text = "La OFICINA (cambia precios y captura mercancía; no se cobra)", Left = 8, Top = 156, Width = 680, Font = Tema.Negrita, Checked = _oficina };
                 ofi.CheckedChanged += (s, e) => { _oficina = ofi.Checked; PintarLista(); };
                 p.Controls.Add(caja); p.Controls.Add(ofi);
-                p.Controls.Add(Parrafo("¿Cambió de computadora? Puede traer todo desde un respaldo de VentaFácil en lugar de empezar de cero:", 220, 30));
-                p.Controls.Add(Ui.Boton("Ya tengo un respaldo…", 8, 258, 230, 42, (s, e) => BeginInvoke((Action)(() => { if (SeccionRespaldos.Restaurar()) { Restaurado = true; Close(); } }))));
+                p.Controls.Add(Parrafo("¿Cambió de computadora? Puede traer todo desde un respaldo de VentaFácil en lugar de empezar de cero:", 214, 44));
+                p.Controls.Add(Ui.Boton("Ya tengo un respaldo…", 8, 264, 230, 42, (s, e) => BeginInvoke((Action)(() => { if (SeccionRespaldos.Restaurar()) { Restaurado = true; Close(); } }))));
             }
             else
             {
@@ -308,7 +308,7 @@ namespace VentaFacil.Forms.Admin
             _sinEx = Casilla(p, "Permitir vender productos sin existencia", c.PermitirVentaSinExistencia, ref y);
             _auto = Casilla(p, "Imprimir el ticket al cobrar", c.ImprimirAutomatico, ref y);
             _cancela = Casilla(p, "Los cajeros pueden cancelar y hacer descuentos sin clave", c.CajeroPuedeCancelar, ref y);
-            p.Controls.Add(Parrafo("Cajón, báscula y demás detalles están en F6 Ajustes → Negocio.", y + 8, 30, Tema.Humo));
+            p.Controls.Add(Parrafo("El cajón, la báscula y lo demás están en F6 Ajustes → Equipos.", y + 8, 30, Tema.Humo));
             return p;
         }
         bool GuardarOperacion()
@@ -358,7 +358,7 @@ namespace VentaFacil.Forms.Admin
         {
             var p = Hoja();
             int y = Revision(p, 8);
-            p.Controls.Add(Parrafo("Lo que falte se puede hacer después. Este asistente está en F6 Ajustes → Negocio → «Asistente».", y + 14, 50, Tema.Humo));
+            p.Controls.Add(Parrafo("Lo que falte se puede hacer después. Este asistente está en F6 Ajustes → Negocio → «Abrir asistente».", y + 14, 50, Tema.Humo));
             return p;
         }
     }

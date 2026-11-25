@@ -65,7 +65,7 @@ namespace VentaFacil.Forms.Admin
 
         public bool Importado { get; private set; }
 
-        public FormImportarZafirah() : base("Importar productos de Zafirah", 1240, 712)
+        public FormImportarZafirah() : base("Importar productos de Zafirah", 1240, 696)
         {
             var tip = new ToolTip { AutoPopDelay = 9000 };
 
@@ -152,14 +152,14 @@ namespace VentaFacil.Forms.Admin
 
             // =================== 2. MAPEO ===================
             Controls.Add(Ui.Etiqueta("2. ¿Qué columna es cada dato?", 16, 364, Tema.Negrita, Tema.Azul));
-            _perfiles = new ComboBox { Left = 262, Top = 360, Width = 168, DropDownStyle = ComboBoxStyle.DropDownList, Font = new Font("Segoe UI", 9.5f, FontStyle.Bold) };
+            _perfiles = new ComboBox { Left = 262, Top = 359, Width = 140, DropDownStyle = ComboBoxStyle.DropDownList, Font = new Font("Segoe UI", 9.5f, FontStyle.Bold) };
             _perfiles.SelectedIndexChanged += (s, e) => { if (!_cargando) CambioPerfil(); };
             Controls.Add(_perfiles);
             tip.SetToolTip(_perfiles, "Un perfil dice dónde buscar cada dato en un programa. Puede guardar el suyo con «Guardar…» o editar los archivos de la carpeta de perfiles.");
-            var bGuardar = Ui.Boton("Guardar…", 434, 358, 84, 28, (s, e) => GuardarPerfil());
+            var bGuardar = Ui.Boton("Guardar…", 408, 357, 86, 28, (s, e) => GuardarPerfil());
             bGuardar.Font = new Font("Segoe UI", 9f, FontStyle.Bold);
             Controls.Add(bGuardar);
-            var bCarpeta = Ui.Boton("Carpeta", 522, 358, 54, 28, (s, e) => AbrirCarpetaPerfiles());
+            var bCarpeta = Ui.Boton("Carpeta", 500, 357, 76, 28, (s, e) => AbrirCarpetaPerfiles());
             bCarpeta.Font = new Font("Segoe UI", 8.5f, FontStyle.Bold);
             Controls.Add(bCarpeta);
             tip.SetToolTip(bGuardar, "Guarda las columnas que eligió como un perfil reutilizable (para otro programa u otra base).");
@@ -179,7 +179,7 @@ namespace VentaFacil.Forms.Admin
                 var combo = new ComboBox { Left = 200, Top = y + 2, Width = 200, DropDownStyle = ComboBoxStyle.DropDownList, Font = Tema.Normal };
                 combo.Items.Add("(ninguna)");
                 combo.SelectedIndex = 0;
-                var ejemplo = new Label { Left = 408, Top = y + 6, Width = 142, Height = 24, ForeColor = Tema.Humo, BackColor = Color.Transparent, AutoEllipsis = true, Font = new Font("Segoe UI", 9.5f, FontStyle.Bold) };
+                var ejemplo = new Label { Left = 408, Top = y + 6, Width = 126, Height = 24, ForeColor = Tema.Humo, BackColor = Color.Transparent, AutoEllipsis = true, Font = new Font("Segoe UI", 9.5f, FontStyle.Bold) };
                 tip.SetToolTip(etiqueta, campo.Ayuda);
                 tip.SetToolTip(combo, campo.Ayuda);
                 combo.SelectedIndexChanged += (s, e) =>
@@ -210,13 +210,14 @@ namespace VentaFacil.Forms.Admin
 
             _vista = new DataGridView { Left = 596, Top = 76, Width = 628, Height = 320 };
             Ui.EstiloGrid(_vista);
-            _vista.Font = new Font("Segoe UI", 9.5f, FontStyle.Bold);
+            _vista.Font = new Font("Segoe UI", 9f, FontStyle.Bold);
+            _vista.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 8.5f, FontStyle.Bold);
             _vista.Columns.Add(Ui.Columna("codigo", "Código", 9));
-            _vista.Columns.Add(Ui.Columna("barras", "Cód. barras", 13));
+            _vista.Columns.Add(Ui.Columna("barras", "Barras", 13));
             _vista.Columns.Add(Ui.Columna("producto", "Producto", 27));
             _vista.Columns.Add(Ui.Columna("grupo", "Grupo", 12));
             _vista.Columns.Add(Ui.Columna("costo", "Costo", 9, true));
-            _vista.Columns.Add(Ui.Columna("menudeo", "Menudeo", 9, true));
+            _vista.Columns.Add(Ui.Columna("menudeo", "Menud.", 10, true));
             _vista.Columns.Add(Ui.Columna("medio", "Medio", 11, true));
             _vista.Columns.Add(Ui.Columna("mayoreo", "Mayoreo", 11, true));
             _vista.Columns.Add(Ui.Columna("existencia", "Stock", 8, true));
@@ -237,11 +238,11 @@ namespace VentaFacil.Forms.Admin
             Controls.Add(_sobrescribir);
             Controls.Add(Ui.Etiqueta("Antes de importar se guarda un respaldo automático. Zafirah no se modifica: solo se lee.", 596, 616, null, Tema.Humo));
 
-            _importar = Ui.Boton("Importar", 820, 650, 250, 52, (s, e) => Importar());
+            _importar = Ui.Boton("Importar", 820, 640, 250, 48, (s, e) => Importar());
             Tema.Pastilla(_importar, true);
             _importar.Enabled = false;
             Controls.Add(_importar);
-            Controls.Add(Ui.Boton("Cerrar (Esc)", 1080, 650, 144, 52, (s, e) => Close()));
+            Controls.Add(Ui.Boton("Cerrar (Esc)", 1080, 640, 144, 48, (s, e) => Close()));
 
             _debounce.Tick += (s, e) => { _debounce.Stop(); Actualizar(); };
             Shown += (s, e) => Actualizar();

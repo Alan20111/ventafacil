@@ -11,30 +11,15 @@ using VentaFacil.UI;
 namespace VentaFacil.Forms.Admin
 {
     /// <summary>Entradas de mercancía, ajustes por conteo físico, faltantes, kardex y valor del inventario.</summary>
-    public class SeccionInventario : UserControl
+    public static class SeccionInventario
     {
-        public SeccionInventario()
-        {
-            BackColor = Tema.Crema;
-            var tabs = new TabControl { Dock = DockStyle.Fill, Font = Tema.Negrita, Padding = new Point(14, 6) };
-            tabs.TabPages.Add(Pagina("Entrada de mercancía", new PanelEntrada()));
-            tabs.TabPages.Add(Pagina("Conteo con Excel", new PanelConteo()));
-            tabs.TabPages.Add(Pagina("Ajuste de un producto", new PanelAjuste()));
-            tabs.TabPages.Add(Pagina("Bajos de existencia", new PanelReporte(() => AdminConsultas.BajosDeExistencia(), "faltantes")));
-            tabs.TabPages.Add(Pagina("Kardex de un producto", new PanelKardex()));
-            tabs.TabPages.Add(Pagina("Valor del inventario", new PanelReporte(() => AdminConsultas.ValorInventario(), "valor_inventario", "ValorCosto", "ValorVenta")));
-            Controls.Add(tabs);
-            Controls.Add(AdminUtil.TituloSeccion("Inventario"));
-        }
-
-        static TabPage Pagina(string titulo, Control c)
-        {
-            var p = new TabPage(titulo) { BackColor = Tema.Crema };
-            c.Dock = DockStyle.Fill;
-            c.Font = Tema.Normal;
-            p.Controls.Add(c);
-            return p;
-        }
+        static Control Vista(Control c) { c.BackColor = Tema.Crema; c.Font = Tema.Normal; return c; }
+        public static Control Entrada() { return Vista(new PanelEntrada()); }
+        public static Control Conteo() { return Vista(new PanelConteo()); }
+        public static Control Ajuste() { return Vista(new PanelAjuste()); }
+        public static Control Faltantes() { return Vista(new PanelReporte(() => AdminConsultas.BajosDeExistencia(), "faltantes")); }
+        public static Control Kardex() { return Vista(new PanelKardex()); }
+        public static Control Valor() { return Vista(new PanelReporte(() => AdminConsultas.ValorInventario(), "valor_inventario", "ValorCosto", "ValorVenta")); }
 
         // ------------------------------------------------------------------
         class PanelEntrada : UserControl
@@ -47,16 +32,16 @@ namespace VentaFacil.Forms.Admin
 
             public PanelEntrada()
             {
-                var arriba = new Panel { Dock = DockStyle.Top, Height = 92 };
+                var arriba = new Panel { Dock = DockStyle.Top, Height = 100 };
                 arriba.Controls.Add(Ui.Etiqueta("Código:", 10, 10, Tema.Negrita));
                 _codigo = Ui.Caja(10, 32, 220, Tema.Mediana); arriba.Controls.Add(_codigo);
                 arriba.Controls.Add(Ui.Etiqueta("Cantidad:", 240, 10, Tema.Negrita));
                 _cantidad = Ui.Caja(240, 32, 100, Tema.Mediana); _cantidad.TextAlign = HorizontalAlignment.Right; _cantidad.Text = "1"; arriba.Controls.Add(_cantidad);
                 arriba.Controls.Add(Ui.Etiqueta("Costo nuevo (opcional):", 350, 10));
                 _costo = Ui.Caja(350, 32, 120, Tema.Mediana); _costo.TextAlign = HorizontalAlignment.Right; arriba.Controls.Add(_costo);
-                arriba.Controls.Add(Ui.Boton("Agregar (Enter)", 480, 30, 130, 34, (s, e) => Agregar(), true));
-                arriba.Controls.Add(Ui.Boton("Buscar (Ctrl+B)", 616, 30, 130, 34, (s, e) => Buscar()));
-                arriba.Controls.Add(Ui.Etiqueta("Escanee el código, escriba la cantidad y presione Enter. Al terminar presione \"Aplicar entrada\".", 10, 70, null, Tema.Humo));
+                arriba.Controls.Add(Ui.Boton("Agregar (Enter)", 486, 30, 150, 36, (s, e) => Agregar(), true));
+                arriba.Controls.Add(Ui.Boton("Buscar (Ctrl+B)", 644, 30, 150, 36, (s, e) => Buscar()));
+                arriba.Controls.Add(Ui.Etiqueta("Escanee el código, escriba la cantidad y presione Enter. Al terminar presione \"Aplicar entrada\".", 10, 74, null, Tema.Humo));
                 Controls.Add(arriba);
 
                 _grid = AdminUtil.Grid();
@@ -69,11 +54,11 @@ namespace VentaFacil.Forms.Admin
 
                 var abajo = new Panel { Dock = DockStyle.Bottom, Height = 56 };
                 abajo.Controls.Add(Ui.Etiqueta("Referencia (factura / proveedor):", 10, 18));
-                _referencia = Ui.Caja(240, 14, 260); abajo.Controls.Add(_referencia);
-                abajo.Controls.Add(Ui.Boton("Quitar (Supr)", 510, 10, 120, 38, (s, e) => Quitar()));
-                var aplicar = Ui.Boton("Aplicar entrada", 640, 10, 150, 38, (s, e) => Aplicar(), true);
+                _referencia = Ui.Caja(264, 14, 240); abajo.Controls.Add(_referencia);
+                abajo.Controls.Add(Ui.Boton("Quitar (Supr)", 516, 8, 140, 40, (s, e) => Quitar()));
+                var aplicar = Ui.Boton("Aplicar entrada", 664, 8, 160, 40, (s, e) => Aplicar(), true);
                 abajo.Controls.Add(aplicar);
-                _total = Ui.Etiqueta("", 800, 18, Tema.Negrita);
+                _total = Ui.Etiqueta("", 840, 18, Tema.Negrita);
                 abajo.Controls.Add(_total);
 
                 Controls.Add(_grid);
@@ -200,15 +185,14 @@ namespace VentaFacil.Forms.Admin
             {
                 Controls.Add(Ui.Etiqueta("1. Escanee o escriba el código (Ctrl+B para buscar):", 16, 16, Tema.Negrita));
                 _codigo = Ui.Caja(16, 42, 260, Tema.Mediana); Controls.Add(_codigo);
-                Controls.Add(Ui.Boton("Buscar (Ctrl+B)", 286, 40, 130, 34, (s, e) => Elegir("")));
+                Controls.Add(Ui.Boton("Buscar (Ctrl+B)", 286, 38, 150, 38, (s, e) => Elegir("")));
                 _info = Ui.Etiqueta("", 16, 86, Tema.Mediana, Tema.Azul);
                 Controls.Add(_info);
                 Controls.Add(Ui.Etiqueta("2. Existencia contada físicamente:", 16, 150, Tema.Negrita));
                 _contado = Ui.Caja(16, 176, 160, Tema.Mediana); _contado.TextAlign = HorizontalAlignment.Right; Controls.Add(_contado);
                 Controls.Add(Ui.Etiqueta("Motivo (opcional):", 16, 220));
                 _motivo = Ui.Caja(16, 244, 380); Controls.Add(_motivo);
-                var b = Ui.Boton("Guardar ajuste", 16, 288, 180, 40, (s, e) => Guardar());
-                b.ForeColor = Tema.Verde;
+                var b = Ui.Boton("Guardar ajuste", 16, 288, 180, 40, (s, e) => Guardar(), true);
                 Controls.Add(b);
 
                 _codigo.KeyDown += (s, e) =>

@@ -7,7 +7,7 @@ Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y
 > redondeo de dinero, detección de base dañada, y el código de barras Code 128 (contra una librería independiente) y la trama ESC/POS de las etiquetas.
 > **El dibujo de la etiqueta, su impresión real y la lectura con el lector NO se han probado: son el paso 36. Tampoco se han visto en pantalla los módulos (37 a 40b), el asistente de importación (41 a 48) ni su conexión a un SQL Server real, los permisos (49 a 56) ni los envíos y el reporte (57 a 81), ni el asistente (2 a 4d).**
 >
-> **Sí se probó con un SQLite de verdad** (herramientas/pruebas-datos, con un adaptador porque `System.Data.SQLite` solo existe para Windows): el código real de esquema, migración, productos, códigos de barras, cobros, cancelaciones, cortes, dinero exacto, conteo, respaldos, base dañada, restauración y la **aplicación** del importador. **Nada de lo que sigue se había probado en Windows.**
+> **Sí se probó con un SQLite de verdad** (herramientas/pruebas-datos, con un adaptador porque `System.Data.SQLite` solo existe para Windows): el código real de esquema, migración, productos, códigos de barras, cobros, cancelaciones, cortes, dinero exacto, conteo, respaldos, base dañada, restauración y la **aplicación** del importador. **Desde la v1.24** todo lo anterior corre además en un **Windows real** (GitHub Actions): pruebas de datos con .NET Framework y SQLite de verdad, las 162 capturas de pantalla sin encimados ni textos cortados (1366 y 1024 de ancho) y el arranque del programa en una instalación nueva. **Sigue faltando a mano:** impresora, cajón, báscula, lector, USB, Windows 7, la licencia y usarlo con una persona.
 
 ## A. Instalación
 | # | Qué hacer | Debe pasar |
@@ -16,7 +16,7 @@ Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y
 | 2 | Primer arranque (sin datos) | Se abre el **asistente**; se ve completo en 1366x768 |
 | 3 | Asistente: Caja → crear la cuenta de administrador (probar antes una clave de 3 letras, «admin» y dos distintas) | Rechaza las malas; con la buena sigue. `admin` / `admin` ya no entra |
 | 4 | Asistente: negocio, usuarios (crear un cajero), respaldos, impresora, forma de trabajar, productos, licencia, Listo | Cada paso se guarda; «Listo» dice qué falta; al Terminar entra sin pedir clave |
-| 4b | Cerrar el asistente a la mitad y volver a abrir el programa | No se pierde lo hecho; está en F6 Ajustes → Negocio → Asistente |
+| 4b | Cerrar el asistente a la mitad y volver a abrir el programa | No se pierde lo hecho; está en F6 Ajustes → Negocio → Abrir asistente |
 | 4c | **Actualizar** sobre una versión anterior con datos y entrar como cajero; luego como administrador | Al cajero no le sale nada; al administrador, «Configurar / No configurar»; al elegir No, no vuelve a salir. Usuarios, ventas e impresora siguen igual |
 | 4d | «Configurar» y brincar con la lista de la izquierda | Cambia solo lo que se toque |
 
@@ -45,8 +45,8 @@ Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y
 ## D. Productos e inventario
 | # | Qué hacer | Debe pasar |
 |---|-----------|-----------|
-| 19 | F3 Catálogo → Importar Excel | Vista previa, importa ~490 productos sin errores |
-| 20 | F3 Catálogo → Lista costos; abrir el Excel | Mismo formato que el original |
+| 19 | F3 Catálogo → Importar → Lista de costos | Vista previa, importa ~490 productos sin errores |
+| 20 | F3 Catálogo → Exportar → Lista de costos; abrir el Excel | Mismo formato que el original |
 | 21 | F4 Almacén → entrada de mercancía | Sube la existencia |
 | 22 | F4 Almacén → **Conteo con Excel**: exportar hoja, llenar CONTADO en 5 productos, importar | Muestra diferencias con valor, se aplican y salen en el kardex |
 | 23 | F5 Resultados: reportes con filtros y exportar a Excel | Totales correctos |
@@ -78,7 +78,7 @@ Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y
 | 33 | F3 Catálogo → **Códigos de barras**; tomar 3 productos con empaque y pasar el lector | Cada código se guarda y salta al siguiente; la columna «Cód. barras» de Productos lo muestra |
 | 34 | Pasar el MISMO código en otro producto | Avisa de quién es y ofrece pasarlo; no deja duplicar |
 | 35 | En la pantalla de cobro, escanear un empaque ya asignado | Entra el producto con su precio |
-| 36 | Un producto de granel → **Etiqueta** (F5) → ver la vista previa → Imprimir; luego escanear la etiqueta impresa **con el lector** | La etiqueta sale legible (nombre, precio, barras) y el lector la lee y entra el producto |
+| 36 | Un producto de granel → **Imprimir etiqueta** (Ctrl+T) → ver la vista previa → Imprimir; luego escanear la etiqueta impresa **con el lector** | La etiqueta sale legible (nombre, precio, barras) y el lector la lee y entra el producto |
 
 ## I. Módulos y atajos
 | # | Qué hacer | Debe pasar |
@@ -87,12 +87,12 @@ Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y
 | 38 | Pulsar F2, F3, F4, F5, F6 y F1 con el teclado, y luego con el ratón | Cambia de módulo; la línea blanca se desliza; F1 regresa a Caja con el cursor en la captura |
 | 39 | En cada módulo, ver la barra de atajos de arriba y probar Ctrl+F1, Ctrl+F2… | Cada botón hace lo que dice (cambia de vista o abre su diálogo); Esc regresa a Caja |
 | 40 | En Caja: Ctrl+F1 cobra (y también «+»), Ctrl+F2 busca, Ctrl+F8 cancela; F10 cambia de usuario | Funcionan; con una venta a medias, F3–F6 avisan y no entran |
-| 40b | Pasar el ratón y pulsar botones secundarios y principales | Borde azul de 2 px **liso** (sin puntitos), el color cambia suave, el botón se hunde al pulsar |
+| 40b | Pasar el ratón y pulsar botones secundarios y principales | Sin borde, texto centrado, el color cambia suave |
 
 ## J. Importar de Zafirah (pasos 41–48)
 | # | Qué hacer | Debe pasar |
 |---|-----------|-----------|
-| 41 | F3 Catálogo → icono pequeño al final de la barra (importar de Zafirah). Pestaña «Archivo»: elegir un Excel o CSV de prueba | Se abre el asistente completo (cabe en 1366x768, sin cortes). Aparecen las columnas propuestas con su ejemplo y la vista previa con avisos |
+| 41 | F3 Catálogo → Importar → Zafirah. Pestaña «Archivo»: elegir un Excel o CSV de prueba | Se abre el asistente completo (cabe en 1366x768, sin cortes). Aparecen las columnas propuestas con su ejemplo y la vista previa con avisos |
 | 42 | Si Zafirah está en esa PC: pestaña «Base de Zafirah» → servidor `(local)` (o `.\SQLEXPRESS`), **Conectar** (Windows o usuario SQL) → base `smartdatabase` → tabla `ZFRADMARTICULOS` → **Leer tabla** | Conecta sin escribir nada en Zafirah; propone Código, Nombre, Precio, Costo, Existencia… **Comprobar a ojo** que Menudeo, Costo y Existencia sean las columnas correctas; elegir «a partir de» para medio mayoreo/mayoreo si hace falta. Si falla, el mensaje debe ser claro (usuario, permiso, servidor) |
 | 43 | **Importar** | Pide confirmar, hace respaldo, muestra el resumen; los productos salen en Productos y se cobran por su código corto y por su código de barras |
 | 44 | Repetir la importación | No duplica nada; actualiza; si un código era de otro producto lo lista y no lo pisa |

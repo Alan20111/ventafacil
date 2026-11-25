@@ -1,0 +1,64 @@
+name: Verificar en Windows
+on:
+  workflow_dispatch:
+  push:
+    branches: [ 'verificar/**' ]
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - name: Pruebas de datos con .NET Framework y SQLite real
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          dotnet build herramientas/pruebas-datos-windows -c Release -nologo -v q -o salida-datos
+          ./salida-datos/PruebasDatosWindows.exe 2>&1 | Tee-Object datos.txt
+      - name: Compilar el verificador de pantallas
+        shell: pwsh
+        run: dotnet build herramientas/verificar-ui -c Release -nologo -v q -o salida-ui
+      - name: Abrir todas las pantallas
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          try { Set-DisplayResolution -Width 1600 -Height 900 -Force } catch { Write-Host $_ }
+          ./salida-ui/VerificarUi.exe capturas 2>&1 | Out-File ui.txt
+          Get-Content ui.txt -TotalCount 400
+      - name: Abrir el programa de verdad (instalacion nueva)
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          dotnet build src/VentaFacil -c Release -nologo -v q -o salida-exe
+          New-Item -ItemType Directory -Force suelto | Out-Null
+          Copy-Item salida-exe/VentaFacil.exe suelto/
+          Remove-Item C:\VentaFacil -Recurse -Force -ErrorAction SilentlyContinue
+          Start-Process suelto/VentaFacil.exe
+          Start-Sleep 15
+          $p = Get-Process VentaFacil -ErrorAction SilentlyContinue
+          "Proceso: $($p.Path)  Ventana: [$($p.MainWindowTitle)]" | Tee-Object arranque.txt
+          "Carpeta: " + ((Get-ChildItem C:\VentaFacil -Recurse -File -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName) -join '; ') | Tee-Object -Append arranque.txt
+          "Asociacion: " + (Get-ItemProperty 'HKCU:\Software\Classes\VentaFacil.Archivo\shell\open\command' -ErrorAction SilentlyContinue).'(default)' | Tee-Object -Append arranque.txt
+          "Errores: " + (Get-Content C:\VentaFacil\datos\errores.log -Raw -ErrorAction SilentlyContinue) | Tee-Object -Append arranque.txt
+          Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+          $r = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+          $b = New-Object System.Drawing.Bitmap $r.Width, $r.Height
+          [System.Drawing.Graphics]::FromImage($b).CopyFromScreen(0, 0, 0, 0, $b.Size)
+          New-Item -ItemType Directory -Force capturas | Out-Null
+          $b.Save("$pwd\capturas\00 arranque real.png")
+          Stop-Process -Name VentaFacil -Force -ErrorAction SilentlyContinue
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: capturas
+          path: |
+            capturas
+            datos.txt
+            ui.txt
+            arranque.txt
+          retention-days: 3

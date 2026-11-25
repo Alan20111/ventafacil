@@ -31,28 +31,28 @@ namespace VentaFacil.Forms.Admin
         // Operación
         CheckBox _fondo, _declarar, _sinExistencia, _cajeroCancela, _avisar;
 
-        public SeccionConfig()
+        /// <param name="equipos">true: impresora, cajón y báscula. false: negocio y forma de trabajar.</param>
+        public SeccionConfig(bool equipos)
         {
             BackColor = Tema.Crema;
             _c = Config.Actual.Copia();
 
             var tabs = new TabControl { Dock = DockStyle.Fill, Font = Tema.Negrita, Padding = new Point(14, 6) };
-            tabs.TabPages.Add(TabNegocio());
-            tabs.TabPages.Add(TabImpresora());
-            tabs.TabPages.Add(TabCajon());
-            tabs.TabPages.Add(TabBascula());
-            tabs.TabPages.Add(TabOperacion());
+            // Se construyen todas (guardar lee todos los campos) y se muestran las de esta vista
+            var paginas = new[] { TabNegocio(), TabOperacion(), TabImpresora(), TabCajon(), TabBascula() };
+            for (int i = 0; i < paginas.Length; i++) if ((i >= 2) == equipos) tabs.TabPages.Add(paginas[i]);
             Controls.Add(tabs);
 
             var barra = AdminUtil.Barra();
             var guardar = AdminUtil.BotonBarra("Guardar cambios", (s, e) => Guardar(), 140, true);
             barra.Controls.Add(guardar);
-            barra.Controls.Add(AdminUtil.BotonBarra("Ticket prueba", (s, e) => Prueba(), 130));
-            barra.Controls.Add(AdminUtil.BotonBarra("Probar cajón", (s, e) => ProbarCajon(), 115));
-            barra.Controls.Add(AdminUtil.BotonBarra("Licencia", (s, e) => VentaFacil.Forms.Licenciamiento.FormLicencia.Mostrar(Licencia.Evaluar(), true), 95));
-            barra.Controls.Add(AdminUtil.BotonBarra("Asistente", (s, e) => Asistente(), 110));
+            if (equipos)
+            {
+                barra.Controls.Add(AdminUtil.BotonBarra("Imprimir prueba", (s, e) => Prueba()));
+                barra.Controls.Add(AdminUtil.BotonBarra("Probar cajón", (s, e) => ProbarCajon()));
+            }
+            else barra.Controls.Add(AdminUtil.BotonBarra("Abrir asistente", (s, e) => Asistente()));
             Controls.Add(barra);
-            Controls.Add(AdminUtil.TituloSeccion("Configuración"));
             Llenar();
         }
 
@@ -72,10 +72,13 @@ namespace VentaFacil.Forms.Admin
         // ---------------- construcción de pestañas ----------------
         static TabPage Pagina(string t) { return new TabPage(t) { BackColor = Tema.Crema, Font = Tema.Normal, AutoScroll = true }; }
 
+        /// <summary>Donde empiezan los campos: caben todas las etiquetas de la izquierda.</summary>
+        const int Columna2 = 260;
+
         static TextBox Texto(TabPage p, string etiqueta, ref int y, int ancho = 420)
         {
             p.Controls.Add(Ui.Etiqueta(etiqueta, 16, y + 4));
-            var t = Ui.Caja(220, y, ancho);
+            var t = Ui.Caja(Columna2, y, ancho);
             p.Controls.Add(t);
             y += 38;
             return t;
@@ -92,7 +95,7 @@ namespace VentaFacil.Forms.Admin
         static ComboBox Combo(TabPage p, string etiqueta, ref int y, int ancho = 300, bool editable = false)
         {
             p.Controls.Add(Ui.Etiqueta(etiqueta, 16, y + 4));
-            var c = new ComboBox { Left = 220, Top = y, Width = ancho, DropDownStyle = editable ? ComboBoxStyle.DropDown : ComboBoxStyle.DropDownList, Font = Tema.Normal };
+            var c = new ComboBox { Left = Columna2, Top = y, Width = ancho, DropDownStyle = editable ? ComboBoxStyle.DropDown : ComboBoxStyle.DropDownList, Font = Tema.Normal };
             p.Controls.Add(c);
             y += 38;
             return c;
@@ -101,7 +104,7 @@ namespace VentaFacil.Forms.Admin
         static NumericUpDown Numero(TabPage p, string etiqueta, ref int y, decimal min, decimal max, int dec = 0)
         {
             p.Controls.Add(Ui.Etiqueta(etiqueta, 16, y + 4));
-            var n = AdminUtil.Numero(220, y, 100, min, max, dec);
+            var n = AdminUtil.Numero(Columna2, y, 100, min, max, dec);
             p.Controls.Add(n);
             y += 38;
             return n;
@@ -120,9 +123,9 @@ namespace VentaFacil.Forms.Admin
             _banner = Texto(p, "Mensaje en pantalla de venta:", ref y);
             _caja = Numero(p, "Número de esta caja:", ref y, 1, 99);
             p.Controls.Add(Ui.Etiqueta("Carpeta de respaldos:", 16, y + 4));
-            _carpetaRespaldo = Ui.Caja(220, y, 300);
+            _carpetaRespaldo = Ui.Caja(Columna2, y, 300);
             p.Controls.Add(_carpetaRespaldo);
-            p.Controls.Add(Ui.Boton("Examinar…", 530, y - 4, 130, 36, (s, e) => ElegirCarpetaRespaldo()));
+            p.Controls.Add(Ui.Boton("Examinar…", 572, y - 5, 130, 38, (s, e) => ElegirCarpetaRespaldo()));
             y += 38;
             p.Controls.Add(Ui.Etiqueta("Si tiene varias computadoras, cada una debe tener un número de caja distinto.", 16, y, null, Tema.Humo));
             return p;
@@ -148,7 +151,7 @@ namespace VentaFacil.Forms.Admin
             _ancho.Items.Add("58 mm"); _ancho.Items.Add("80 mm");
             _ancho.SelectedIndexChanged += (s, e) => { if (_ancho.Focused) _columnas.Value = _ancho.SelectedIndex == 0 ? 32 : 42; };
             _columnas = Numero(p, "Letras por renglón:", ref y, 24, 64);
-            p.Controls.Add(Ui.Etiqueta("58 mm ≈ 32   ·   80 mm ≈ 42 (48 en algunas)", 330, y - 34, null, Tema.Humo));
+            p.Controls.Add(Ui.Etiqueta("58 mm ≈ 32   ·   80 mm ≈ 42 (48 en algunas)", 376, y - 34, null, Tema.Humo));
             _fuente = Combo(p, "Letra (modo Windows):", ref y, 200, true);
             foreach (var f in new[] { "Consolas", "Courier New", "Lucida Console", "Arial" }) _fuente.Items.Add(f);
             _tamano = Numero(p, "Tamaño de letra:", ref y, 5, 16, 1);
@@ -189,8 +192,8 @@ namespace VentaFacil.Forms.Admin
             _basBaudios = Combo(p, "Velocidad (baudios):", ref y, 140, true);
             foreach (var b in new[] { "1200", "2400", "4800", "9600", "19200" }) _basBaudios.Items.Add(b);
             _basComando = Texto(p, "Comando para pedir peso:", ref y, 120);
-            p.Controls.Add(Ui.Etiqueta("Torrey / Rhino: P   ·   Otras: W  o  vacío si la báscula transmite sola", 350, y - 34, null, Tema.Humo));
-            p.Controls.Add(Ui.Boton("Leer peso", 16, y, 130, 36, (s, e) => LeerPeso()));
+            p.Controls.Add(Ui.Etiqueta("Torrey / Rhino: P   ·   Otras: W  o  vacío si la báscula transmite sola", 396, y - 34, null, Tema.Humo));
+            p.Controls.Add(Ui.Boton("Leer peso", 16, y, 130, 40, (s, e) => LeerPeso()));
             _peso = Ui.Etiqueta("", 160, y + 6, Tema.Mediana, Tema.Azul);
             p.Controls.Add(_peso);
             y += 50;

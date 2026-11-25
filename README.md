@@ -25,8 +25,8 @@ Cada cambio al proyecto publica un release nuevo.
    Si no aparece, instale el instalador sin conexión de .NET Framework 4.8 (`ndp48-x86-x64-allos-enu.exe`, de microsoft.com). En Windows 7 necesita el Service Pack 1.
 2. Copie la carpeta `VentaFacil` a `C:\VentaFacil` (no a *Archivos de programa*, para que pueda guardar los datos ahí mismo).
 3. Abra `VentaFacil.exe`: se instala solo en `C:\VentaFacil` y crea el acceso en el escritorio.
-4. La primera vez se abre el **asistente**: si es caja u oficina, la cuenta del administrador (sustituye a admin / admin), el negocio, los usuarios, los respaldos, la impresora, los productos y la licencia. Cada paso se guarda; se puede cerrar y seguir después en *F6 Ajustes → Negocio → Asistente*. Después de **cada actualización**, al entrar un administrador pregunta **Configurar** o **No configurar**; los datos se conservan siempre.
-5. La ventana **Impresora de tickets** detecta las impresoras instaladas en Windows, marca las de tickets y recomienda una. Pulse **F3 Imprimir prueba** y **Guardar**. Se puede volver a abrir en cualquier momento con **Ctrl+I** o en *F6 Ajustes → Impresora*.
+4. La primera vez se abre el **asistente**: si es caja u oficina, la cuenta del administrador (sustituye a admin / admin), el negocio, los usuarios, los respaldos, la impresora, los productos y la licencia. Cada paso se guarda; se puede cerrar y seguir después en *F6 Ajustes → Negocio → Abrir asistente*. Después de **cada actualización**, al entrar un administrador pregunta **Configurar** o **No configurar**; los datos se conservan siempre.
+5. La ventana **Impresora de tickets** detecta las impresoras instaladas en Windows, marca las de tickets y recomienda una. Pulse **F3 Imprimir prueba** y **Guardar**. Se puede volver a abrir en cualquier momento con **Ctrl+I** o en *F6 Ajustes → Equipos*.
 
 Los datos quedan en `C:\VentaFacil\datos\ventafacil.db`. Cada día, y después de cada corte Z, se hace un respaldo automático en `datos\respaldos\` (se guardan los últimos 30).
 
@@ -48,7 +48,7 @@ VentaFácil **no usa puertos**: imprime por la cola de Windows. Si Windows impri
 | **Directo ESC/POS** | Para impresoras térmicas de tickets. Es más rápido, corta el papel y abre el cajón en el mismo envío. Funciona aunque la impresora esté instalada con el controlador **"Generic / Text Only"**. |
 
 - Papel de 80 mm: 42 columnas (48 en algunas impresoras). Papel de 58 mm: 32 columnas.
-- Si el cajón no abre, cambie el *pin del cajón* (pin 2 o pin 5) en *F6 Ajustes → Negocio*, pestaña *Cajón de dinero*.
+- Si el cajón no abre, cambie el *pin del cajón* (pin 2 o pin 5) en *F6 Ajustes → Equipos*, pestaña *Cajón de dinero*.
 
 ## Uso diario: teclas del punto de venta
 
@@ -78,14 +78,14 @@ VentaFácil **no usa puertos**: imprime por la cola de Windows. Si Windows impri
 
 En *F3 Catálogo*:
 
-- **Importar Excel**: lee el archivo de costos tal cual se usa hoy (hojas con columnas NO, STOCK, PRODUCTO, BTO, CANT, COSTO, MAYOREO, CANT, MED. MAY., CANT, MENUDEO). Antes de importar muestra una vista previa:
+- **Importar → Lista de costos de la semillera**: lee el archivo de costos tal cual se usa hoy (hojas con columnas NO, STOCK, PRODUCTO, BTO, CANT, COSTO, MAYOREO, CANT, MED. MAY., CANT, MENUDEO). Antes de importar muestra una vista previa:
   - Cada renglón de proveedor o grupo (JUANJO, SAMY, DURAN…) se vuelve el proveedor y grupo de los productos que le siguen.
   - El costo por kg es el precio del bulto ÷ lo que trae.
   - Los tres precios se aplican **solos en caja** según la cantidad: menudeo, medio mayoreo (desde 1 kg, 6 kg…) y mayoreo (desde 3 kg, 25 kg…).
   - Detecta qué se vende por kilo y qué por pieza (empacados, desechables, sobres…). Se puede corregir en cada producto.
   - Usted decide si la columna STOCK es el **stock mínimo** o la **existencia actual**.
   - Los productos nuevos reciben un código corto (1, 2, 3…) para teclearlo en caja. Si se vuelve a importar, actualiza costos y precios.
-- **Lista costos**: genera un `.xlsx` con el mismo formato (agrupado por proveedor, con la fórmula de costo = BTO/CANT y las columnas L M M J V S D para las marcas de la semana), más una hoja de **precios para mostrador** sin costos.
+- **Exportar → Lista de costos**: genera un `.xlsx` con el mismo formato (agrupado por proveedor, con la fórmula de costo = BTO/CANT y las columnas L M M J V S D para las marcas de la semana), más una hoja de **precios para mostrador** sin costos.
 - El formulario de producto calcula igual que la hoja: costo del bulto ÷ lo que trae = costo; a cada precio se le ve su % de ganancia. Con *mantener el %*, al cambiar el costo del bulto se actualizan solos los tres precios.
 - Todos los reportes (ventas, cortes, inventario, kardex…) se exportan a Excel con el mismo estilo, con totales.
 
@@ -103,7 +103,7 @@ En *F3 Catálogo*:
 - El acceso **VentaFácil - Reparar** del escritorio revisa el programa, la base, los respaldos y los accesos sin borrar datos.
 
 ### Importar los productos de Zafirah
-*F3 Catálogo* → icono pequeño al final de la barra de *Productos*. Origen: **la base de Zafirah** (SQL Server, **solo lectura**: únicamente `SELECT`, nunca se escribe en Zafirah; probable servidor `(local)` y base `smartdatabase`, tabla `ZFRADMARTICULOS`) o **un archivo Excel/CSV** (por ejemplo un reporte exportado). Los nombres de las columnas de Zafirah se conocen por sus reportes pero **no se habían visto en una base real**, así que el asistente **no adivina en silencio**: propone qué columna es cada dato (si hay dos candidatas de costo o precio, elige la que trae más valores), muestra un **ejemplo** de cada una, permite cambiarla y enseña una **vista previa con avisos** (sin precio, precio menor al costo, códigos repetidos, niveles de mayoreo sin cantidad mínima…). Las cantidades «a partir de» de medio mayoreo/mayoreo **no se proponen**: se eligen viendo los datos. Si la tabla trae **una fila por almacén**, suma las existencias o usa un almacén elegido.
+*F3 Catálogo* → *Importar* → *Zafirah*. Origen: **la base de Zafirah** (SQL Server, **solo lectura**: únicamente `SELECT`, nunca se escribe en Zafirah; probable servidor `(local)` y base `smartdatabase`, tabla `ZFRADMARTICULOS`) o **un archivo Excel/CSV** (por ejemplo un reporte exportado). Los nombres de las columnas de Zafirah se conocen por sus reportes pero **no se habían visto en una base real**, así que el asistente **no adivina en silencio**: propone qué columna es cada dato (si hay dos candidatas de costo o precio, elige la que trae más valores), muestra un **ejemplo** de cada una, permite cambiarla y enseña una **vista previa con avisos** (sin precio, precio menor al costo, códigos repetidos, niveles de mayoreo sin cantidad mínima…). Las cantidades «a partir de» de medio mayoreo/mayoreo **no se proponen**: se eligen viendo los datos. Si la tabla trae **una fila por almacén**, suma las existencias o usa un almacén elegido.
 Al importar: respaldo automático previo, **todo en una transacción**, y un resumen. Si un código ya es de **otro** producto (otro nombre) **no se pisa** (se lista; hay casilla para reemplazarlo); si el mismo **nombre** ya existe con otro código, se actualiza ese producto sin duplicarlo; un código de barras que ya es de otro producto no se duplica. Los productos conservan el código de Zafirah (el que se teclea en caja) y su código de barras. No se importan ventas, clientes ni contraseñas.
 
 #### Respaldos `.BK` y perfiles de importación
@@ -119,11 +119,11 @@ La barra azul de arriba tiene los módulos, que se cambian con **F1–F6** o con
 | F1 | **Caja** | Cobrar · Buscar · Quitar · Precio · En espera · Descuento · Varios · Cancelar |
 | F2 | **Turno** | Resumen · Entradas/salidas · Cortes X/Z · Abrir cajón · Reimprimir ticket · Recibir envío · Reporte a oficina (si está enlazada) · Cambiar usuario |
 | F3 | **Catálogo** | Productos · Grupos · Códigos de barras |
-| F4 | **Almacén** | Inventario (entradas, ajustes, conteo con Excel, kardex) · Envíos recibidos. En la oficina: Llegó mercancía · Envíos |
-| F5 | **Resultados** | Reportes y exportar a Excel. En la oficina: ventas, existencias, cortes y diferencias de la tienda |
-| F6 | **Ajustes** | Negocio · Usuarios · Respaldos · Envíos · Impresora · Licencia · Teclas rápidas · Acerca de · Salir |
+| F4 | **Almacén** | Entrada de mercancía · Conteo con Excel · Ajustar un producto · Faltantes · Kardex · Valor · Envíos recibidos (si está enlazada). En la oficina: Llegó mercancía · Envíos |
+| F5 | **Resultados** | Ventas por día · Tickets · Más vendidos · Por cajero · Forma de pago · Por grupo · Cortes de caja · Movimientos (se consultan solos al elegir fechas). En la oficina: ventas, existencias, cortes y diferencias de la tienda |
+| F6 | **Ajustes** | Negocio · Equipos (impresora, cajón y báscula) · Usuarios · Respaldos · Envíos · Licencia · Teclas rápidas · Acerca de · Salir |
 
-Cada módulo declara arriba sus botones con su atajo. Los módulos sin permiso piden la clave de alguien que sí lo tenga, y no se entra a F3–F6 con una venta a medias. Los botones tienen borde de 2 px, transición de color al pasar el ratón y un pequeño hundido al pulsar.
+Cada módulo declara arriba sus botones con su atajo. Los módulos sin permiso piden la clave de alguien que sí lo tenga, y no se entra a F3–F6 con una venta a medias. Los botones son planos (sin borde): se distinguen por contraste, con el texto centrado.
 
 ### Usuarios y permisos
 En *F6 Ajustes → Usuarios*. Cada quien tiene un **perfil** que marca sus casillas: **Cajero**, **Encargado** (todo menos Usuarios, Respaldos y el enlace de Envíos), **Administrador** (todo, siempre) o **Personalizado** (cuando se ajustan a mano). El **cajero**, de fábrica, solo cobra, ve *Turno*, registra entradas y salidas, abre el cajón y saca **su propio corte X**. Con las casillas *Puede usar* se le da o quita cada módulo (Turno, Catálogo, Almacén, Resultados, Ajustes) y cada acción (descuentos, cancelar, corte X de caja, corte Z…). Cobrar y el corte propio no se pueden quitar; *Usuarios* y *Respaldos* son solo del administrador. Los módulos sin permiso salen con candado y se abren únicamente con la clave de alguien que sí lo tenga; esa autorización se olvida al volver a Caja o al cambiar de usuario (F10), que siempre regresa a Caja. Al actualizar nadie pierde su cuenta: el corte X de caja, que antes veía cualquiera, ahora pide permiso.
@@ -140,17 +140,18 @@ Para que los cambios de la oficina no se capturen a mano en la caja. En *F6 Ajus
 - Si la oficina cambia de computadora o restaura un respaldo viejo, hay que volver a enlazar. Una caja por tienda: con dos cajas (dos bases) las existencias no se comparten.
 
 ### Códigos de barras y etiquetas
-La lista de la semillera no trae códigos de barras, así que lo importado se cobra con su **código corto** (1, 2, 3…). Para escanear: *F3 Catálogo* → **Códigos de barras**. Se toma el producto, se pasa el lector por su empaque y el código se guarda solo (en el *código alterno*; el código corto no se toca) y salta al siguiente. `F2` saltar · `F3` «sin código de barras» · `F4` quitar · `F5` etiqueta. Un código no puede ser de dos productos: si ya existe, avisa de quién es y ofrece pasarlo.
+La lista de la semillera no trae códigos de barras, así que lo importado se cobra con su **código corto** (1, 2, 3…). Para escanear: *F3 Catálogo* → **Códigos de barras**. Se toma el producto, se pasa el lector por su empaque y el código se guarda solo (en el *código alterno*; el código corto no se toca) y salta al siguiente. `Ctrl+S` saltar · `Ctrl+K` «sin código de barras» · `Ctrl+Q` quitar · `Ctrl+T` etiqueta. Es una vista del módulo, no una ventana aparte. Un código no puede ser de dos productos: si ya existe, avisa de quién es y ofrece pasarlo.
 Lo que no trae código (granel, verdura): **Etiqueta** imprime una tira con nombre, precio y el código corto en Code 128 por la impresora de tickets (por controlador de Windows o como imagen en modo ESC/POS, sin depender del comando de barras de la impresora).
 
 ### Conteo de inventario con Excel
-Inventario → **Conteo con Excel**: se exporta la hoja (todo o por proveedor), se llena la columna CONTADO en el negocio y se importa; antes de aplicar se ven los faltantes y sobrantes con su valor.
+*F4 Almacén* → **Conteo con Excel**: se exporta la hoja (todo o por proveedor), se llena la columna CONTADO en el negocio y se importa; antes de aplicar se ven los faltantes y sobrantes con su valor.
 
 ### Licencia
 30 días de prueba; después una clave por computadora (permanente). Se genera con `herramientas/licencias` (ver [docs/LICENCIAS.md](docs/LICENCIAS.md)).
 
 ### Pruebas
 - [docs/PRUEBAS_WINDOWS.md](docs/PRUEBAS_WINDOWS.md): 81 pasos para la laptop.
+- **Windows real (GitHub Actions, `.github/workflows/windows.yml`)**: corre las pruebas de datos con .NET Framework y `System.Data.SQLite` de verdad, abre **todas** las pantallas (`herramientas/verificar-ui`), revisa encimados, textos cortados, alineación y botones, guarda capturas y arranca el `.exe`. Se lanza a mano (*Actions → Verificar en Windows*) o al subir a una rama `verificar/…`.
 - `dotnet run` en `herramientas/licencias -- --probar`, `herramientas/pruebas-dinero`, `herramientas/pruebas-conteo` y `herramientas/pruebas-barras` (código de barras contra una librería independiente), `herramientas/pruebas-zafirah` (importador) y `herramientas/pruebas-datos` (**la capa de datos real contra un SQLite de verdad**: esquema, migración, cobros, cortes, dinero exacto, conteo, respaldos, base dañada, restauración, importador y **envíos** repetidos, perdidos, alterados e interrumpidos, y el **regreso de ventas y existencias**; usa un adaptador mínimo porque `System.Data.SQLite` solo corre en Windows): pruebas automáticas (se corren en Mac o Windows).
 
 ## Desarrollo

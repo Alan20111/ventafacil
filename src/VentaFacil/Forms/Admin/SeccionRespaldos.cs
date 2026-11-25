@@ -16,7 +16,6 @@ namespace VentaFacil.Forms.Admin
             BackColor = Tema.Crema;
             var p = new Panel { Dock = DockStyle.Fill, AutoScroll = true };
             Controls.Add(p);
-            Controls.Add(AdminUtil.TituloSeccion("Respaldos"));
 
             int y = 16;
             p.Controls.Add(Ui.Etiqueta("Carpeta de datos:", 16, y, Tema.Negrita));

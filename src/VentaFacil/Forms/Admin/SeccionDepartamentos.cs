@@ -17,16 +17,15 @@ namespace VentaFacil.Forms.Admin
             _grid = AdminUtil.Grid();
             _grid.Dock = DockStyle.Left;
             _grid.Width = 480;
-            _grid.Columns.Add(Ui.Columna("nombre", "Departamento", 100));
+            _grid.Columns.Add(Ui.Columna("nombre", "Grupo", 100));
             _grid.CellDoubleClick += (s, e) => { if (e.RowIndex >= 0) Renombrar(); };
             Controls.Add(_grid);
 
             var barra = AdminUtil.Barra();
-            barra.Controls.Add(AdminUtil.BotonBarra("Nuevo (Ctrl+N)", (s, e) => Nuevo(), 140));
-            barra.Controls.Add(AdminUtil.BotonBarra("Renombrar (Ctrl+M)", (s, e) => Renombrar(), 175));
-            barra.Controls.Add(AdminUtil.BotonBarra("Eliminar (Ctrl+E)", (s, e) => Eliminar(), 155));
+            barra.Controls.Add(AdminUtil.BotonBarra("Nuevo", (s, e) => Nuevo(), 100, true));
+            barra.Controls.Add(AdminUtil.BotonBarra("Renombrar", (s, e) => Renombrar(), 100));
+            barra.Controls.Add(AdminUtil.BotonBarra("Eliminar", (s, e) => Eliminar(), 100));
             Controls.Add(barra);
-            Controls.Add(AdminUtil.TituloSeccion("Departamentos"));
             Load += (s, e) => { Cargar(); _grid.Focus(); };
         }
 

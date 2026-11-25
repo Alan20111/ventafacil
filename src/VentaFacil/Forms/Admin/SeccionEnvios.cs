@@ -235,7 +235,6 @@ namespace VentaFacil.Forms.Admin
             barra.Controls.Add(des);
             barra.Controls.Add(AdminUtil.BotonBarra("Guardar reporte…", (s, e) => Acuse(), 150));
             Controls.Add(barra);
-            Controls.Add(AdminUtil.TituloSeccion("Envíos recibidos de la oficina"));
             Load += (s, e) => Cargar();
         }
 
@@ -343,7 +342,6 @@ namespace VentaFacil.Forms.Admin
             arriba.Controls.Add(Ui.Boton("Cargar Excel…", 752, 30, 130, 34, (s, e) => Excel()));
             arriba.Controls.Add(Ui.Etiqueta("En la tienda se SUMA a lo que haya. Para corregir o dar salida, escriba la cantidad con signo menos.", 10, 70, null, Tema.Humo));
             Controls.Add(arriba);
-            Controls.Add(AdminUtil.TituloSeccion("Llegó mercancía"));
 
             Pintar();
             _codigo.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; _cantidad.Focus(); _cantidad.SelectAll(); } else if (e.KeyData == (Keys.Control | Keys.B)) { e.SuppressKeyPress = true; Buscar(); } };
@@ -587,7 +585,6 @@ namespace VentaFacil.Forms.Admin
             BackColor = Tema.Crema;
             var p = new Panel { Dock = DockStyle.Fill, AutoScroll = true };
             Controls.Add(p);
-            Controls.Add(AdminUtil.TituloSeccion("Envíos entre oficina y tienda"));
             bool oficina = Envios.EsOficina, tienda = Envios.EsTienda, conocida = Envios.Dato("oficina_id") != "";
             int y = 16;
             p.Controls.Add(Ui.Etiqueta(oficina ? "Este equipo es la OFICINA de: " + Envios.Dato("negocio")

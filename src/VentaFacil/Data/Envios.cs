@@ -69,6 +69,7 @@ namespace VentaFacil.Data
             C("minimo", "Mínimo", 'N'), C("proveedor", "Proveedor", 'T'), C("orden", "Orden en la lista", 'N'), C("sin_barras", "Sin código de barras", 'B'), C("activo", "Activo", 'B', "Baja")
         };
         internal static Campo BuscarCampo(string nombre) { return Campos.FirstOrDefault(c => c.Nombre == nombre); }
+        static Campo PorNombreOTitulo(string n) { return BuscarCampo(n) ?? Campos.FirstOrDefault(c => c.Titulo == n); }
 
         // ================================================================== enlace
         public static string Dato(string clave) { return Convert.ToString(Db.Scalar("SELECT valor FROM enlace WHERE clave=@p0", clave)) ?? ""; }
@@ -213,7 +214,7 @@ namespace VentaFacil.Data
                         {
                             var campo = BuscarCampo(gc.Key);
                             string antes = gc.First().Antes, despues = T(f, gc.Key);
-                            if (antes != despues) r.Lineas.Add(new LineaEnvio { Tipo = TipoDe(campo, despues), Codigo = codigo, Producto = nombre, Campo = campo.Titulo, Antes = Bonito(campo, antes), Despues = Bonito(campo, despues) });
+                            if (antes != despues) r.Lineas.Add(new LineaEnvio { Tipo = TipoDe(campo, despues), Codigo = codigo, Producto = nombre, Campo = campo.Titulo, Antes = antes, Despues = despues });
                         }
                     decimal q = g.Where(c => c.CampoNombre == "existencia").Sum(c => c.Cantidad);
                     if (q != 0) r.Lineas.Add(new LineaEnvio { Tipo = q > 0 ? "Entrada" : "Salida", Codigo = codigo, Producto = nombre, Cantidad = q, Nota = Refs(g) });
@@ -674,12 +675,13 @@ namespace VentaFacil.Data
         /// <summary>Cómo se ve un valor en pantalla.</summary>
         public static string Bonito(string campo, string v)
         {
-            var c = BuscarCampo(campo);
+            var c = PorNombreOTitulo(campo == "alta" ? "precio" : campo);
             return c == null ? v : Bonito(c, v);
         }
         static string Bonito(Campo c, string v)
         {
-            if (c.Clase == 'B') return v == "1" ? "Sí" : "No";
+            if (c.Clase == 'B') return v == "1" ? "Sí" : v == "" ? "" : "No";
+            if (c.Nombre.StartsWith("precio") || c.Nombre.StartsWith("costo")) return v == "" ? "" : Fmt.Dinero(Leer(v));
             return v;
         }
         public static string TituloCampo(string campo) { var c = BuscarCampo(campo); return c != null ? c.Titulo : campo == "alta" ? "Precio" : campo == "existencia" ? "Existencia" : campo; }

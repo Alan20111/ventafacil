@@ -256,7 +256,7 @@ namespace VentaFacil.Printing
             r.Impresora = Detector.Resolver(c.Impresora, out aviso);
             if (aviso != null) Log.Error(null, aviso);
             if (string.IsNullOrEmpty(r.Impresora))
-                throw new InvalidOperationException("No hay ninguna impresora instalada en Windows.\nInstale la impresora (que imprima la página de prueba de Windows) y elíjala en F6 Ajustes > Impresora.");
+                throw new InvalidOperationException("No hay ninguna impresora instalada en Windows.\nInstale la impresora (que imprima la página de prueba de Windows) y elíjala en F6 Ajustes > Equipos (o con Ctrl+I).");
             return r;
         }
 

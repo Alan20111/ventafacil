@@ -16,18 +16,36 @@ namespace VentaFacil.Forms.Admin
         {
             return new FlowLayoutPanel
             {
-                Dock = DockStyle.Top, Height = 52, Padding = new Padding(6, 6, 6, 0), BackColor = Tema.AzulFondo,
-                WrapContents = false, AutoScroll = true
+                Dock = DockStyle.Top, Height = 56, Padding = new Padding(12, 8, 8, 0), BackColor = Tema.AzulFondo,
+                WrapContents = false
             };
         }
 
-        public static Button BotonBarra(string texto, EventHandler click, int ancho = 110, bool principal = false)
+        public static Button BotonBarra(string texto, EventHandler click, int ancho = 90, bool principal = false)
         {
-            var b = new Button { Text = texto, Width = ancho, Height = 36, Font = Tema.Negrita, Margin = new Padding(3, 4, 3, 4) };
+            // el ancho sale del texto: nunca se parte en dos renglones
+            int justo = TextRenderer.MeasureText(texto, Tema.Negrita).Width + 28;
+            var b = new Button { Text = texto, Width = Math.Max(ancho, justo), Height = 40, Font = Tema.Negrita, Margin = new Padding(0, 0, 8, 0) };
             Tema.Pastilla(b, principal);
             if (click != null) b.Click += click;
             return b;
         }
+
+        /// <summary>Separación entre grupos de botones de una barra.</summary>
+        public static Control Separador() { return new Panel { Width = 16, Height = 40, Margin = new Padding(0), BackColor = System.Drawing.Color.Transparent }; }
+
+        /// <summary>Botón que abre un menú con varias opciones (para no llenar la barra).</summary>
+        public static Button BotonMenu(string texto, params System.Collections.Generic.KeyValuePair<string, Action>[] opciones)
+        {
+            var menu = new ContextMenuStrip { Font = Tema.Normal, ShowImageMargin = false, BackColor = System.Drawing.Color.White };
+            foreach (var o in opciones) { var x = o; menu.Items.Add(x.Key, null, (s, e) => x.Value()); }
+            foreach (ToolStripItem it in menu.Items) it.Padding = new Padding(4, 6, 4, 6);
+            var b = BotonBarra(texto + "  ▾", null);
+            b.Click += (s, e) => menu.Show(b, 0, b.Height + 2);
+            b.Disposed += (s, e) => menu.Dispose();
+            return b;
+        }
+        public static System.Collections.Generic.KeyValuePair<string, Action> Opcion(string nombre, Action a) { return new System.Collections.Generic.KeyValuePair<string, Action>(nombre, a); }
 
         public static Label TituloSeccion(string texto)
         {
@@ -54,10 +72,11 @@ namespace VentaFacil.Forms.Admin
                 c.HeaderText = Encabezado(c.Name);
                 bool dinero = Array.IndexOf(columnasDinero, c.Name) >= 0;
                 var tipo = dt.Columns[c.Name].DataType;
-                if (dinero) { c.DefaultCellStyle.Format = "$#,##0.00"; c.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight; }
+                if (dinero) { c.DefaultCellStyle.Format = "$#,##0.00"; c.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight; c.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleRight; }
                 else if (tipo == typeof(double) || tipo == typeof(decimal) || tipo == typeof(long) || tipo == typeof(int))
                 {
                     c.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+                    c.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleRight;
                     if (tipo == typeof(double) || tipo == typeof(decimal)) c.DefaultCellStyle.Format = "#,##0.###";
                 }
             }

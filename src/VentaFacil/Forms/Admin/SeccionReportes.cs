@@ -19,60 +19,63 @@ namespace VentaFacil.Forms.Admin
             public override string ToString() { return Nombre; }
         }
 
-        readonly ComboBox _tipo;
         readonly DateTimePicker _desde, _hasta;
         readonly DataGridView _grid;
         readonly Label _resumen, _ayuda;
         DataTable _dt;
-        Rep _rep;
+        readonly Rep _rep;
+        bool _cambiando;
 
-        public SeccionReportes()
+        static readonly Rep[] Todos =
         {
+            new Rep { Nombre = "Ventas por día", Consulta = AdminConsultas.VentasPorDia, Dinero = new[] { "Total", "Costo", "Ganancia" }, Archivo = "ventas_por_dia" },
+            new Rep { Nombre = "Tickets", Consulta = AdminConsultas.Tickets, Dinero = new[] { "Total" }, Archivo = "tickets" },
+            new Rep { Nombre = "Más vendidos", Consulta = AdminConsultas.ProductosMasVendidos, Dinero = new[] { "Importe", "Ganancia" }, Archivo = "productos_vendidos" },
+            new Rep { Nombre = "Por cajero", Consulta = AdminConsultas.VentasPorCajero, Dinero = new[] { "Total" }, Archivo = "ventas_por_cajero" },
+            new Rep { Nombre = "Forma de pago", Consulta = AdminConsultas.VentasPorFormaPago, Dinero = new[] { "Total" }, Archivo = "ventas_por_forma_pago" },
+            new Rep { Nombre = "Por grupo", Consulta = AdminConsultas.VentasPorDepartamento, Dinero = new[] { "Importe", "Ganancia" }, Archivo = "ventas_por_grupo" },
+            new Rep { Nombre = "Cortes de caja", Consulta = AdminConsultas.Turnos, Dinero = new[] { "Fondo", "Declarado" }, Archivo = "cortes" },
+            new Rep { Nombre = "Movimientos", Consulta = AdminConsultas.MovimientosCaja, Dinero = new[] { "Monto" }, Archivo = "movimientos_caja" }
+        };
+
+        /// <summary>Cada reporte es una vista del módulo Resultados.</summary>
+        public static void AgregarVistas(ModuloVista m) { foreach (var r in Todos) { var x = r; m.AgregarVista(x.Nombre, () => new SeccionReportes(x)); } }
+
+        SeccionReportes(Rep rep)
+        {
+            _rep = rep;
             BackColor = Tema.Crema;
             _grid = AdminUtil.Grid();
             _grid.CellDoubleClick += (s, e) => { if (e.RowIndex >= 0) Detalle(); };
             _grid.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; Detalle(); } };
             Controls.Add(_grid);
 
-            var abajo = new Panel { Dock = DockStyle.Bottom, Height = 34, BackColor = Tema.AzulFondo };
-            _resumen = Ui.Etiqueta("", 10, 8, Tema.Negrita, Tema.Azul);
+            var abajo = new Panel { Dock = DockStyle.Bottom, Height = 40, BackColor = Tema.AzulFondo };
+            _resumen = Ui.Etiqueta("", 12, 10, Tema.Negrita, Tema.Azul);
             abajo.Controls.Add(_resumen);
+            _ayuda = new Label { Dock = DockStyle.Right, Width = 300, TextAlign = ContentAlignment.MiddleRight, Font = Tema.Normal, ForeColor = Tema.Humo, Padding = new Padding(0, 0, 12, 0) };
+            abajo.Controls.Add(_ayuda);
             Controls.Add(abajo);
 
-            var filtro = new Panel { Dock = DockStyle.Top, Height = 92, BackColor = Tema.Crema };
-            filtro.Controls.Add(Ui.Etiqueta("Reporte:", 10, 14, Tema.Negrita));
-            _tipo = new ComboBox { Left = 80, Top = 10, Width = 300, DropDownStyle = ComboBoxStyle.DropDownList, Font = Tema.Normal, MaxDropDownItems = 12 };
-            filtro.Controls.Add(_tipo);
-            filtro.Controls.Add(Ui.Etiqueta("Desde:", 392, 14, Tema.Negrita));
-            _desde = new DateTimePicker { Left = 450, Top = 10, Width = 130, Format = DateTimePickerFormat.Short, Font = Tema.Normal };
+            // Se elige el período y se consulta solo: no hay botón de consultar
+            var filtro = new Panel { Dock = DockStyle.Top, Height = 60, BackColor = Tema.Crema };
+            filtro.Controls.Add(Ui.Boton("Hoy", 12, 10, 64, 40, (s, e) => Rango(DateTime.Today, DateTime.Today)));
+            filtro.Controls.Add(Ui.Boton("Ayer", 84, 10, 68, 40, (s, e) => Rango(DateTime.Today.AddDays(-1), DateTime.Today.AddDays(-1))));
+            filtro.Controls.Add(Ui.Boton("Semana", 160, 10, 88, 40, (s, e) => Rango(DateTime.Today.AddDays(-(((int)DateTime.Today.DayOfWeek + 6) % 7)), DateTime.Today)));
+            filtro.Controls.Add(Ui.Boton("Mes", 256, 10, 64, 40, (s, e) => Rango(new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1), DateTime.Today)));
+            filtro.Controls.Add(Ui.Etiqueta("Del:", 336, 20, Tema.Negrita));
+            _desde = new DateTimePicker { Left = 376, Top = 17, Width = 130, Format = DateTimePickerFormat.Short, Font = Tema.Normal };
             filtro.Controls.Add(_desde);
-            filtro.Controls.Add(Ui.Etiqueta("Hasta:", 590, 14, Tema.Negrita));
-            _hasta = new DateTimePicker { Left = 644, Top = 10, Width = 130, Format = DateTimePickerFormat.Short, Font = Tema.Normal };
+            filtro.Controls.Add(Ui.Etiqueta("al:", 518, 20, Tema.Negrita));
+            _hasta = new DateTimePicker { Left = 548, Top = 17, Width = 130, Format = DateTimePickerFormat.Short, Font = Tema.Normal };
             filtro.Controls.Add(_hasta);
-            filtro.Controls.Add(Ui.Boton("Hoy", 10, 48, 65, 32, (s, e) => Rango(DateTime.Today, DateTime.Today)));
-            filtro.Controls.Add(Ui.Boton("Ayer", 80, 48, 65, 32, (s, e) => Rango(DateTime.Today.AddDays(-1), DateTime.Today.AddDays(-1))));
-            filtro.Controls.Add(Ui.Boton("Semana", 150, 48, 75, 32, (s, e) => Rango(DateTime.Today.AddDays(-(((int)DateTime.Today.DayOfWeek + 6) % 7)), DateTime.Today)));
-            filtro.Controls.Add(Ui.Boton("Mes", 230, 48, 65, 32, (s, e) => Rango(new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1), DateTime.Today)));
-            var consultar = Ui.Boton("Consultar", 310, 46, 130, 36, (s, e) => Consultar(), true);
-            filtro.Controls.Add(consultar);
-            filtro.Controls.Add(Ui.Boton("Imprimir ticket", 446, 46, 130, 36, (s, e) => ImprimirTicket()));
-            filtro.Controls.Add(Ui.Boton("Exportar Excel", 582, 46, 125, 36, (s, e) => ExcelSemillera.ExportarTabla(_dt, _rep != null ? _rep.Archivo : "reporte")));
-            _ayuda = Ui.Etiqueta("", 720, 54, null, Tema.Humo);
-            filtro.Controls.Add(_ayuda);
+            filtro.Controls.Add(Ui.Boton("Exportar a Excel", 702, 10, 160, 40, (s, e) => ExcelSemillera.ExportarTabla(_dt, _rep.Archivo)));
+            filtro.Controls.Add(Ui.Boton("Imprimir", 870, 10, 104, 40, (s, e) => ImprimirTicket()));
             Controls.Add(filtro);
-            Controls.Add(AdminUtil.TituloSeccion("Reportes"));
 
-            _tipo.Items.Add(new Rep { Nombre = "Ventas por día", Consulta = AdminConsultas.VentasPorDia, Dinero = new[] { "Total", "Costo", "Ganancia" }, Archivo = "ventas_por_dia" });
-            _tipo.Items.Add(new Rep { Nombre = "Tickets (detalle, reimprimir, cancelar)", Consulta = AdminConsultas.Tickets, Dinero = new[] { "Total" }, Archivo = "tickets" });
-            _tipo.Items.Add(new Rep { Nombre = "Productos más vendidos", Consulta = AdminConsultas.ProductosMasVendidos, Dinero = new[] { "Importe", "Ganancia" }, Archivo = "productos_vendidos" });
-            _tipo.Items.Add(new Rep { Nombre = "Ventas por cajero", Consulta = AdminConsultas.VentasPorCajero, Dinero = new[] { "Total" }, Archivo = "ventas_por_cajero" });
-            _tipo.Items.Add(new Rep { Nombre = "Ventas por forma de pago", Consulta = AdminConsultas.VentasPorFormaPago, Dinero = new[] { "Total" }, Archivo = "ventas_por_forma_pago" });
-            _tipo.Items.Add(new Rep { Nombre = "Ventas por departamento", Consulta = AdminConsultas.VentasPorDepartamento, Dinero = new[] { "Importe", "Ganancia" }, Archivo = "ventas_por_departamento" });
-            _tipo.Items.Add(new Rep { Nombre = "Cortes de caja (turnos)", Consulta = AdminConsultas.Turnos, Dinero = new[] { "Fondo", "Declarado" }, Archivo = "cortes" });
-            _tipo.Items.Add(new Rep { Nombre = "Entradas y salidas de efectivo", Consulta = AdminConsultas.MovimientosCaja, Dinero = new[] { "Monto" }, Archivo = "movimientos_caja" });
-            _tipo.SelectedIndex = 0;
-            _tipo.SelectedIndexChanged += (s, e) => Consultar();
-            Load += (s, e) => { Rango(DateTime.Today, DateTime.Today); };
+            EventHandler cambio = (s, e) => { if (!_cambiando) Consultar(); };
+            _desde.ValueChanged += cambio; _hasta.ValueChanged += cambio;
+            Load += (s, e) => Rango(DateTime.Today, DateTime.Today);
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -81,13 +84,16 @@ namespace VentaFacil.Forms.Admin
             return base.ProcessCmdKey(ref msg, keyData);
         }
 
-        void Rango(DateTime d, DateTime h) { _desde.Value = d; _hasta.Value = h; Consultar(); }
+        void Rango(DateTime d, DateTime h)
+        {
+            _cambiando = true;
+            try { _desde.Value = d; _hasta.Value = h; } finally { _cambiando = false; }
+            Consultar();
+        }
 
         void Consultar()
         {
-            _rep = _tipo.SelectedItem as Rep;
-            if (_rep == null) return;
-            if (_hasta.Value.Date < _desde.Value.Date) { Ui.Aviso("La fecha \"hasta\" es anterior a \"desde\"."); return; }
+            if (_hasta.Value.Date < _desde.Value.Date) { _resumen.Text = "La segunda fecha es anterior a la primera."; return; }
             try
             {
                 Cursor = Cursors.WaitCursor;

@@ -59,7 +59,7 @@ $CAMBIOS
 1. Windows 7: instalar **.NET Framework 4.8** (sin él no abre; Windows 8, 10 y 11 ya lo traen).
 2. **Instalación nueva:** se abre el asistente (cuenta, negocio, usuarios, respaldos, impresora, productos y licencia).
 3. **Actualización:** abra este archivo con VentaFácil cerrado. Sus datos se conservan; al entrar un administrador pregunta si quiere configurar o no.
-4. Para cargar los productos de la semillera: **F3 Catálogo** → **Importar Excel**.
+4. Para cargar los productos de la semillera: **F3 Catálogo** → **Importar** → Lista de costos.
 
 > Compilado con el SDK de .NET desde macOS (commit $(git rev-parse --short HEAD)).
 NOTAS

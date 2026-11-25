@@ -9,7 +9,7 @@ using VentaFacil.UI;
 
 namespace VentaFacil.Forms.Admin
 {
-    /// <summary>Catálogo de productos: buscar, alta (F3), modificar (F4), eliminar (F5), importar/exportar CSV.</summary>
+    /// <summary>Catálogo de productos: buscar, alta, modificar, eliminar, etiqueta, importar y exportar.</summary>
     public class SeccionProductos : UserControl
     {
         readonly TextBox _buscar;
@@ -24,67 +24,49 @@ namespace VentaFacil.Forms.Admin
             BackColor = Tema.Crema;
 
             _grid = AdminUtil.Grid();
-            _grid.Columns.Add(Ui.Columna("codigo", "Código", 10));
-            _grid.Columns.Add(Ui.Columna("barras", "Cód. barras", 13));
-            _grid.Columns.Add(Ui.Columna("descripcion", "Producto", 34));
-            _grid.Columns.Add(Ui.Columna("proveedor", "Proveedor", 13));
+            _grid.Columns.Add(Ui.Columna("codigo", "Código", 8));
+            _grid.Columns.Add(Ui.Columna("barras", "Cód. barras", 18));
+            _grid.Columns.Add(Ui.Columna("descripcion", "Producto", 40));
+            _grid.Columns.Add(Ui.Columna("proveedor", "Proveedor", 17));
             _grid.Columns.Add(Ui.Columna("costo", "Costo", 10, true));
-            _grid.Columns.Add(Ui.Columna("mayoreo", "Mayoreo", 13, true));
-            _grid.Columns.Add(Ui.Columna("medio", "Med. may.", 13, true));
+            _grid.Columns.Add(Ui.Columna("mayoreo", "Mayoreo", 18, true));
+            _grid.Columns.Add(Ui.Columna("medio", "Med. may.", 18, true));
             _grid.Columns.Add(Ui.Columna("precio", "Menudeo", 10, true));
             _grid.Columns.Add(Ui.Columna("existencia", "Stock", 8, true));
-            _grid.Columns.Add(Ui.Columna("minimo", "Mín.", 6, true));
+            _grid.Columns.Add(Ui.Columna("minimo", "Mín.", 7, true));
             if (Envios.EsOficina) _grid.Columns["existencia"].Visible = false;   // la existencia real está en la caja
             _grid.CellDoubleClick += (s, e) => { if (e.RowIndex >= 0) Modificar(); };
             _grid.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; Modificar(); } };
+            // en pantallas chicas se guardan las dos columnas menos usadas, para que los precios se lean completos
+            SizeChanged += (s, e) => { bool ancha = Width >= 1150; if (Width > 200 && _grid.Columns["proveedor"].Visible != ancha) { _grid.Columns["proveedor"].Visible = ancha; _grid.Columns["minimo"].Visible = ancha; } };
             Controls.Add(_grid);
 
-            var filtro = new Panel { Dock = DockStyle.Top, Height = 46, BackColor = Tema.Crema };
-            filtro.Controls.Add(Ui.Etiqueta("Buscar:", 10, 12, Tema.Negrita));
-            _buscar = Ui.Caja(75, 8, 300, Tema.Mediana);
+            var filtro = new Panel { Dock = DockStyle.Top, Height = 50, BackColor = Tema.Crema };
+            filtro.Controls.Add(Ui.Etiqueta("Buscar:", 12, 15, Tema.Negrita));
+            _buscar = Ui.Caja(84, 9, 320, Tema.Mediana);
             filtro.Controls.Add(_buscar);
-            _inactivos = new CheckBox { Text = "Ver desactivados", Left = 390, Top = 12, AutoSize = true, Font = Tema.Normal };
+            _inactivos = new CheckBox { Text = "Ver desactivados", Left = 424, Top = 13, AutoSize = true, Font = Tema.Normal };
             filtro.Controls.Add(_inactivos);
-            _conteo = Ui.Etiqueta("", 535, 12, null, Tema.Humo);
+            _conteo = Ui.Etiqueta("", 600, 15, null, Tema.Humo);
             filtro.Controls.Add(_conteo);
             Controls.Add(filtro);
 
+            // Tres grupos: lo del producto elegido · su etiqueta · traer y sacar listas
             var barra = AdminUtil.Barra();
-            barra.Controls.Add(AdminUtil.BotonBarra("Nuevo", (s, e) => Nuevo(), 95));
-            barra.Controls.Add(AdminUtil.BotonBarra("Modificar", (s, e) => Modificar(), 105));
-            barra.Controls.Add(AdminUtil.BotonBarra("Eliminar", (s, e) => Eliminar(), 95));
-            var impXls = AdminUtil.BotonBarra("Importar Excel", (s, e) => { if (ExcelSemillera.Importar(FindForm())) Cargar(); }, 120);
-            impXls.ForeColor = Tema.Verde;
-            barra.Controls.Add(impXls);
-            var barras = AdminUtil.BotonBarra("Códigos barras", (s, e) => CodigosDeBarras(), 115);
-            barras.ForeColor = Tema.Azul;
-            barra.Controls.Add(barras);
-            barra.Controls.Add(AdminUtil.BotonBarra("Etiqueta", (s, e) => { var p = Seleccionado(); if (p == null) Ui.Aviso("Elija un producto de la lista."); else FormVistaEtiqueta.Mostrar(p); }, 85));
-            barra.Controls.Add(AdminUtil.BotonBarra("Lista costos", (s, e) => ExcelSemillera.ExportarLista(FindForm()), 105));
-            barra.Controls.Add(AdminUtil.BotonBarra("Importar CSV", (s, e) => Importar(), 105));
-            barra.Controls.Add(AdminUtil.BotonBarra("Exportar CSV", (s, e) => Exportar(), 105));
-            // Icono discreto y sin marco para importar desde Zafirah (no llama la atención)
-            var zafirah = new Button
-            {
-                Width = 28, Height = 28,
-                FlatStyle = FlatStyle.Flat,
-                BackColor = Color.Transparent,
-                Cursor = Cursors.Hand,
-                Image = Iconos.Importar(16, Tema.Ceniza),
-                Margin = new Padding(6, 6, 2, 0),
-                TabStop = false
-            };
-            zafirah.FlatAppearance.BorderSize = 0;
-            zafirah.FlatAppearance.MouseOverBackColor = Tema.Taupe;
-            zafirah.FlatAppearance.MouseDownBackColor = Tema.Piedra;
-            zafirah.Click += (s, e) => ImportarZafirah();
-            zafirah.MouseEnter += (s, e) => { zafirah.Image = Iconos.Importar(16, Tema.Azul); };
-            zafirah.MouseLeave += (s, e) => { zafirah.Image = Iconos.Importar(16, Tema.Ceniza); };
-            var ttZafirah = new ToolTip();
-            ttZafirah.SetToolTip(zafirah, "Importar desde Zafirah (.BK o SQL Server)");
-            barra.Controls.Add(zafirah);
+            barra.Controls.Add(AdminUtil.BotonBarra("Nuevo", (s, e) => Nuevo(), 100, true));
+            barra.Controls.Add(AdminUtil.BotonBarra("Modificar", (s, e) => Modificar(), 100));
+            barra.Controls.Add(AdminUtil.BotonBarra("Eliminar", (s, e) => Eliminar(), 100));
+            barra.Controls.Add(AdminUtil.Separador());
+            barra.Controls.Add(AdminUtil.BotonBarra("Imprimir etiqueta", (s, e) => { var p = Seleccionado(); if (p == null) Ui.Aviso("Elija un producto de la lista."); else FormVistaEtiqueta.Mostrar(p); }));
+            barra.Controls.Add(AdminUtil.Separador());
+            barra.Controls.Add(AdminUtil.BotonMenu("Importar",
+                AdminUtil.Opcion("Lista de costos de la semillera (Excel)…", () => { if (ExcelSemillera.Importar(FindForm())) Cargar(); }),
+                AdminUtil.Opcion("Archivo CSV…", Importar),
+                AdminUtil.Opcion("Zafirah: SQL Server, respaldo .BK o Excel…", ImportarZafirah)));
+            barra.Controls.Add(AdminUtil.BotonMenu("Exportar",
+                AdminUtil.Opcion("Lista de costos (Excel)…", () => ExcelSemillera.ExportarLista(FindForm())),
+                AdminUtil.Opcion("Archivo CSV…", Exportar)));
             Controls.Add(barra);
-            Controls.Add(AdminUtil.TituloSeccion("Productos"));
 
             _timer.Tick += (s, e) => { _timer.Stop(); Cargar(); };
             _buscar.TextChanged += (s, e) => { _timer.Stop(); _timer.Start(); };
@@ -136,13 +118,6 @@ namespace VentaFacil.Forms.Admin
         public void ImportarZafirah()
         {
             using (var f = new FormImportarZafirah()) f.ShowDialog(FindForm());
-            Cargar();
-        }
-
-        /// <summary>Abre la asignación rápida de códigos de barras y, al cerrar, recarga la lista.</summary>
-        public void CodigosDeBarras()
-        {
-            using (var f = new FormAsignarCodigos()) f.ShowDialog(FindForm());
             Cargar();
         }
 

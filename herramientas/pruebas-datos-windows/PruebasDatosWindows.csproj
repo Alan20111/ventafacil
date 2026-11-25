@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Las mismas pruebas de pruebas-datos, pero en Windows con .NET Framework y el System.Data.SQLite REAL (x86), como el programa. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <PlatformTarget>x86</PlatformTarget>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <NoWarn>CS0618;CS8632</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Using Include="System" /><Using Include="System.IO" /><Using Include="System.Linq" /><Using Include="System.Collections.Generic" /><Using Include="System.Threading" />
+    <Compile Include="..\pruebas-datos\Program.cs" />
+    <Compile Include="LogPrueba.cs" />
+    <Compile Include="..\..\src\VentaFacil\Core\Basicos.cs;..\..\src\VentaFacil\Core\Permisos.cs;..\..\src\VentaFacil\Core\EnvioArchivo.cs;..\..\src\VentaFacil\Core\JsonMini.cs;..\..\src\VentaFacil\Core\Fmt.cs;..\..\src\VentaFacil\Core\Dinero.cs;..\..\src\VentaFacil\Core\ZafirahMapeo.cs" LinkBase="Real" />
+    <Compile Include="..\..\src\VentaFacil\Data\Db.cs;..\..\src\VentaFacil\Data\Esquema.cs;..\..\src\VentaFacil\Data\Modelos.cs;..\..\src\VentaFacil\Data\Repos.cs;..\..\src\VentaFacil\Data\Respaldo.cs;..\..\src\VentaFacil\Data\Salud.cs;..\..\src\VentaFacil\Data\ImportarProductosZ.cs;..\..\src\VentaFacil\Data\Envios.cs;..\..\src\VentaFacil\Data\ReporteTienda.cs;..\..\src\VentaFacil\Data\PrimeraVez.cs" LinkBase="Real" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" />
+    <Reference Include="System.Data" />
+  </ItemGroup>
+</Project>

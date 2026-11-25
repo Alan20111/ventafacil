@@ -14,9 +14,9 @@ namespace VentaFacil.Forms.Admin
     /// Asignación rápida de códigos de barras. Se elige (o ya está seleccionado) un producto, se ESCANEA su
     /// empaque, el código se guarda en su código alterno y se pasa solo al siguiente. Así el dueño no teclea
     /// nada: solo toma el producto y pasa el lector. El código corto del producto no se toca.
-    /// Lo que no lleva código de barras (granel, verdura) se marca con F3 o se le imprime una etiqueta con F5.
+    /// Lo que no lleva código de barras (granel, verdura) se marca con Ctrl+K o se le imprime una etiqueta con Ctrl+T.
     /// </summary>
-    public class FormAsignarCodigos : Dialogo
+    public class SeccionCodigos : UserControl
     {
         readonly DataGridView _grid;
         readonly TextBox _buscar, _escaner;
@@ -26,58 +26,55 @@ namespace VentaFacil.Forms.Admin
         List<Producto> _todos = new List<Producto>();
         bool _llenando;
 
-        public FormAsignarCodigos() : base("Códigos de barras", 1040, 690)
+        public SeccionCodigos()
         {
-            Controls.Add(Ui.Etiqueta("Asignar códigos de barras", 16, 10, Tema.Mediana, Tema.Azul));
-            _resumen = Ui.Etiqueta("", 420, 16, Tema.Negrita, Tema.Humo);
-            Controls.Add(_resumen);
-
-            // ---- filtros ----
-            Controls.Add(Ui.Etiqueta("Buscar:", 16, 56, Tema.Negrita));
-            _buscar = Ui.Caja(96, 52, 280, Tema.Normal);
-            Controls.Add(_buscar);
-            Controls.Add(Ui.Etiqueta("Grupo:", 394, 56, Tema.Negrita));
-            _grupo = new ComboBox { Left = 468, Top = 52, Width = 250, DropDownStyle = ComboBoxStyle.DropDownList, Font = Tema.Normal };
-            Controls.Add(_grupo);
-            _conCodigo = new CheckBox { Text = "Ver también los que ya tienen", Left = 734, Top = 54, AutoSize = true };
-            _marcados = new CheckBox { Text = "Ver los marcados «sin código»", Left = 734, Top = 80, AutoSize = true };
-            Controls.Add(_conCodigo); Controls.Add(_marcados);
-
-            // ---- lista ----
-            _grid = new DataGridView { Left = 16, Top = 112, Width = 1008, Height = 290 };
-            Ui.EstiloGrid(_grid);
+            BackColor = Tema.Crema;
+            _grid = AdminUtil.Grid();
             _grid.Columns.Add(Ui.Columna("producto", "Producto", 40));
             _grid.Columns.Add(Ui.Columna("grupo", "Grupo", 22));
-            _grid.Columns.Add(Ui.Columna("corto", "Código corto", 12));
+            _grid.Columns.Add(Ui.Columna("corto", "Cód. corto", 12));
             _grid.Columns.Add(Ui.Columna("barras", "Código de barras", 22));
             _grid.Columns.Add(Ui.Columna("estado", "Estado", 14));
             Controls.Add(_grid);
 
-            // ---- escaneo ----
-            Controls.Add(Ui.Etiqueta("Escanee el empaque de:", 16, 414, Tema.Negrita));
-            _producto = new Label { Left = 16, Top = 440, Width = 1008, Height = 40, Font = Tema.Mediana, ForeColor = Tema.Azul, BackColor = Color.Transparent, Text = "" };
-            Controls.Add(_producto);
-            _escaner = new TextBox { Left = 16, Top = 488, Width = 560, Font = Tema.Captura, MaxLength = 40 };
-            Controls.Add(_escaner);
-            _mensaje = new Label { Left = 592, Top = 490, Width = 432, Height = 44, Font = Tema.Negrita, ForeColor = Tema.Verde, BackColor = Color.Transparent };
-            Controls.Add(_mensaje);
+            // ---- escaneo, abajo ----
+            var abajo = new Panel { Dock = DockStyle.Bottom, Height = 128, BackColor = Tema.AzulFondo };
+            abajo.Controls.Add(Ui.Etiqueta("Escanee:", 12, 14, Tema.Mediana));
+            _producto = new Label { Left = 112, Top = 12, Width = 900, Height = 30, AutoEllipsis = true, Font = Tema.Mediana, ForeColor = Tema.Azul, BackColor = Color.Transparent, TextAlign = ContentAlignment.MiddleLeft, Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right };
+            abajo.Controls.Add(_producto);
+            _escaner = new TextBox { Left = 12, Top = 52, Width = 480, Font = Tema.Captura, MaxLength = 40, BorderStyle = BorderStyle.FixedSingle };
+            abajo.Controls.Add(_escaner);
+            _mensaje = new Label { Left = 508, Top = 52, Width = 480, Height = 43, AutoEllipsis = true, Font = Tema.Negrita, ForeColor = Tema.Verde, BackColor = Color.Transparent, TextAlign = ContentAlignment.MiddleLeft };
+            abajo.Controls.Add(_mensaje);
+            abajo.Controls.Add(Ui.Etiqueta("Pase el lector: se guarda solo y sigue con el siguiente (↑ ↓ para moverse).", 12, 102, null, Tema.Humo));
+            _resumen = new Label { Left = 600, Top = 100, Width = 390, Height = 24, TextAlign = ContentAlignment.MiddleLeft, Font = Tema.Normal, ForeColor = Tema.Azul, BackColor = Color.Transparent };
+            abajo.Controls.Add(_resumen);
+            Controls.Add(abajo);
 
-            // ---- botones ----
-            int by = 556;
-            Controls.Add(Ui.Boton("F2  Saltar", 16, by, 150, 46, (s, e) => Siguiente()));
-            Controls.Add(Ui.Boton("F3  Sin código de barras", 176, by, 260, 46, (s, e) => SinBarras()));
-            Controls.Add(Ui.Boton("F4  Quitar código", 446, by, 200, 46, (s, e) => Quitar()));
-            Controls.Add(Ui.Boton("F5  Etiqueta…", 656, by, 190, 46, (s, e) => Etiqueta()));
-            var cerrar = Ui.Boton("Cerrar (Esc)", 856, by, 168, 46, (s, e) => Close());
-            Controls.Add(cerrar);
-            Controls.Add(Ui.Etiqueta("Tome el producto y pase el lector: el código se guarda solo y salta al siguiente. Flechas ↑ ↓ para moverse.", 16, 620, null, Tema.Humo));
-            Controls.Add(Ui.Etiqueta("Lo que no trae código (granel, verdura): F3 lo marca, o F5 imprime una etiqueta con el código corto.", 16, 646, null, Tema.Humo));
+            // ---- filtros ----
+            var filtro = new Panel { Dock = DockStyle.Top, Height = 50, BackColor = Tema.Crema };
+            filtro.Controls.Add(Ui.Etiqueta("Buscar:", 12, 15, Tema.Negrita));
+            _buscar = Ui.Caja(84, 11, 240); filtro.Controls.Add(_buscar);
+            filtro.Controls.Add(Ui.Etiqueta("Grupo:", 340, 15, Tema.Negrita));
+            _grupo = new ComboBox { Left = 406, Top = 11, Width = 220, DropDownStyle = ComboBoxStyle.DropDownList, Font = Tema.Normal };
+            filtro.Controls.Add(_grupo);
+            _conCodigo = new CheckBox { Text = "Incluir con código", Left = 644, Top = 13, AutoSize = true, Font = Tema.Normal };
+            _marcados = new CheckBox { Text = "Incluir «sin código»", Left = 826, Top = 13, AutoSize = true, Font = Tema.Normal };
+            filtro.Controls.Add(_conCodigo); filtro.Controls.Add(_marcados);
+            Controls.Add(filtro);
+
+            var barra = AdminUtil.Barra();
+            barra.Controls.Add(AdminUtil.BotonBarra("Saltar  (Ctrl+S)", (s, e) => Siguiente()));
+            barra.Controls.Add(AdminUtil.BotonBarra("Sin código de barras  (Ctrl+K)", (s, e) => SinBarras()));
+            barra.Controls.Add(AdminUtil.BotonBarra("Quitar código  (Ctrl+Q)", (s, e) => Quitar()));
+            barra.Controls.Add(AdminUtil.BotonBarra("Imprimir etiqueta  (Ctrl+T)", (s, e) => Etiqueta()));
+            Controls.Add(barra);
 
             _buscar.TextChanged += (s, e) => Filtrar(null);
             _grupo.SelectedIndexChanged += (s, e) => Filtrar(null);
             _conCodigo.CheckedChanged += (s, e) => Filtrar(null);
             _marcados.CheckedChanged += (s, e) => Filtrar(null);
-            _grid.SelectionChanged += (s, e) => { if (!_llenando) { MostrarActual(); BeginInvoke((Action)(() => _escaner.Focus())); } };
+            _grid.SelectionChanged += (s, e) => { if (!_llenando && IsHandleCreated) { MostrarActual(); BeginInvoke((Action)(() => { if (!_buscar.Focused) _escaner.Focus(); })); } };
             _grid.CellClick += (s, e) => _escaner.Focus();
             _escaner.KeyDown += (s, e) =>
             {
@@ -85,14 +82,20 @@ namespace VentaFacil.Forms.Admin
                 else if (e.KeyCode == Keys.Down) { e.SuppressKeyPress = true; Mover(1); }
                 else if (e.KeyCode == Keys.Up) { e.SuppressKeyPress = true; Mover(-1); }
             };
-            KeyDown += (s, e) =>
+            Load += (s, e) => { Cargar(); BeginInvoke((Action)(() => _escaner.Focus())); };
+        }
+
+        /// <summary>Ctrl+letra: F1–F6 son de los módulos.</summary>
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            switch (keyData)
             {
-                if (e.KeyCode == Keys.F2) { e.Handled = true; Siguiente(); }
-                else if (e.KeyCode == Keys.F3) { e.Handled = true; SinBarras(); }
-                else if (e.KeyCode == Keys.F4) { e.Handled = true; Quitar(); }
-                else if (e.KeyCode == Keys.F5) { e.Handled = true; Etiqueta(); }
-            };
-            Shown += (s, e) => { Cargar(); _escaner.Focus(); };
+                case Keys.Control | Keys.S: Siguiente(); return true;
+                case Keys.Control | Keys.K: SinBarras(); return true;
+                case Keys.Control | Keys.Q: Quitar(); return true;
+                case Keys.Control | Keys.T: Etiqueta(); return true;
+            }
+            return base.ProcessCmdKey(ref msg, keyData);
         }
 
         // ---------------- datos ----------------
@@ -161,7 +164,7 @@ namespace VentaFacil.Forms.Admin
             {
                 int con, pend, marc;
                 ProductoRepo.ResumenBarras(out con, out pend, out marc);
-                _resumen.Text = "Con código de barras: " + con + "     Pendientes: " + pend + "     Sin código: " + marc;
+                _resumen.Text = "Con código: " + con + "   ·   Pendientes: " + pend + "   ·   Sin código: " + marc;
             }
             catch (Exception) { }
         }
@@ -302,8 +305,8 @@ namespace VentaFacil.Forms.Admin
         {
             _p = p;
             Controls.Add(Ui.Etiqueta("Así sale la etiqueta (código corto " + p.Codigo + "):", 16, 12, Tema.Negrita));
-            var panel = new Panel { Left = 16, Top = 44, Width = 488, Height = 460, AutoScroll = true, BackColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
-            panel.Controls.Add(new PictureBox { Image = vista, SizeMode = PictureBoxSizeMode.AutoSize, Left = 0, Top = 0 });
+            var panel = new Panel { Left = 16, Top = 44, Width = 488, Height = 460, BackColor = Color.White, BorderStyle = BorderStyle.FixedSingle, Padding = new Padding(8) };
+            panel.Controls.Add(new PictureBox { Image = vista, SizeMode = PictureBoxSizeMode.Zoom, Dock = DockStyle.Fill });
             Controls.Add(panel);
             Controls.Add(Ui.Etiqueta("Copias:", 16, 524, Tema.Negrita));
             _copias = AdminUtil.Numero(100, 520, 80, 1, 99);
@@ -313,7 +316,7 @@ namespace VentaFacil.Forms.Admin
             Tema.Pastilla(imprimir, true);
             Controls.Add(imprimir);
             Controls.Add(Ui.Boton("Cerrar (Esc)", 376, 512, 128, 48, (s, e) => Close()));
-            Controls.Add(Ui.Etiqueta("Sale por la impresora de tickets configurada. Pegue la etiqueta en el producto o su bolsa.", 16, 576, null, Tema.Humo));
+            Controls.Add(new Label { Text = "Sale por la impresora de tickets. Pegue la etiqueta en el producto o su bolsa.", Left = 16, Top = 574, Width = 488, Height = 46, Font = Tema.Normal, ForeColor = Tema.Humo, BackColor = Color.Transparent });
         }
 
         void Imprimir()

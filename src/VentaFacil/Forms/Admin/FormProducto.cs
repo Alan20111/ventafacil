@@ -31,30 +31,30 @@ namespace VentaFacil.Forms.Admin
 
             int x1 = 20, x2 = 170, y = 14, paso = 38;
             Controls.Add(Ui.Etiqueta("Código:", x1, y + 4, Tema.Negrita));
-            _codigo = Ui.Caja(x2, y, 200, Tema.Mediana); Controls.Add(_codigo);
+            _codigo = Ui.Caja(x2, y, 200); Controls.Add(_codigo);
             Controls.Add(Ui.Etiqueta("Cód. de barras:", x2 + 220, y + 4));
             _codigo2 = Ui.Caja(x2 + 340, y, 210); Controls.Add(_codigo2);
             y += paso + 2;
             Controls.Add(Ui.Etiqueta("Producto:", x1, y + 4, Tema.Negrita));
-            _descripcion = Ui.Caja(x2, y, 550, Tema.Mediana); _descripcion.MaxLength = 120; _descripcion.CharacterCasing = CharacterCasing.Upper; Controls.Add(_descripcion);
+            _descripcion = Ui.Caja(x2, y, 550); _descripcion.MaxLength = 120; _descripcion.CharacterCasing = CharacterCasing.Upper; Controls.Add(_descripcion);
             y += paso + 2;
             Controls.Add(Ui.Etiqueta("Proveedor:", x1, y + 4));
             _proveedor = new ComboBox { Left = x2, Top = y, Width = 200, DropDownStyle = ComboBoxStyle.DropDown, Font = Tema.Normal, AutoCompleteMode = AutoCompleteMode.SuggestAppend, AutoCompleteSource = AutoCompleteSource.ListItems };
             Controls.Add(_proveedor);
             Controls.Add(Ui.Etiqueta("Grupo:", x2 + 220, y + 4));
-            _depto = new ComboBox { Left = x2 + 280, Top = y, Width = 190, DropDownStyle = ComboBoxStyle.DropDownList, Font = Tema.Normal };
+            _depto = new ComboBox { Left = x2 + 280, Top = y, Width = 164, DropDownStyle = ComboBoxStyle.DropDownList, Font = Tema.Normal };
             Controls.Add(_depto);
-            Controls.Add(Ui.Boton("+ Nuevo", x2 + 476, y - 2, 74, 30, (s, e) => NuevoDepartamento()));
+            Controls.Add(Ui.Boton("Nuevo…", x2 + 452, y - 2, 98, 32, (s, e) => NuevoDepartamento()));
             y += paso + 8;
 
             // ---------------- Costo ----------------
             var gCosto = new GroupBox { Text = "Costo", Left = x1, Top = y, Width = 700, Height = 92, Font = Tema.Negrita };
             gCosto.Controls.Add(Ui.Etiqueta("Costo del bulto / caja:", 12, 28, Tema.Normal));
-            _bulto = Num(170, 24); gCosto.Controls.Add(_bulto);
-            gCosto.Controls.Add(Ui.Etiqueta("÷  trae:", 296, 28, Tema.Normal));
-            _trae = Num(356, 24, 70); gCosto.Controls.Add(_trae);
-            gCosto.Controls.Add(Ui.Etiqueta("=  costo por kg/pz:", 432, 28, Tema.Normal));
-            _costo = Num(570, 24, 110); _costo.Font = Tema.Negrita; gCosto.Controls.Add(_costo);
+            _bulto = Num(180, 24); gCosto.Controls.Add(_bulto);
+            gCosto.Controls.Add(Ui.Etiqueta("÷  trae:", 304, 28, Tema.Normal));
+            _trae = Num(370, 24, 66); gCosto.Controls.Add(_trae);
+            gCosto.Controls.Add(Ui.Etiqueta("=  costo por kg/pz:", 442, 28, Tema.Normal));
+            _costo = Num(590, 24, 98); _costo.Font = Tema.Negrita; gCosto.Controls.Add(_costo);
             _mantener = new CheckBox { Text = "Al cambiar el costo, mantener el % de ganancia (los precios se actualizan solos)", Left = 12, Top = 58, Width = 670, Checked = true, Font = Tema.Normal };
             gCosto.Controls.Add(_mantener);
             Controls.Add(gCosto);
@@ -79,7 +79,6 @@ namespace VentaFacil.Forms.Admin
                     _unidad[i] = Ui.Etiqueta("kg", 556, fy + 4, Tema.Normal); gPrecio.Controls.Add(_unidad[i]);
                 }
             }
-            _precio[Menudeo].Font = Tema.Mediana;
             Controls.Add(gPrecio);
             y += 160;
 
@@ -92,7 +91,7 @@ namespace VentaFacil.Forms.Admin
             y += 34;
             Controls.Add(Ui.Etiqueta(_nuevo ? "Existencia inicial:" : "Existencia actual:", x1, y + 4));
             _existencia = Num(x2, y); Controls.Add(_existencia);
-            if (!_nuevo) { _existencia.ReadOnly = true; _existencia.BackColor = Tema.Gris; Controls.Add(Ui.Etiqueta(Envios.EsOficina ? "(la real: F5 Resultados)" : "(se cambia en Inventario)", x2, y + 28, null, Tema.Humo)); }
+            if (!_nuevo) { _existencia.ReadOnly = true; _existencia.BackColor = Tema.Gris; Controls.Add(Ui.Etiqueta(Envios.EsOficina ? "(la real: F5 Resultados)" : "(se cambia en F4 Almacén)", x2, y + 28, null, Tema.Humo)); }
             Controls.Add(Ui.Etiqueta("Stock mínimo:", 380, y + 4));
             _minimo = Num(490, y); Controls.Add(_minimo);
 

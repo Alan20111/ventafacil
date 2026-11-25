@@ -26,11 +26,10 @@ namespace VentaFacil.Forms.Admin
             Controls.Add(_grid);
 
             var barra = AdminUtil.Barra();
-            barra.Controls.Add(AdminUtil.BotonBarra("Nuevo (Ctrl+N)", (s, e) => Nuevo(), 140));
-            barra.Controls.Add(AdminUtil.BotonBarra("Modificar (Enter)", (s, e) => Modificar(), 155));
-            barra.Controls.Add(AdminUtil.BotonBarra("Mi contraseña", (s, e) => MiClave(), 125));
+            barra.Controls.Add(AdminUtil.BotonBarra("Nuevo", (s, e) => Nuevo(), 100, true));
+            barra.Controls.Add(AdminUtil.BotonBarra("Modificar", (s, e) => Modificar(), 100));
+            barra.Controls.Add(AdminUtil.BotonBarra("Mi contraseña", (s, e) => MiClave()));
             Controls.Add(barra);
-            Controls.Add(AdminUtil.TituloSeccion("Usuarios"));
             Load += (s, e) => { Cargar(); _grid.Focus(); };
         }
 
@@ -101,23 +100,23 @@ namespace VentaFacil.Forms.Admin
         public FormUsuario(Usuario u) : base(u == null ? "Nuevo usuario" : "Modificar usuario", 760, 476)
         {
             _u = u ?? new Usuario();
-            int x = 170, y = 16;
+            int x = 188, y = 16;
             Controls.Add(Ui.Etiqueta("Usuario (para entrar):", 16, y + 4, Tema.Negrita));
-            _login = Ui.Caja(x, y, 260); _login.Text = _u.Login; Controls.Add(_login);
+            _login = Ui.Caja(x, y, 250); _login.Text = _u.Login; Controls.Add(_login);
             y += 40;
             Controls.Add(Ui.Etiqueta("Nombre completo:", 16, y + 4));
-            _nombre = Ui.Caja(x, y, 260); _nombre.Text = _u.Nombre; Controls.Add(_nombre);
+            _nombre = Ui.Caja(x, y, 250); _nombre.Text = _u.Nombre; Controls.Add(_nombre);
             y += 40;
             Controls.Add(Ui.Etiqueta("Perfil:", 16, y + 4));
-            _rol = new ComboBox { Left = x, Top = y, Width = 260, DropDownStyle = ComboBoxStyle.DropDownList, Font = Tema.Normal };
+            _rol = new ComboBox { Left = x, Top = y, Width = 250, DropDownStyle = ComboBoxStyle.DropDownList, Font = Tema.Normal };
             foreach (var p in new[] { Permisos.PerfilCajero, Permisos.PerfilEncargado, Permisos.PerfilPersonalizado, Permisos.PerfilAdmin }) _rol.Items.Add(p);
             Controls.Add(_rol);
             y += 40;
             Controls.Add(Ui.Etiqueta("Contraseña:", 16, y + 4));
-            _clave = Ui.Caja(x, y, 260); _clave.UseSystemPasswordChar = true; Controls.Add(_clave);
+            _clave = Ui.Caja(x, y, 250); _clave.UseSystemPasswordChar = true; Controls.Add(_clave);
             y += 40;
             Controls.Add(Ui.Etiqueta("Repetir contraseña:", 16, y + 4));
-            _clave2 = Ui.Caja(x, y, 260); _clave2.UseSystemPasswordChar = true; Controls.Add(_clave2);
+            _clave2 = Ui.Caja(x, y, 250); _clave2.UseSystemPasswordChar = true; Controls.Add(_clave2);
             y += 36;
             if (_u.Id != 0) Controls.Add(Ui.Etiqueta("(deje vacío para no cambiarla)", x, y - 6, null, Tema.Humo));
             _activo = new CheckBox { Text = "Activo", Left = 16, Top = y + 12, AutoSize = true, Checked = _u.Id == 0 || _u.Activo };

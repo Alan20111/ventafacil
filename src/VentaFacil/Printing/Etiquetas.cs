@@ -37,7 +37,7 @@ namespace VentaFacil.Printing
 
             string precio = Fmt.Dinero(p.Precio) + (p.Granel ? " /kg" : " /pz");
             using (var fNombre = new Font("Segoe UI", W / 13f, FontStyle.Bold, GraphicsUnit.Pixel))
-            using (var fPrecio = new Font("Segoe UI", W / 7f, FontStyle.Bold, GraphicsUnit.Pixel))
+            using (var fPrecio = LetraQueCabe(precio, W / 7f, W - 2 * margen))
             using (var fCodigo = new Font("Consolas", W / 15f, FontStyle.Bold, GraphicsUnit.Pixel))
             using (var medida = new Bitmap(1, 1))
             using (var gm = Graphics.FromImage(medida))
@@ -77,6 +77,19 @@ namespace VentaFacil.Printing
                 }
                 return bmp;
             }
+        }
+
+        /// <summary>La letra más grande (hasta el tamaño dado) con la que el precio cabe en un renglón: nunca se corta.</summary>
+        static Font LetraQueCabe(string texto, float tam, int ancho)
+        {
+            using (var b = new Bitmap(1, 1))
+            using (var g = Graphics.FromImage(b))
+                for (; ; tam -= 2f)
+                {
+                    var f = new Font("Segoe UI", tam, FontStyle.Bold, GraphicsUnit.Pixel);
+                    if (tam <= 16f || g.MeasureString(texto, f).Width <= ancho - 4) return f;
+                    f.Dispose();
+                }
         }
 
         /// <summary>Trama ESC/POS de las etiquetas, una tras otra, con corte entre ellas si la impresora corta.</summary>

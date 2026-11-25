@@ -30,7 +30,7 @@ namespace VentaFacil.UI
                 return f.ShowDialog(dueno) == DialogResult.OK;
         }
 
-        FormImpresoras(Config c, bool detectarAlAbrir) : base("Impresora de tickets", 860, 610)
+        FormImpresoras(Config c, bool detectarAlAbrir) : base("Impresora de tickets", 940, 640)
         {
             _c = c;
             var cab = new PanelTitulo { Titulo = "Impresora de tickets", Subtitulo = "elija o detecte", Height = 48 };
@@ -43,14 +43,14 @@ namespace VentaFacil.UI
             detectar.Click += (s, e) => DetectarAuto();
             Tema.Pastilla(detectar, true);
             Controls.Add(detectar);
-            _resultado = new Label { Left = 428, Top = 92, Width = 416, Height = 50, Font = Tema.Negrita, ForeColor = Tema.Verde, TextAlign = ContentAlignment.MiddleLeft };
+            _resultado = new Label { Left = 428, Top = 92, Width = 496, Height = 50, Font = Tema.Negrita, ForeColor = Tema.Verde, TextAlign = ContentAlignment.MiddleLeft };
             Controls.Add(_resultado);
 
             _auto = new RadioButton { Text = "Automático: usar siempre la impresora PREDETERMINADA de Windows", Left = 16, Top = 152, Width = 820, Font = Tema.Negrita };
             _manual = new RadioButton { Text = "Manual: usar la impresora que elija de esta lista  (doble clic o Enter)", Left = 16, Top = 178, Width = 820, Font = Tema.Negrita };
             Controls.Add(_auto); Controls.Add(_manual);
 
-            _grid = new DataGridView { Left = 16, Top = 208, Width = 828, Height = 220 };
+            _grid = new DataGridView { Left = 16, Top = 208, Width = 908, Height = 220 };
             Ui.EstiloGrid(_grid);
             _grid.Columns.Add(Ui.Columna("nombre", "Impresora", 38));
             _grid.Columns.Add(Ui.Columna("tipo", "Tipo", 20));
@@ -65,22 +65,22 @@ namespace VentaFacil.UI
             _r80 = new RadioButton { Text = "80 mm", Left = 120, Top = 24, Width = 90, Font = Tema.Normal };
             grupoPapel.Controls.Add(_r58); grupoPapel.Controls.Add(_r80);
             Controls.Add(grupoPapel);
-            var grupoModo = new GroupBox { Text = "Forma de imprimir", Left = 288, Top = 436, Width = 556, Height = 58, Font = Tema.Negrita };
-            _modoWin = new RadioButton { Text = "Normal (controlador de Windows)", Left = 14, Top = 24, Width = 260, Font = Tema.Normal };
-            _modoEsc = new RadioButton { Text = "Directo térmica (ESC/POS, corta papel)", Left = 280, Top = 24, Width = 270, Font = Tema.Normal };
+            var grupoModo = new GroupBox { Text = "Forma de imprimir", Left = 288, Top = 436, Width = 636, Height = 58, Font = Tema.Negrita };
+            _modoWin = new RadioButton { Text = "Normal (controlador de Windows)", Left = 14, Top = 24, Width = 284, Font = Tema.Normal };
+            _modoEsc = new RadioButton { Text = "Directo térmica (ESC/POS, corta papel)", Left = 302, Top = 24, Width = 326, Font = Tema.Normal };
             grupoModo.Controls.Add(_modoWin); grupoModo.Controls.Add(_modoEsc);
             Controls.Add(grupoModo);
 
             int y = 504;
-            Controls.Add(Ui.Boton("F3  Imprimir prueba", 16, y, 170, 42, (s, e) => Prueba()));
-            Controls.Add(Ui.Boton("F4  Probar cajón", 192, y, 150, 42, (s, e) => ProbarCajon()));
-            Controls.Add(Ui.Boton("F5  Actualizar lista", 348, y, 160, 42, (s, e) => Cargar()));
-            Controls.Add(Ui.Boton("Impresoras de Windows…", 514, y, 190, 42, (s, e) => AbrirPanelWindows()));
-            var guardar = Ui.Boton("Guardar", 16, y + 52, 170, 40, (s, e) => Guardar());
+            Controls.Add(Ui.Boton("F3  Imprimir prueba", 16, y, 190, 42, (s, e) => Prueba()));
+            Controls.Add(Ui.Boton("F4  Probar cajón", 214, y, 170, 42, (s, e) => ProbarCajon()));
+            Controls.Add(Ui.Boton("F5  Actualizar lista", 392, y, 180, 42, (s, e) => Cargar()));
+            Controls.Add(Ui.Boton("Impresoras de Windows…", 580, y, 220, 42, (s, e) => AbrirPanelWindows()));
+            var guardar = Ui.Boton("Guardar", 16, y + 52, 190, 42, (s, e) => Guardar());
             Tema.Pastilla(guardar, true);
             Controls.Add(guardar);
-            Controls.Add(Ui.Boton("Cancelar (Esc)", 192, y + 52, 150, 40, (s, e) => { DialogResult = DialogResult.Cancel; }));
-            Controls.Add(Ui.Etiqueta("Si Windows imprime su página de prueba, aquí también funcionará. No hace falta configurar puertos.", 350, y + 62, null, Tema.Humo));
+            Controls.Add(Ui.Boton("Cancelar (Esc)", 214, y + 52, 170, 42, (s, e) => { DialogResult = DialogResult.Cancel; }));
+            Controls.Add(Ui.Etiqueta("Si Windows imprime su página de prueba, aquí también funcionará. No hace falta configurar puertos.", 16, y + 106, null, Tema.Humo));
 
             _grid.CellDoubleClick += (s, e) => { if (e.RowIndex >= 0) ElegirSeleccionada(); };
             _grid.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; ElegirSeleccionada(); } };

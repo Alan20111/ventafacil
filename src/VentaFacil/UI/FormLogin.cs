@@ -19,7 +19,7 @@ namespace VentaFacil.UI
             StartPosition = autorizacion ? FormStartPosition.CenterParent : FormStartPosition.CenterScreen;
             MaximizeBox = false; MinimizeBox = !autorizacion;
             ShowInTaskbar = !autorizacion;
-            ClientSize = new Size(420, autorizacion ? 270 : 310);
+            ClientSize = new Size(460, autorizacion ? 270 : 310);
             BackColor = Tema.Crema;
             Font = Tema.Normal;
             KeyPreview = true;
@@ -36,17 +36,17 @@ namespace VentaFacil.UI
             else y += 10;
 
             Controls.Add(Ui.Etiqueta("Usuario:", 24, y + 4, Tema.Mediana));
-            _usuario = Ui.Caja(140, y, 250, Tema.Mediana);
+            _usuario = Ui.Caja(168, y, 264, Tema.Mediana);
             Controls.Add(_usuario);
             y += 48;
             Controls.Add(Ui.Etiqueta("Contraseña:", 24, y + 4, Tema.Mediana));
-            _clave = Ui.Caja(140, y, 250, Tema.Mediana);
+            _clave = Ui.Caja(168, y, 264, Tema.Mediana);
             _clave.UseSystemPasswordChar = true;
             Controls.Add(_clave);
             y += 56;
 
-            var ok = Ui.Boton("Entrar (Enter)", 140, y, 130, 40, (s, e) => Entrar(), true);
-            var no = Ui.Boton(autorizacion ? "Cancelar" : "Salir", 280, y, 110, 40, (s, e) => { DialogResult = DialogResult.Cancel; Close(); });
+            var ok = Ui.Boton("Entrar (Enter)", 168, y, 144, 42, (s, e) => Entrar(), true);
+            var no = Ui.Boton(autorizacion ? "Cancelar" : "Salir", 320, y, 112, 42, (s, e) => { DialogResult = DialogResult.Cancel; Close(); });
             Controls.Add(ok); Controls.Add(no);
             AcceptButton = ok; CancelButton = no;
 
@@ -55,12 +55,9 @@ namespace VentaFacil.UI
             {
                 if (UsuarioRepo.Validar("admin", "admin") != null)
                 {
-                    var pista = Ui.Etiqueta("Primera vez: usuario admin, contraseña admin", 0, 246, new Font("Segoe UI", 9.5f), Tema.Humo);
-                    pista.Left = (ClientSize.Width - pista.Width) / 2;
-                    Controls.Add(pista);
+                    Controls.Add(new Label { Text = "Primera vez: usuario admin, contraseña admin", Left = 0, Top = 244, Width = ClientSize.Width, Height = 22, TextAlign = ContentAlignment.MiddleCenter, Font = new Font("Segoe UI", 9.5f), ForeColor = Tema.Humo, BackColor = Color.Transparent });
                 }
-                var marca = Ui.Etiqueta("alanmendez.dev", 0, 280, new Font("Segoe UI", 8.5f), Color.FromArgb(135, 150, 170));
-                marca.Left = (ClientSize.Width - marca.Width) / 2;
+                var marca = new Label { Text = "alanmendez.dev", Left = 0, Top = 278, Width = ClientSize.Width, Height = 22, TextAlign = ContentAlignment.MiddleCenter, Font = new Font("Segoe UI", 8.5f), ForeColor = Color.FromArgb(110, 125, 145), BackColor = Color.Transparent };
                 marca.Cursor = Cursors.Hand;
                 marca.Click += (s, e) => { try { System.Diagnostics.Process.Start("https://alanmendez.dev"); } catch { } };
                 Controls.Add(marca);

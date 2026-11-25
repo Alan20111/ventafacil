@@ -76,6 +76,8 @@ namespace VentaFacil.UI
                     "",
                     "CATÁLOGO, ALMACÉN, RESULTADOS Y AJUSTES",
                     "Ctrl+N nuevo   Ctrl+M modificar   Ctrl+E eliminar",
+                    "Códigos de barras: Ctrl+S saltar  Ctrl+K sin código",
+                    "                   Ctrl+Q quitar  Ctrl+T etiqueta",
                     "Ctrl+B buscar (Almacén)   Ctrl+R consultar (Resultados)",
                     "",
                     "F2 Turno: Recibir envío de la oficina (USB)",

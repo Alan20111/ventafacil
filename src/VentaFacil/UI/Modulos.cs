@@ -96,7 +96,7 @@ namespace VentaFacil.UI
         class Elemento { public string Nombre; public Func<Control> Vista; public Action Accion; public BotonF Boton; }
         readonly List<Elemento> _items = new List<Elemento>();
         readonly Panel _cuerpo = new Panel { Dock = DockStyle.Fill, BackColor = Tema.Crema };
-        readonly TableLayoutPanel _barra = new TableLayoutPanel { Dock = DockStyle.Top, Height = 68, RowCount = 1, BackColor = Tema.AzulFondo, Padding = new Padding(8, 6, 8, 4) };
+        readonly Panel _barra = new Panel { Dock = DockStyle.Top, Height = 68, BackColor = Tema.AzulFondo };
         readonly Label _estado;
         readonly string _titulo;
         Control _actual;
@@ -124,16 +124,32 @@ namespace VentaFacil.UI
         /// <summary>Dibuja la barra de atajos y muestra la primera vista.</summary>
         public void Construir()
         {
-            _barra.ColumnCount = Math.Max(1, _items.Count);
+            _barra.Visible = _items.Count > 1;   // con una sola vista no hace falta botón
             for (int i = 0; i < _items.Count; i++)
             {
-                _barra.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f / _items.Count));
                 int n = i;
-                var b = new BotonF("Ctrl+F" + (i + 1), _items[i].Nombre, (s, e) => Atajo(n + 1)) { Dock = DockStyle.Fill, Margin = new Padding(3, 0, 3, 0) };
+                var b = new BotonF("Ctrl+F" + (i + 1), _items[i].Nombre, (s, e) => Atajo(n + 1));
                 _items[i].Boton = b;
-                _barra.Controls.Add(b, i, 0);
+                _barra.Controls.Add(b);
             }
+            _barra.Resize += (s, e) => Acomodar();
+            Acomodar();
             for (int i = 0; i < _items.Count; i++) if (_items[i].Vista != null) { Mostrar(i); break; }
+        }
+
+        static readonly Font Letra11 = new Font("Segoe UI", 11f, FontStyle.Bold), Letra95 = new Font("Segoe UI", 9.5f, FontStyle.Bold);
+        static Font LetraBoton(float t) { return t > 10 ? Letra11 : Letra95; }
+
+        /// <summary>Todos del mismo tamaño, pegados a la izquierda; si son muchos se reparten el ancho.</summary>
+        void Acomodar()
+        {
+            if (_items.Count == 0 || _barra.Width < 50) return;
+            const int hueco = 8, margen = 12;
+            int ancho = Math.Min(190, (_barra.Width - margen * 2 - hueco * (_items.Count - 1)) / _items.Count);
+            // si algún nombre no cabe, la letra de todos se achica igual
+            float tam = 11f;
+            foreach (var it in _items) if (TextRenderer.MeasureText(it.Nombre, LetraBoton(11f), Size.Empty, TextFormatFlags.NoPadding).Width > ancho - 10) tam = 9.5f;
+            for (int i = 0; i < _items.Count; i++) { _items[i].Boton.Font = LetraBoton(tam); _items[i].Boton.SetBounds(margen + i * (ancho + hueco), 8, ancho, 52); }
         }
 
         /// <summary>Ctrl+F(n): n empieza en 1. Devuelve false si el módulo no tiene tantos atajos.</summary>

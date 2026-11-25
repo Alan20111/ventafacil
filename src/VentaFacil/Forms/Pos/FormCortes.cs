@@ -117,7 +117,7 @@ namespace VentaFacil.Forms.Pos
                 Mostrar(t);
                 TurnoCerrado = true;
                 try { Db.Respaldar(); } catch (Exception ex) { Log.Error(ex, "Respaldo tras corte Z"); }
-                try { Impresora.Imprimir(t); } catch (Exception ex) { Ui.Error(ex, "El corte se hizo, pero no se pudo imprimir. Puede verlo en F5 Resultados > Reportes, Cortes de caja"); }
+                try { Impresora.Imprimir(t); } catch (Exception ex) { Ui.Error(ex, "El corte se hizo, pero no se pudo imprimir. Puede verlo en F5 Resultados > Cortes de caja"); }
 
                 if (declarado.HasValue)
                 {

@@ -19,6 +19,7 @@ namespace VentaFacil.Forms.Pos
         decimal _multiplicador = 1;
         bool _forzarSalida;
 
+        static readonly Font LetraTotalChica = new Font("Segoe UI", 28f, FontStyle.Bold);
         PanelTitulo _titulo;
         DataGridView _grid;
         TextBox _captura;
@@ -69,34 +70,37 @@ namespace VentaFacil.Forms.Pos
             _titulo.Resize += (s, e) => UbicarEncabezado();
 
             // ---- Zona inferior: captura + total ----
-            var abajo = new Panel { Dock = DockStyle.Bottom, Height = 150, BackColor = Tema.AzulFondo, Padding = new Padding(8) };
+            var abajo = new Panel { Dock = DockStyle.Bottom, Height = 168, BackColor = Tema.AzulFondo, Padding = new Padding(8) };
 
-            var panelTotal = new Panel { Dock = DockStyle.Right, Width = 430, BackColor = Tema.Crema, BorderStyle = BorderStyle.FixedSingle };
-            panelTotal.Controls.Add(Ui.Etiqueta("TOTAL:", 12, 14, Tema.Grande, Tema.Azul));
-            _lblTotal = new Label { Text = "$0.00", Font = Tema.Enorme, ForeColor = Tema.Azul, AutoSize = false, TextAlign = ContentAlignment.MiddleRight, Left = 120, Top = 2, Width = 296, Height = 60, Anchor = AnchorStyles.Top | AnchorStyles.Right };
+            var panelTotal = new Panel { Dock = DockStyle.Right, Width = 480, BackColor = Tema.Crema };
+            panelTotal.Controls.Add(Ui.Etiqueta("TOTAL", 14, 22, Tema.Grande, Tema.Azul));
+            _lblTotal = new Label { Text = "$0.00", Font = Tema.Enorme, ForeColor = Tema.Azul, AutoSize = false, TextAlign = ContentAlignment.MiddleRight, Left = 132, Top = 2, Width = 336, Height = 78 };
+            // Un total grande se achica en vez de cortarse
+            _lblTotal.TextChanged += (s, e) => _lblTotal.Font = TextRenderer.MeasureText(_lblTotal.Text, Tema.Enorme).Width <= _lblTotal.Width ? Tema.Enorme : LetraTotalChica;
             panelTotal.Controls.Add(_lblTotal);
-            var btnCobrar = new Button { Text = "COBRAR  ( + / Ctrl+F1 )", Font = Tema.Mediana, BackColor = Tema.Azul, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Left = 12, Top = 72, Width = 404, Height = 58, TabStop = false, Cursor = Cursors.Hand };
+            var btnCobrar = new Button { Text = "COBRAR  ( + / Ctrl+F1 )", Font = Tema.Mediana, BackColor = Tema.Azul, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Left = 12, Top = 84, Width = 456, Height = 58, TabStop = false, Cursor = Cursors.Hand };
             btnCobrar.Click += (s, e) => Cobrar();
             Tema.Pastilla(btnCobrar, true);
             panelTotal.Controls.Add(btnCobrar);
-            abajo.Controls.Add(panelTotal);
 
-            var panelCaptura = new Panel { Dock = DockStyle.Fill, BackColor = Tema.Crema, BorderStyle = BorderStyle.FixedSingle };
+            var panelCaptura = new Panel { Dock = DockStyle.Fill, BackColor = Tema.Crema };
             panelCaptura.Controls.Add(Ui.Etiqueta("Código de barras, cantidad* o nombre del artículo:", 10, 8, Tema.Negrita, Tema.Azul));
-            _captura = new TextBox { Left = 10, Top = 32, Width = 420, Font = Tema.Captura, CharacterCasing = CharacterCasing.Normal, Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right };
+            _captura = new TextBox { Left = 12, Top = 34, Width = 420, Font = Tema.Captura, CharacterCasing = CharacterCasing.Normal, BorderStyle = BorderStyle.FixedSingle };
             _captura.KeyDown += CapturaKeyDown;
             _captura.KeyPress += CapturaKeyPress;
             panelCaptura.Controls.Add(_captura);
-            _lblCantidad = Ui.Etiqueta("Cantidad: 1", 10, 76, Tema.Mediana, Tema.Azul);
+            _lblCantidad = Ui.Etiqueta("Cantidad: 1", 10, 86, Tema.Mediana, Tema.Azul);
             panelCaptura.Controls.Add(_lblCantidad);
-            _lblArticulos = Ui.Etiqueta("Artículos: 0", 200, 76, Tema.Mediana, Tema.Texto);
+            _lblArticulos = Ui.Etiqueta("Artículos: 0", 200, 86, Tema.Mediana, Tema.Texto);
             panelCaptura.Controls.Add(_lblArticulos);
-            _lblMensaje = Ui.Etiqueta("", 10, 106, Tema.Negrita, Tema.Rojo);
+            _lblMensaje = Ui.Etiqueta("", 10, 120, Tema.Negrita, Tema.Rojo);
             panelCaptura.Controls.Add(_lblMensaje);
-            _lblUltimo = new Label { AutoSize = false, Width = 260, Height = 60, Top = 72, Font = Tema.Mediana, ForeColor = Tema.Verde, TextAlign = ContentAlignment.MiddleRight, Anchor = AnchorStyles.Top | AnchorStyles.Right };
+            _lblUltimo = new Label { AutoSize = false, Width = 260, Height = 58, Top = 84, Font = Tema.Mediana, ForeColor = Tema.Verde, TextAlign = ContentAlignment.MiddleRight };
             panelCaptura.Controls.Add(_lblUltimo);
-            panelCaptura.Resize += (s, e) => { _lblUltimo.Left = panelCaptura.ClientSize.Width - _lblUltimo.Width - 8; };
+            panelCaptura.Resize += (s, e) => { _captura.Width = Math.Max(120, panelCaptura.ClientSize.Width - 24); _lblUltimo.Width = Math.Max(0, Math.Min(280, panelCaptura.ClientSize.Width - 392)); _lblUltimo.Left = panelCaptura.ClientSize.Width - _lblUltimo.Width - 12; };
             abajo.Controls.Add(panelCaptura);
+            abajo.Controls.Add(new Panel { Dock = DockStyle.Right, Width = 8, BackColor = Tema.AzulFondo });
+            abajo.Controls.Add(panelTotal);   // al final: el total aparta su lugar y la captura usa el resto
 
             _lblBanner = new Label { Dock = DockStyle.Bottom, Height = 24, TextAlign = ContentAlignment.MiddleCenter, ForeColor = Color.White, BackColor = Tema.Azul, Font = Tema.Negrita };
 
@@ -216,20 +220,20 @@ namespace VentaFacil.Forms.Pos
             {
                 case 1:
                     m = new ModuloVista("Turno", "turno, dinero y cortes");
-                    m.AgregarVista("Resumen del turno", VistaTurno);
-                    m.AgregarAccion("Entradas / salidas", Y(MovimientoCaja));
+                    m.AgregarVista("Resumen", VistaTurno);
+                    m.AgregarAccion("Entradas/salidas", Y(MovimientoCaja));
                     m.AgregarAccion("Cortes X / Z", Y(Cortes));
                     m.AgregarAccion("Abrir cajón", AbrirCajon);
                     m.AgregarAccion("Reimprimir ticket", ReimprimirUltimo);
                     if (!Envios.EsOficina) m.AgregarAccion("Recibir envío", Y(RecibirEnvio));
                     if (Envios.EsTienda) m.AgregarAccion("Reporte a oficina", ReporteAOficina);
-                    m.AgregarAccion("Cambiar usuario (F10)", CambiarUsuario);
+                    m.AgregarAccion("Cambiar usuario", CambiarUsuario);
                     break;
                 case 2:
                     m = new ModuloVista("Catálogo", "productos, precios y códigos");
                     m.AgregarVista("Productos", () => new Admin.SeccionProductos());
                     m.AgregarVista("Grupos", () => new Admin.SeccionDepartamentos());
-                    m.AgregarAccion("Códigos de barras", () => { m.Mostrar(0); var sp = m.Actual as Admin.SeccionProductos; if (sp != null) sp.CodigosDeBarras(); });
+                    m.AgregarVista("Códigos de barras", () => new Admin.SeccionCodigos());
                     break;
                 case 3:
                     m = new ModuloVista("Almacén", "existencias, entradas y conteo");
@@ -239,7 +243,12 @@ namespace VentaFacil.Forms.Pos
                         m.AgregarVista("Envíos", () => new Admin.SeccionEnviosOficina());
                         break;
                     }
-                    m.AgregarVista("Inventario", () => new Admin.SeccionInventario());
+                    m.AgregarVista("Entrada de mercancía", Admin.SeccionInventario.Entrada);
+                    m.AgregarVista("Conteo con Excel", Admin.SeccionInventario.Conteo);
+                    m.AgregarVista("Ajustar un producto", Admin.SeccionInventario.Ajuste);
+                    m.AgregarVista("Faltantes", Admin.SeccionInventario.Faltantes);
+                    m.AgregarVista("Kardex", Admin.SeccionInventario.Kardex);
+                    m.AgregarVista("Valor", Admin.SeccionInventario.Valor);
                     if (Envios.EsTienda) m.AgregarVista("Envíos recibidos", () => new Admin.SeccionEnviosTienda());
                     break;
                 case 4:
@@ -253,22 +262,22 @@ namespace VentaFacil.Forms.Pos
                         m.AgregarVista("Diferencias", () => new Admin.SeccionTiendaDiferencias());
                         break;
                     }
-                    m.AgregarVista("Reportes", () => new Admin.SeccionReportes());
+                    Admin.SeccionReportes.AgregarVistas(m);
                     break;
                 default:
                     m = new ModuloVista("Ajustes", "configuración del sistema");
-                    m.AgregarVista("Negocio", () => new Admin.SeccionConfig());
+                    m.AgregarVista("Negocio", () => new Admin.SeccionConfig(false));
+                    m.AgregarVista("Equipos", () => new Admin.SeccionConfig(true));
                     if (Puede(Permisos.SoloAdmin))
                     {
                         m.AgregarVista("Usuarios", () => new Admin.SeccionUsuarios());
                         m.AgregarVista("Respaldos", () => new Admin.SeccionRespaldos());
                         m.AgregarVista("Envíos", () => new Admin.SeccionEnlace());
                     }
-                    m.AgregarAccion("Impresora", ConfigurarImpresora);
                     m.AgregarAccion("Licencia", () => Licenciamiento.FormLicencia.Mostrar(Licencia.Evaluar(), true));
                     m.AgregarAccion("Teclas rápidas", () => { using (var f = new FormAyudaTeclas()) f.ShowDialog(this); });
                     m.AgregarAccion("Acerca de", AcercaDe);
-                    m.AgregarAccion("Salir del programa", () => Close());
+                    m.AgregarAccion("Salir", () => Close());
                     break;
             }
             return m;
@@ -302,11 +311,11 @@ namespace VentaFacil.Forms.Pos
         /// <summary>Barra de botones con lo que más se usa en el mostrador (el resto está en el menú).</summary>
         Control ConstruirBarraAcciones()
         {
-            var tabla = new TableLayoutPanel { Dock = DockStyle.Top, Height = 68, ColumnCount = 8, RowCount = 1, BackColor = Tema.AzulFondo, Padding = new Padding(8, 6, 8, 4) };
+            var tabla = new TableLayoutPanel { Dock = DockStyle.Top, Height = 68, ColumnCount = 8, RowCount = 1, BackColor = Tema.AzulFondo, Padding = new Padding(8, 8, 8, 8) };
             for (int i = 0; i < 8; i++) tabla.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f / 8f));
             tabla.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
             Action<int, string, string, EventHandler> boton = (col, tecla, texto, click) =>
-                tabla.Controls.Add(new BotonF(tecla, texto, click) { Dock = DockStyle.Fill, Margin = new Padding(3, 0, 3, 0) }, col, 0);
+                tabla.Controls.Add(new BotonF(tecla, texto, click) { Dock = DockStyle.Fill, Margin = new Padding(4, 0, 4, 0) }, col, 0);
             boton(0, "Ctrl+F1", "Cobrar", (s, e) => Cobrar());
             boton(1, "Ctrl+F2", "Buscar", (s, e) => Buscar());
             boton(2, "Ctrl+F3", "Quitar", (s, e) => QuitarArticulo());

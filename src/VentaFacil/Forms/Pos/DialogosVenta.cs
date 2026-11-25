@@ -170,7 +170,7 @@ namespace VentaFacil.Forms.Pos
 
         void LeerBascula()
         {
-            if (!Config.Actual.BasculaActiva) { Ui.Aviso("La báscula no está activada. Se activa en F6 Ajustes > Negocio, pestaña Báscula."); return; }
+            if (!Config.Actual.BasculaActiva) { Ui.Aviso("La báscula no está activada. Se activa en F6 Ajustes > Equipos, pestaña Báscula."); return; }
             try
             {
                 var peso = Bascula.LeerPeso(Config.Actual);
@@ -218,29 +218,29 @@ namespace VentaFacil.Forms.Pos
         public decimal Cambio { get; private set; }
         public string Referencia { get { return _ref.Text.Trim(); } }
 
-        public FormCobro(decimal total) : base("Cobrar", 560, 420)
+        public FormCobro(decimal total) : base("Cobrar", 576, 452)
         {
             _total = total;
             var cab = new PanelTitulo { Titulo = "Total a cobrar", Height = 44 };
             Controls.Add(cab);
-            Controls.Add(new Label { Text = Fmt.Dinero(total), Font = Tema.Enorme, ForeColor = Tema.Azul, Left = 16, Top = 52, Width = 528, Height = 64, TextAlign = ContentAlignment.MiddleRight });
-            Controls.Add(Ui.Etiqueta("Paga con:", 16, 134, Tema.Grande));
-            _paga = Ui.Caja(200, 128, 344, new Font("Segoe UI", 24f, FontStyle.Bold));
+            Controls.Add(new Label { Text = Fmt.Dinero(total), Font = Tema.Enorme, ForeColor = Tema.Azul, Left = 16, Top = 48, Width = 544, Height = 78, TextAlign = ContentAlignment.MiddleRight });
+            Controls.Add(Ui.Etiqueta("Paga con:", 16, 138, Tema.Grande));
+            _paga = Ui.Caja(200, 134, 360, new Font("Segoe UI", 24f, FontStyle.Bold));
             _paga.TextAlign = HorizontalAlignment.Right;
             _paga.Text = Fmt.Dec(total);
             Controls.Add(_paga);
-            Controls.Add(Ui.Etiqueta("Cambio:", 16, 190, Tema.Grande, Tema.Verde));
-            _cambio = new Label { Text = "$0.00", Font = Tema.Enorme, ForeColor = Tema.Verde, Left = 200, Top = 178, Width = 344, Height = 60, TextAlign = ContentAlignment.MiddleRight };
+            Controls.Add(Ui.Etiqueta("Cambio:", 16, 210, Tema.Grande, Tema.Verde));
+            _cambio = new Label { Text = "$0.00", Font = Tema.Enorme, ForeColor = Tema.Verde, Left = 200, Top = 190, Width = 360, Height = 78, TextAlign = ContentAlignment.MiddleRight };
             Controls.Add(_cambio);
-            Controls.Add(Ui.Etiqueta("Referencia / autorización (tarjeta o transferencia):", 16, 244, null, Tema.Humo));
-            _ref = Ui.Caja(16, 266, 528);
+            Controls.Add(Ui.Etiqueta("Referencia / autorización (tarjeta o transferencia):", 16, 276, null, Tema.Humo));
+            _ref = Ui.Caja(16, 300, 544);
             Controls.Add(_ref);
 
-            int x = 16, y = 306;
+            int x = 16, y = 342;
             Func<string, string, Button> b = (texto, forma) =>
             {
-                var bt = Ui.Boton(texto, x, y, 130, 50, (s, e) => Cobrar(forma));
-                x += 134;
+                var bt = Ui.Boton(texto, x, y, 130, 56, (s, e) => Cobrar(forma));
+                x += 138;
                 Controls.Add(bt);
                 return bt;
             };
@@ -249,7 +249,7 @@ namespace VentaFacil.Forms.Pos
             b("F3\nTarjeta", "TARJETA");
             b("F4\nTransfer.", "TRANSFERENCIA");
             b("F5\nVales", "VALES");
-            Controls.Add(Ui.Etiqueta("Esc = regresar a la venta", 16, 386, null, Tema.Humo));
+            Controls.Add(Ui.Etiqueta("Esc = regresar a la venta", 16, 416, null, Tema.Humo));
 
             _paga.TextChanged += (s, e) => Calcular();
             _paga.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; Cobrar("EFECTIVO"); } };
@@ -321,7 +321,7 @@ namespace VentaFacil.Forms.Pos
             _valor = Ui.Caja(100, 194, 200, Tema.Captura);
             _valor.TextAlign = HorizontalAlignment.Right;
             Controls.Add(_valor);
-            Controls.Add(Ui.Etiqueta("Valor 0 = quitar descuento", 310, 204, null, Tema.Humo));
+            Controls.Add(Ui.Etiqueta("Valor 0 = quitar descuento", 16, 238, null, Tema.Humo));
             var ok = Ui.Boton("Aplicar (Enter)", 196, 270, 130, 40, (s, e) => Aceptar());
             var no = Ui.Boton("Cancelar (Esc)", 332, 270, 130, 40, (s, e) => { DialogResult = DialogResult.Cancel; });
             Controls.Add(ok); Controls.Add(no);

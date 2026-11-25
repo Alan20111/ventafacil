@@ -42,67 +42,71 @@ namespace VentaFacil.UI
         public static readonly Font Captura = new Font(Fuente, 20f, FontStyle.Bold);
         public static readonly Font Mono = new Font("Consolas", 12f, FontStyle.Bold);
 
-        /// <summary>
-        /// Botón en píldora. El borde de Windows es rectangular y se veía "cuadrado" alrededor del botón redondo,
-        /// así que aquí no se usa: el contorno redondo se dibuja a mano con la misma forma del botón.
-        /// </summary>
-        /// <summary>Animaciones de botones y de la barra de módulos (se pueden apagar en Ajustes; ninguna dura más de ~150 ms).</summary>
+        /// <summary>Fondo de los botones secundarios: se distinguen por contraste, sin contorno.</summary>
+        public static readonly Color Suave = Color.FromArgb(214, 227, 246);
+
+        /// <summary>Animaciones de botones y de la barra de módulos (ninguna dura más de ~150 ms).</summary>
         public static bool Animaciones = true;
 
+        /// <summary>
+        /// Botón plano: sin borde, esquinas suaves y texto SIEMPRE centrado. Se dibuja completo a mano, así que no
+        /// depende de cómo Windows acomode el texto ni del contorno de «botón con foco».
+        /// </summary>
         public static void Pastilla(Button b, bool principal = false)
         {
-            b.FlatStyle = FlatStyle.Flat;
-            b.FlatAppearance.BorderSize = 0;
-            b.UseVisualStyleBackColor = false;
-            b.Cursor = Cursors.Hand;
-            var f = FundidoBoton.De(b);
-            f.Definir(principal ? Azul : Crema, principal ? AzulOscuro : Color.FromArgb(230, 240, 252), principal ? AzulOscuro : Piedra);
-            b.Paint -= DibujarContorno;
-            b.Paint += DibujarContorno;
-            b.SizeChanged -= AlCambiarTamano;
-            b.SizeChanged += AlCambiarTamano;
-            Redondear(b);
+            if (principal) Plano(b, Azul, AzulOscuro, Color.FromArgb(0, 34, 84));
+            else Plano(b, Suave, Color.FromArgb(196, 214, 241), Color.FromArgb(176, 200, 234));
         }
 
-        /// <summary>Estilo para acciones de peligro (cierre de turno, eliminar, cancelar ticket).</summary>
-        public static void BotonPeligro(Button b)
+        /// <summary>Acciones de peligro (cierre de turno, eliminar, cancelar ticket).</summary>
+        public static void BotonPeligro(Button b) { Plano(b, Rojo, Color.FromArgb(160, 15, 15), Color.FromArgb(130, 10, 10)); }
+
+        static void Plano(Button b, Color reposo, Color hover, Color abajo)
         {
             b.FlatStyle = FlatStyle.Flat;
             b.FlatAppearance.BorderSize = 0;
             b.UseVisualStyleBackColor = false;
+            b.TextAlign = ContentAlignment.MiddleCenter;
             b.Cursor = Cursors.Hand;
-            var f = FundidoBoton.De(b);
-            f.Definir(Rojo, Color.FromArgb(160, 15, 15), Color.FromArgb(130, 10, 10));
-            b.Paint -= DibujarContorno;
-            b.Paint += DibujarContorno;
-            b.SizeChanged -= AlCambiarTamano;
-            b.SizeChanged -= AlCambiarTamano;
-            Redondear(b);
+            FundidoBoton.De(b).Definir(reposo, hover, abajo);
+            b.Paint -= Dibujar;
+            b.Paint += Dibujar;
         }
 
-        static void AlCambiarTamano(object sender, EventArgs e) { Redondear((Control)sender); }
-
-        /// <summary>
-        /// Borde suave de 1 px con esquinas redondeadas.
-        /// Los botones oscuros de acción principal o peligro no lo necesitan.
-        /// </summary>
-        static void DibujarContorno(object sender, PaintEventArgs e)
+        static Color Fondo(Control c)
         {
-            var b = (Control)sender;
-            if (b.Width < 6 || b.Height < 6) return;
+            for (var p = c.Parent; p != null; p = p.Parent) if (p.BackColor.A == 255) return p.BackColor;
+            return Crema;
+        }
+
+        static void Dibujar(object sender, PaintEventArgs e)
+        {
+            var b = (Button)sender;
             var f = FundidoBoton.Buscar(b);
-            if (f != null && f.Reposo.GetBrightness() < 0.45f) return;
-            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            e.Graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
-            Color colorBorde = b.Enabled ? Color.FromArgb(175, 195, 222) : Ceniza;
-            using (var pluma = new Pen(colorBorde, 1.2f))
-            using (var forma = Forma(b.Width - 2, b.Height - 2, 7))
-            {
-                var m = new System.Drawing.Drawing2D.Matrix();
-                m.Translate(0.5f, 0.5f);
-                forma.Transform(m);
-                e.Graphics.DrawPath(pluma, forma);
+            if (f == null || b.Width < 4 || b.Height < 4) return;
+            var g = e.Graphics;
+            Color fondo = !b.Enabled ? Color.FromArgb(228, 232, 238) : f.Actual;
+            if (b.Enabled && b.Focused && b.TabStop && !f.Oprimido) fondo = FundidoBoton.Mezcla(fondo, f.Abajo, 0.45f);   // foco del teclado: más oscuro, sin borde
+            Color tinta = !b.Enabled ? Color.FromArgb(140, 148, 160) : fondo.GetBrightness() < 0.5f ? Color.White : AzulOscuro;
+            g.Clear(Fondo(b));
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            using (var br = new SolidBrush(fondo))
+            using (var ruta = Forma(b.Width, b.Height, 8)) g.FillPath(br, ruta);
+            int baja = f.Oprimido && Animaciones ? 1 : 0;
+            var bf = b as BotonF;
+            if (bf != null && !string.IsNullOrEmpty(bf.Tecla))
+            {   // atajo chico arriba y nombre abajo, los dos centrados como un bloque
+                var t1 = TextRenderer.MeasureText(bf.Tecla, BotonF.LetraTecla, Size.Empty, TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding);
+                var t2 = TextRenderer.MeasureText(bf.Nombre, b.Font, Size.Empty, TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding);
+                int y = (b.Height - t1.Height - t2.Height) / 2 + baja;
+                var fl = TextFormatFlags.HorizontalCenter | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding | TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine;
+                TextRenderer.DrawText(g, bf.Tecla, BotonF.LetraTecla, new Rectangle(0, y, b.Width, t1.Height), FundidoBoton.Mezcla(tinta, fondo, 0.30f), fl);
+                TextRenderer.DrawText(g, bf.Nombre, b.Font, new Rectangle(2, y + t1.Height, b.Width - 4, t2.Height), tinta, fl);
+                return;
             }
+            var flags = TextFormatFlags.HorizontalCenter | TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding;
+            var tam = TextRenderer.MeasureText(b.Text, b.Font, new Size(b.Width - 8, int.MaxValue), flags);
+            TextRenderer.DrawText(g, b.Text, b.Font, new Rectangle(4, (b.Height - tam.Height) / 2 + baja, b.Width - 8, tam.Height), tinta, flags);
         }
 
         /// <summary>Rectángulo redondeado suave (radio estándar de 8 px para interfaces modernas).</summary>
@@ -119,12 +123,6 @@ namespace VentaFacil.UI
             return p;
         }
 
-        /// <summary>Recorta el botón con esquinas suaves de 8 px sin dientes de sierra.</summary>
-        public static void Redondear(Control c, int radio = 8)
-        {
-            if (c.Width <= 2 || c.Height <= 2) return;
-            using (var p = Forma(c.Width, c.Height, radio)) c.Region = new Region(p);
-        }
     }
 
     /// <summary>Hover y clic con transición suave de color y garantía de alto contraste de texto.</summary>
@@ -137,6 +135,8 @@ namespace VentaFacil.UI
         float _x;          // 0 = reposo, 1 = hover
         int _dir;
         bool _abajo;
+        public Color Actual { get; private set; }
+        public bool Oprimido { get { return _abajo; } }
 
         public static FundidoBoton Buscar(Control c) { FundidoBoton f; return Tabla.TryGetValue(c, out f) ? f : null; }
         public static FundidoBoton De(Button b)
@@ -151,9 +151,11 @@ namespace VentaFacil.UI
             _b = b;
             _t.Tick += (s, e) => Paso();
             b.MouseEnter += (s, e) => { _dir = 1; Empezar(); };
-            b.MouseLeave += (s, e) => { _dir = -1; _abajo = false; b.Padding = Padding.Empty; Empezar(); };
-            b.MouseDown += (s, e) => { _abajo = true; Aplicar(); if (Tema.Animaciones) b.Padding = new Padding(0, 1, 0, 0); };
-            b.MouseUp += (s, e) => { _abajo = false; b.Padding = Padding.Empty; Aplicar(); };
+            b.MouseLeave += (s, e) => { _dir = -1; _abajo = false; Empezar(); };
+            b.MouseDown += (s, e) => { _abajo = true; Aplicar(); };
+            b.MouseUp += (s, e) => { _abajo = false; Aplicar(); };
+            b.GotFocus += (s, e) => b.Invalidate();
+            b.LostFocus += (s, e) => b.Invalidate();
             b.Disposed += (s, e) => _t.Dispose();
         }
 
@@ -177,17 +179,13 @@ namespace VentaFacil.UI
 
         void Aplicar()
         {
-            Color c = _abajo ? Abajo : Mezcla(Reposo, Hover, _x);
-            _b.BackColor = c;
-            _b.FlatAppearance.MouseOverBackColor = c;
-            // Accesibilidad de contraste:
-            // Fondo oscuro (brillo < 0.45) -> texto blanco.
-            // Fondo claro -> texto azul oscuro (Tema.AzulOscuro) con contraste > 7:1.
-            _b.ForeColor = c.GetBrightness() < 0.45f ? Color.White : Tema.AzulOscuro;
+            Actual = _abajo ? Abajo : Mezcla(Reposo, Hover, _x);
+            _b.BackColor = Actual;
+            _b.FlatAppearance.MouseOverBackColor = Actual;
             _b.Invalidate();
         }
 
-        static Color Mezcla(Color a, Color b, float t)
+        public static Color Mezcla(Color a, Color b, float t)
         {
             return Color.FromArgb((int)(a.R + (b.R - a.R) * t), (int)(a.G + (b.G - a.G) * t), (int)(a.B + (b.B - a.B) * t));
         }
@@ -204,11 +202,16 @@ namespace VentaFacil.UI
             if (Width <= 0 || Height <= 0) return;
             e.Graphics.Clear(Tema.Azul);
             e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
-            TextRenderer.DrawText(e.Graphics, Titulo, Tema.Grande, new Point(16, 8), Color.White);
+            // centrado en la altura que tenga; en encabezados bajos la letra es menor para que no se corte
+            var letra = Height >= 60 ? Tema.Grande : Tema.Mediana;
+            var tam = TextRenderer.MeasureText(Titulo, letra);
+            int y = (Height - tam.Height) / 2;
+            TextRenderer.DrawText(e.Graphics, Titulo, letra, new Point(16, y), Color.White);
             if (!string.IsNullOrEmpty(Subtitulo))
             {
-                var tam = TextRenderer.MeasureText(Titulo, Tema.Grande);
-                TextRenderer.DrawText(e.Graphics, Subtitulo, Tema.Mediana, new Point(24 + tam.Width, 24), Color.FromArgb(220, 235, 255));
+                var chica = Height >= 60 ? Tema.Mediana : Tema.Normal;
+                var t2 = TextRenderer.MeasureText(Subtitulo, chica);
+                TextRenderer.DrawText(e.Graphics, Subtitulo, chica, new Point(24 + tam.Width, y + tam.Height - t2.Height - (letra == Tema.Grande ? 4 : 1)), Color.FromArgb(220, 235, 255));
             }
         }
         protected override void OnResize(EventArgs e) { base.OnResize(e); Invalidate(); }
@@ -217,12 +220,13 @@ namespace VentaFacil.UI
     /// <summary>Botón con atajo arriba y nombre abajo: "Ctrl+F1" / "Productos".</summary>
     public class BotonF : Button
     {
-        public string Tecla;
+        public static readonly Font LetraTecla = new Font("Segoe UI", 8.5f, FontStyle.Bold);
+        public string Tecla, Nombre;
         public BotonF(string tecla, string texto, EventHandler click)
         {
-            Tecla = tecla;
-            Text = (string.IsNullOrEmpty(tecla) ? "" : tecla + "\n") + texto;
-            Font = new Font("Segoe UI", 10.5f, FontStyle.Bold);
+            Tecla = tecla; Nombre = texto;
+            Text = (string.IsNullOrEmpty(tecla) ? "" : tecla + "\n") + texto;   // para lectores de pantalla
+            Font = new Font("Segoe UI", 11f, FontStyle.Bold);
             Tema.Pastilla(this);
             TabStop = false;
             if (click != null) Click += click;
@@ -302,10 +306,13 @@ namespace VentaFacil.UI
             g.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             g.MultiSelect = false;
             g.BackgroundColor = Tema.Crema;
-            g.BorderStyle = BorderStyle.FixedSingle;
+            g.BorderStyle = BorderStyle.None;
             g.GridColor = Tema.Piedra;
             g.Font = Tema.Normal;
-            g.RowTemplate.Height = 26;
+            g.RowTemplate.Height = 28;
+            g.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
+            g.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
+            g.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             g.ColumnHeadersDefaultCellStyle.Font = Tema.Negrita;
             g.ColumnHeadersDefaultCellStyle.BackColor = Tema.Azul;
             g.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
@@ -318,12 +325,47 @@ namespace VentaFacil.UI
             g.DefaultCellStyle.SelectionForeColor = Color.Black;
             g.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             g.StandardTab = true;
+            g.ColumnHeadersDefaultCellStyle.WrapMode = DataGridViewTriState.False;
+            g.SizeChanged += (s, e) => Repartir(g);
+            g.ColumnAdded += (s, e) => Repartir(g);
+            g.ColumnStateChanged += (s, e) => { if (e.StateChanged == DataGridViewElementStates.Visible) Repartir(g); };
+            foreach (Control h in g.Controls) if (h is VScrollBar) h.VisibleChanged += (s, e) => Repartir(g);
+        }
+
+        /// <summary>Reparte el ancho según el peso de cada columna, sin que ninguna quede más angosta que su encabezado.</summary>
+        static void Repartir(DataGridView g)
+        {
+            if (g.Width < 200 || g.Columns.Count == 0) return;
+            var cols = new System.Collections.Generic.List<DataGridViewColumn>();
+            foreach (DataGridViewColumn c in g.Columns) if (c.Visible && c.Tag is int) cols.Add(c);
+            if (cols.Count == 0) return;
+            int libre = g.ClientSize.Width - 2;
+            foreach (Control h in g.Controls) if (h is VScrollBar && h.Visible) libre -= h.Width;
+            var fijo = new int[cols.Count];
+            var letra = g.ColumnHeadersDefaultCellStyle.Font ?? g.Font;
+            for (bool cambio = true; cambio; )
+            {
+                cambio = false;
+                int queda = libre; double pesos = 0;
+                for (int i = 0; i < cols.Count; i++) if (fijo[i] > 0) queda -= fijo[i]; else pesos += (int)cols[i].Tag;
+                for (int i = 0; i < cols.Count; i++)
+                {
+                    if (fijo[i] > 0) continue;
+                    int minimo = TextRenderer.MeasureText(cols[i].HeaderText, letra).Width + 12;
+                    if (queda * (int)cols[i].Tag / pesos < minimo) { fijo[i] = minimo; cambio = true; break; }
+                }
+                if (cambio) continue;
+                int usado = 0, ultimo = -1;
+                for (int i = 0; i < cols.Count; i++) { if (fijo[i] == 0) { fijo[i] = -(int)(queda * (int)cols[i].Tag / pesos); ultimo = i; } usado += Math.Abs(fijo[i]); }
+                if (ultimo >= 0) fijo[ultimo] -= Math.Max(0, libre - usado);   // el sobrante del redondeo
+            }
+            for (int i = 0; i < cols.Count; i++) if (cols[i].Width != Math.Abs(fijo[i])) cols[i].Width = Math.Max(5, Math.Abs(fijo[i]));
         }
 
         public static DataGridViewTextBoxColumn Columna(string nombre, string titulo, int peso, bool derecha = false, string formato = null)
         {
-            var c = new DataGridViewTextBoxColumn { Name = nombre, HeaderText = titulo, FillWeight = peso, SortMode = DataGridViewColumnSortMode.NotSortable };
-            if (derecha) c.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+            var c = new DataGridViewTextBoxColumn { Name = nombre, HeaderText = titulo, FillWeight = peso, Tag = peso, AutoSizeMode = DataGridViewAutoSizeColumnMode.None, SortMode = DataGridViewColumnSortMode.NotSortable };
+            if (derecha) { c.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight; c.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleRight; }
             if (formato != null) c.DefaultCellStyle.Format = formato;
             return c;
         }
@@ -348,6 +390,15 @@ namespace VentaFacil.UI
             KeyPreview = true;
         }
 
+        /// <summary>El botón que responde a Enter siempre se ve como el principal.</summary>
+        protected override void OnLoad(EventArgs e)
+        {
+            var b = AcceptButton as Button;
+            var f = b == null ? null : FundidoBoton.Buscar(b);
+            if (f != null && f.Reposo == Tema.Suave) Tema.Pastilla(b, true);
+            base.OnLoad(e);
+        }
+
         protected override void OnKeyDown(KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Escape) { DialogResult = DialogResult.Cancel; Close(); e.Handled = true; return; }
@@ -361,17 +412,20 @@ namespace VentaFacil.UI
         readonly bool _numero;
         public string Valor { get { return _txt.Text; } }
 
-        public FormPedir(string titulo, string etiqueta, string valor, bool clave, bool numero) : base(titulo, 420, 150)
+        public FormPedir(string titulo, string etiqueta, string valor, bool clave, bool numero) : base(titulo, 440, 156)
         {
             _numero = numero;
-            Controls.Add(Ui.Etiqueta(etiqueta, 16, 14, Tema.Negrita));
-            _txt = Ui.Caja(16, 42, 388, Tema.Captura);
+            int alto = TextRenderer.MeasureText(etiqueta, Tema.Negrita, new Size(408, int.MaxValue), TextFormatFlags.WordBreak).Height;
+            Controls.Add(new Label { Text = etiqueta, Left = 16, Top = 14, Width = 408, Height = alto + 2, Font = Tema.Negrita, BackColor = Color.Transparent });
+            _txt = Ui.Caja(16, 22 + alto, 408, Tema.Captura);
             _txt.Text = valor;
             if (clave) _txt.UseSystemPasswordChar = true;
             if (numero) _txt.TextAlign = HorizontalAlignment.Right;
             Controls.Add(_txt);
-            var ok = Ui.Boton("Aceptar (Enter)", 150, 96, 130, 36, (s, e) => Aceptar());
-            var no = Ui.Boton("Cancelar (Esc)", 288, 96, 116, 36, (s, e) => { DialogResult = DialogResult.Cancel; });
+            int y = 22 + alto + _txt.PreferredHeight + 16;
+            ClientSize = new Size(440, y + 56);
+            var ok = Ui.Boton("Aceptar (Enter)", 128, y, 148, 40, (s, e) => Aceptar(), true);
+            var no = Ui.Boton("Cancelar (Esc)", 284, y, 140, 40, (s, e) => { DialogResult = DialogResult.Cancel; });
             Controls.Add(ok); Controls.Add(no);
             AcceptButton = ok; CancelButton = no;
             Shown += (s, e) => { _txt.SelectAll(); _txt.Focus(); };
