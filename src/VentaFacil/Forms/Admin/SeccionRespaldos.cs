@@ -38,7 +38,7 @@ namespace VentaFacil.Forms.Admin
             y += 28;
             p.Controls.Add(Ui.Etiqueta("Reemplaza TODOS los datos actuales por los de un respaldo. Úselo sólo si se dañó la información o cambió de computadora.", 16, y, null, Tema.Humo));
             y += 26;
-            var restaurar = Ui.Boton("Restaurar respaldo…", 16, y, 200, 42, (s, e) => Restaurar());
+            var restaurar = Ui.Boton("Restaurar respaldo…", 16, y, 200, 42, (s, e) => { if (Restaurar()) Application.Exit(); });
             Tema.BotonPeligro(restaurar);
             p.Controls.Add(restaurar);
         }
@@ -67,17 +67,18 @@ namespace VentaFacil.Forms.Admin
             catch (Exception ex) { Ui.Error(ex, "Abrir carpeta"); }
         }
 
-        void Restaurar()
+        /// <summary>Reemplaza todo por un respaldo. true si se hizo: hay que cerrar el programa.</summary>
+        public static bool Restaurar()
         {
             using (var d = new OpenFileDialog { Filter = "Respaldo VentaFácil|*.db", Title = "Elija el respaldo a restaurar" })
             {
                 if (d.InitialDirectory == "") d.InitialDirectory = Path.Combine(Db.Carpeta, "respaldos");
-                if (d.ShowDialog() != DialogResult.OK) return;
+                if (d.ShowDialog() != DialogResult.OK) return false;
                 if (string.Equals(Path.GetFullPath(d.FileName), Path.GetFullPath(Db.Archivo), StringComparison.OrdinalIgnoreCase))
-                { Ui.Aviso("Ese es el archivo de datos actual."); return; }
+                { Ui.Aviso("Ese es el archivo de datos actual."); return false; }
                 if (!Ui.Confirmar("ATENCIÓN: se reemplazarán TODOS los datos actuales (ventas, productos, usuarios) por los del respaldo:\n\n" +
-                    d.FileName + "\n\nAntes se guardará una copia de los datos actuales.\n¿Continuar?")) return;
-                if (Ui.PedirTexto("Confirmar", "Escriba RESTAURAR para confirmar:") != "RESTAURAR") return;
+                    d.FileName + "\n\nAntes se guardará una copia de los datos actuales.\n¿Continuar?")) return false;
+                if (Ui.PedirTexto("Confirmar", "Escriba RESTAURAR para confirmar:") != "RESTAURAR") return false;
                 try
                 {
                     Db.Respaldar(); // copia de lo actual, por si acaso
@@ -88,9 +89,9 @@ namespace VentaFacil.Forms.Admin
                         if (File.Exists(extra)) File.Delete(extra);
                     File.Copy(d.FileName, Db.Archivo, true);
                     Ui.Info("Respaldo restaurado.\n\nEl programa se cerrará. Vuelva a abrirlo.");
-                    Application.Exit();
+                    return true;
                 }
-                catch (Exception ex) { Ui.Error(ex, "No se pudo restaurar. Cierre y abra el programa e intente de nuevo"); }
+                catch (Exception ex) { Ui.Error(ex, "No se pudo restaurar. Cierre y abra el programa e intente de nuevo"); return false; }
             }
         }
     }

@@ -19,7 +19,7 @@ namespace VentaFacil.Forms.Admin
             _grid = AdminUtil.Grid();
             _grid.Columns.Add(Ui.Columna("usuario", "Usuario", 25));
             _grid.Columns.Add(Ui.Columna("nombre", "Nombre", 45));
-            _grid.Columns.Add(Ui.Columna("rol", "Tipo", 20));
+            _grid.Columns.Add(Ui.Columna("rol", "Perfil", 20));
             _grid.Columns.Add(Ui.Columna("activo", "Activo", 10));
             _grid.CellDoubleClick += (s, e) => { if (e.RowIndex >= 0) Modificar(); };
             _grid.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; Modificar(); } };
@@ -48,7 +48,7 @@ namespace VentaFacil.Forms.Admin
                 _grid.Rows.Clear();
                 foreach (var u in UsuarioRepo.Todos())
                 {
-                    int i = _grid.Rows.Add(u.Login, u.Nombre, u.EsAdmin ? "Administrador" : u.Permisos == "" ? "Cajero" : "Cajero (permisos propios)", u.Activo ? "Sí" : "No");
+                    int i = _grid.Rows.Add(u.Login, u.Nombre, Permisos.PerfilDe(u, Config.Actual.CajeroPuedeCancelar), u.Activo ? "Sí" : "No");
                     _grid.Rows[i].Tag = u;
                     if (!u.Activo) _grid.Rows[i].DefaultCellStyle.ForeColor = Tema.Humo;
                 }
@@ -98,7 +98,7 @@ namespace VentaFacil.Forms.Admin
         readonly CheckBox _activo;
         readonly System.Collections.Generic.Dictionary<string, CheckBox> _casillas = new System.Collections.Generic.Dictionary<string, CheckBox>();
 
-        public FormUsuario(Usuario u) : base(u == null ? "Nuevo usuario" : "Modificar usuario", 760, 440)
+        public FormUsuario(Usuario u) : base(u == null ? "Nuevo usuario" : "Modificar usuario", 760, 476)
         {
             _u = u ?? new Usuario();
             int x = 170, y = 16;
@@ -108,10 +108,9 @@ namespace VentaFacil.Forms.Admin
             Controls.Add(Ui.Etiqueta("Nombre completo:", 16, y + 4));
             _nombre = Ui.Caja(x, y, 260); _nombre.Text = _u.Nombre; Controls.Add(_nombre);
             y += 40;
-            Controls.Add(Ui.Etiqueta("Tipo:", 16, y + 4));
+            Controls.Add(Ui.Etiqueta("Perfil:", 16, y + 4));
             _rol = new ComboBox { Left = x, Top = y, Width = 260, DropDownStyle = ComboBoxStyle.DropDownList, Font = Tema.Normal };
-            _rol.Items.Add("Cajero"); _rol.Items.Add("Administrador");
-            _rol.SelectedIndex = _u.EsAdmin ? 1 : 0;
+            foreach (var p in new[] { Permisos.PerfilCajero, Permisos.PerfilEncargado, Permisos.PerfilPersonalizado, Permisos.PerfilAdmin }) _rol.Items.Add(p);
             Controls.Add(_rol);
             y += 40;
             Controls.Add(Ui.Etiqueta("Contraseña:", 16, y + 4));
@@ -124,20 +123,25 @@ namespace VentaFacil.Forms.Admin
             _activo = new CheckBox { Text = "Activo", Left = 16, Top = y + 12, AutoSize = true, Checked = _u.Id == 0 || _u.Activo };
             Controls.Add(_activo);
 
-            // ---- permisos (solo para cajeros; el administrador puede todo) ----
-            var grupo = new GroupBox { Text = "Puede usar", Left = 456, Top = 10, Width = 288, Height = 360, Font = Tema.Negrita, BackColor = Color.Transparent };
+            // ---- casillas: el perfil las marca y después se pueden ajustar (el administrador puede todo, siempre) ----
+            var grupo = new GroupBox { Text = "Puede usar", Left = 456, Top = 10, Width = 288, Height = 396, Font = Tema.Negrita, BackColor = Color.Transparent };
             int py = 26;
             foreach (var p in Permisos.Todos)
             {
                 var c = new CheckBox { Text = p.Nombre, Left = 14, Top = py, Width = 264, Height = 26, Font = Tema.Normal };
                 _casillas[p.Clave] = c;
+                c.CheckedChanged += (s, e) => AlCambiarCasilla();
                 grupo.Controls.Add(c);
                 py += 28;
             }
             Controls.Add(grupo);
-            Controls.Add(Ui.Etiqueta("Cobrar y su propio corte siempre puede.", 16, 336, null, Tema.Humo));
-            _rol.SelectedIndexChanged += (s, e) => MostrarPermisos();
-            MostrarPermisos();
+            _nota = new Label { Left = 16, Top = 318, Width = 426, Height = 92, Font = Tema.Normal, ForeColor = Tema.Humo, BackColor = Color.Transparent };
+            Controls.Add(_nota);
+            var inicial = new Usuario { Rol = "CAJERO", Permisos = _u.Permisos };
+            Marcar(_u.EsAdmin ? Permisos.DePerfil(Permisos.PerfilAdmin, CPC) : Permisos.Todos.Where(p => Permisos.Tiene(inicial, p.Clave, CPC)).Select(p => p.Clave).ToList());
+            _rol.SelectedItem = Permisos.PerfilDe(_u, CPC);
+            MostrarPerfil();
+            _rol.SelectedIndexChanged += (s, e) => { if (!_llenando) { var l = Permisos.DePerfil(Perfil, CPC); if (l != null) Marcar(l); MostrarPerfil(); } };
 
             var ok = Ui.Boton("Guardar", 486, ClientSize.Height - 50, 130, 38, (s, e) => Guardar());
             var no = Ui.Boton("Cancelar", 622, ClientSize.Height - 50, 120, 38, (s, e) => { DialogResult = DialogResult.Cancel; });
@@ -146,12 +150,37 @@ namespace VentaFacil.Forms.Admin
             Shown += (s, e) => _login.Focus();
         }
 
-        /// <summary>Administrador: todo marcado y fijo. Cajero: lo que tiene hoy (o lo de fábrica), editable.</summary>
-        void MostrarPermisos()
+        bool _llenando;
+        Label _nota;
+        static bool CPC { get { return Config.Actual.CajeroPuedeCancelar; } }
+        string Perfil { get { return Convert.ToString(_rol.SelectedItem); } }
+        System.Collections.Generic.List<string> Marcadas() { return _casillas.Where(k => k.Value.Checked).Select(k => k.Key).ToList(); }
+
+        void Marcar(System.Collections.Generic.ICollection<string> claves)
         {
-            bool admin = _rol.SelectedIndex == 1;
-            var cajero = new Usuario { Rol = "CAJERO", Permisos = _u.Permisos };
-            foreach (var kv in _casillas) { kv.Value.Checked = admin || Permisos.Tiene(cajero, kv.Key); kv.Value.Enabled = !admin; }
+            _llenando = true;
+            try { foreach (var kv in _casillas) kv.Value.Checked = claves.Contains(kv.Key); }
+            finally { _llenando = false; }
+        }
+
+        /// <summary>Al tocar una casilla, el perfil pasa solo al que corresponda (o a Personalizado).</summary>
+        void AlCambiarCasilla()
+        {
+            if (_llenando || Perfil == Permisos.PerfilAdmin) return;
+            _llenando = true;
+            try { _rol.SelectedItem = Permisos.PerfilDe(Marcadas(), CPC); }
+            finally { _llenando = false; }
+            MostrarPerfil();
+        }
+
+        void MostrarPerfil()
+        {
+            bool admin = Perfil == Permisos.PerfilAdmin;
+            foreach (var kv in _casillas) kv.Value.Enabled = !admin;
+            _nota.Text = admin ? "Puede todo, siempre. Es el único que entra a Usuarios, Respaldos y el enlace de Envíos."
+                : Perfil == Permisos.PerfilEncargado ? "Todos los módulos y acciones, menos Usuarios, Respaldos y el enlace de Envíos."
+                : Perfil == Permisos.PerfilCajero ? "Lo básico para cobrar. Puede marcarle más casillas."
+                : "Solo lo que esté marcado.\nCobrar y su propio corte siempre puede.";
         }
 
         void Guardar()
@@ -160,19 +189,19 @@ namespace VentaFacil.Forms.Admin
             if (_nombre.Text.Trim() == "") { Ui.Aviso("Escriba el nombre completo."); _nombre.Focus(); return; }
             if (_u.Id == 0 && _clave.Text == "") { Ui.Aviso("Escriba una contraseña."); _clave.Focus(); return; }
             if (_clave.Text != _clave2.Text) { Ui.Aviso("Las contraseñas no coinciden."); _clave2.Focus(); return; }
-            string rol = _rol.SelectedIndex == 1 ? "ADMIN" : "CAJERO";
+            string rol = Perfil == Permisos.PerfilAdmin ? "ADMIN" : "CAJERO";
             try
             {
                 bool eraAdminActivo = _u.Id != 0 && _u.EsAdmin && _u.Activo;
                 if (eraAdminActivo && (rol != "ADMIN" || !_activo.Checked) && UsuarioRepo.AdminsActivos() <= 1)
                 {
-                    Ui.Aviso("Este es el único administrador activo.\nNo se puede desactivar ni cambiar a cajero.");
+                    Ui.Aviso("Este es el único administrador activo.\nNo se puede desactivar ni cambiar a otro perfil.");
                     return;
                 }
                 _u.Login = _login.Text.Trim();
                 _u.Nombre = _nombre.Text.Trim();
                 _u.Rol = rol;
-                if (rol != "ADMIN") _u.Permisos = Permisos.Guardar(_casillas.Where(k => k.Value.Checked).Select(k => k.Key).ToList(), Config.Actual.CajeroPuedeCancelar);
+                if (rol != "ADMIN") _u.Permisos = Permisos.Guardar(Marcadas(), CPC);
                 _u.Activo = _activo.Checked;
                 UsuarioRepo.Guardar(_u, _clave.Text == "" ? null : _clave.Text);
                 if (Sesion.Usuario != null && Sesion.Usuario.Id == _u.Id) { Sesion.Usuario.Nombre = _u.Nombre; Sesion.Usuario.Login = _u.Login; Sesion.Usuario.Rol = _u.Rol; Sesion.Usuario.Permisos = _u.Permisos; Sesion.Usuario.Activo = _u.Activo; }

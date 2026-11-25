@@ -5,7 +5,7 @@ Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y
 
 > Lo que se probó fuera de Windows (en una Mac): claves de licencia, lectura/escritura de Excel del conteo,
 > redondeo de dinero, detección de base dañada, y el código de barras Code 128 (contra una librería independiente) y la trama ESC/POS de las etiquetas.
-> **El dibujo de la etiqueta, su impresión real y la lectura con el lector NO se han probado: son el paso 36. Tampoco se han visto en pantalla los módulos (37 a 40b), el asistente de importación (41 a 48) ni su conexión a un SQL Server real, los permisos (49 a 56) ni los envíos y el reporte (57 a 81).**
+> **El dibujo de la etiqueta, su impresión real y la lectura con el lector NO se han probado: son el paso 36. Tampoco se han visto en pantalla los módulos (37 a 40b), el asistente de importación (41 a 48) ni su conexión a un SQL Server real, los permisos (49 a 56) ni los envíos y el reporte (57 a 81), ni el asistente (2 a 4d).**
 >
 > **Sí se probó con un SQLite de verdad** (herramientas/pruebas-datos, con un adaptador porque `System.Data.SQLite` solo existe para Windows): el código real de esquema, migración, productos, códigos de barras, cobros, cancelaciones, cortes, dinero exacto, conteo, respaldos, base dañada, restauración y la **aplicación** del importador. **Nada de lo que sigue se había probado en Windows.**
 
@@ -13,9 +13,12 @@ Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y
 | # | Qué hacer | Debe pasar |
 |---|-----------|-----------|
 | 1 | Copiar `VentaFacil.exe` a la laptop y abrirlo | Se copia a `C:\VentaFacil`, aparecen **VentaFácil** y **VentaFácil - Reparar** en el escritorio y se abre el programa |
-| 2 | Primer arranque | Pregunta dónde guardar los respaldos (por defecto escritorio\VentaFacil_Respaldos) |
-| 3 | Entrar con `admin` / `admin` | Entra y avisa de la impresora la primera vez |
-| 4 | F6 Ajustes → Usuarios | Cambiar la contraseña de `admin` y crear un cajero |
+| 2 | Primer arranque (sin datos) | Se abre el **asistente**; se ve completo en 1366x768 |
+| 3 | Asistente: Caja → crear la cuenta de administrador (probar antes una clave de 3 letras, «admin» y dos distintas) | Rechaza las malas; con la buena sigue. `admin` / `admin` ya no entra |
+| 4 | Asistente: negocio, usuarios (crear un cajero), respaldos, impresora, forma de trabajar, productos, licencia, Listo | Cada paso se guarda; «Listo» dice qué falta; al Terminar entra sin pedir clave |
+| 4b | Cerrar el asistente a la mitad y volver a abrir el programa | No se pierde lo hecho; está en F6 Ajustes → Negocio → Asistente |
+| 4c | **Actualizar** sobre una versión anterior con datos y entrar como cajero; luego como administrador | Al cajero no le sale nada; al administrador, «Configurar / No configurar»; al elegir No, no vuelve a salir. Usuarios, ventas e impresora siguen igual |
+| 4d | «Configurar» y brincar con la lista de la izquierda | Cambia solo lo que se toque |
 
 ## B. Impresora y cajón
 | # | Qué hacer | Debe pasar |
@@ -106,10 +109,10 @@ Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y
 | 50 | Cajero: F2 Turno → Cortes | Abre **su** corte; la lista solo trae su nombre; corte de caja y Z piden clave |
 | 51 | Administrador dentro de Catálogo → F10 → entrar como cajero | Regresa a Caja; F3 vuelve a pedir clave |
 | 52 | Cajero entra a Ajustes con clave de admin, vuelve a Caja y pulsa F6 | Vuelve a pedir clave |
-| 53 | Ajustes → Usuarios → un cajero: marcar Almacén, quitar cajón; entrar con él | Almacén abre sin clave; abrir cajón la pide |
-| 54 | Dar Ajustes a un cajero y entrar con él | No ve Usuarios ni Respaldos |
+| 53 | Ajustes → Usuarios: elegir cada **Perfil** y ver las casillas; luego un cajero: marcar Almacén y quitar cajón; entrar con él | El perfil marca las casillas; al tocarlas pasa solo a Personalizado; las 12 casillas se ven completas. Almacén abre sin clave; abrir cajón la pide |
+| 54 | Crear un **Encargado** y entrar con él | Entra a todo sin clave, pero no ve Usuarios, Respaldos ni Envíos en Ajustes |
 | 55 | En Catálogo, Grupos y Usuarios: F1–F6 y Ctrl+N / Ctrl+M / Ctrl+E | F1–F6 cambian de módulo siempre (F5 ya **no** elimina); Ctrl+letra hace la acción |
-| 56 | Abrir con la base de la v1.17 | Siguen todos los usuarios con su clave |
+| 56 | Abrir con la base de la v1.17 | Siguen todos los usuarios con su clave y sus permisos |
 
 ## L. Envíos oficina → tienda (dos computadoras y una USB)
 | # | Qué hacer | Debe pasar |

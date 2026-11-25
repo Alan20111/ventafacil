@@ -605,7 +605,7 @@ namespace VentaFacil.Forms.Admin
             if (!oficina && !tienda)
             {
                 p.Controls.Add(Ui.Etiqueta("EN LA COMPUTADORA DE LA OFICINA (instalación nueva, sin ventas): abra el archivo de enlace de la tienda.", 16, y, null, Tema.Humo)); y += 30;
-                p.Controls.Add(Ui.Boton("2. Convertir este equipo en la oficina…", 16, y, 320, 42, (s, e) => Convertir())); y += 70;
+                p.Controls.Add(Ui.Boton("2. Convertir este equipo en la oficina…", 16, y, 320, 42, (s, e) => { if (Convertir(FindForm())) Repintar(); })); y += 70;
             }
             if (oficina)
             {
@@ -643,24 +643,24 @@ namespace VentaFacil.Forms.Admin
             catch (Exception ex) { Cursor = Cursors.Default; Ui.Error(ex, "No se creó el enlace"); }
         }
 
-        void Convertir()
+        public static bool Convertir(IWin32Window dueno)
         {
-            string f = EnvioUtil.PedirArchivo(FindForm(), "Elija el archivo de enlace de la tienda", "Enlace de VentaFácil (*.vfenlace)|*.vfenlace");
-            if (f == null) return;
-            if (!Ui.Confirmar("Este equipo será la OFICINA:\n\n• El catálogo de aquí se reemplaza por el de la tienda (antes se guarda un respaldo).\n• Aquí ya no se podrá cobrar.\n\n¿Continuar?")) return;
+            string f = EnvioUtil.PedirArchivo(dueno, "Elija el archivo de enlace de la tienda", "Enlace de VentaFácil (*.vfenlace)|*.vfenlace");
+            if (f == null) return false;
+            if (!Ui.Confirmar("Este equipo será la OFICINA:\n\n• El catálogo de aquí se reemplaza por el de la tienda (antes se guarda un respaldo).\n• Aquí ya no se podrá cobrar.\n\n¿Continuar?")) return false;
             string c = Ui.PedirTexto("Contraseña del enlace", "La contraseña que se puso en la caja:", "", true);
-            if (c == null) return;
+            if (c == null) return false;
             try
             {
-                Cursor = Cursors.WaitCursor;
+                Cursor.Current = Cursors.WaitCursor;
                 int n = Envios.ConvertirEnOficina(f, c);
                 SeccionMercancia.Olvidar();
                 if (Envios.Dato("negocio") != "") { var cfg = Config.Actual.Copia(); cfg.NegocioNombre = Envios.Dato("negocio"); cfg.Guardar(); }
-                Cursor = Cursors.Default;
+                Cursor.Current = Cursors.Default;
                 Ui.Info("Listo: este equipo es la oficina, con " + n + " productos de la tienda.\n\nSalga a Caja (Esc) y vuelva a entrar a F4 Almacén para ver «Llegó mercancía» y «Envíos».");
-                Repintar();
+                return true;
             }
-            catch (Exception ex) { Cursor = Cursors.Default; Ui.Error(ex, "No se convirtió en oficina"); }
+            catch (Exception ex) { Cursor.Current = Cursors.Default; Ui.Error(ex, "No se convirtió en oficina"); return false; }
         }
 
         void Quitar()

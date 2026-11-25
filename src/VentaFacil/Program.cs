@@ -68,6 +68,7 @@ namespace VentaFacil
                 Application.ThreadException += (s, e) => Ui.Error(e.Exception, "Ocurrió un error inesperado. Sus ventas guardadas no se pierden. Si vuelve a pasar, cierre y abra el programa.");
                 AppDomain.CurrentDomain.UnhandledException += (s, e) => Log.Error(e.ExceptionObject as Exception, "No controlado");
 
+                bool nueva = false;
                 try
                 {
                     try { Db.Inicializar(); }
@@ -79,7 +80,12 @@ namespace VentaFacil
                         Db.Inicializar();
                     }
                     Config.Cargar();
-                    ElegirCarpetaRespaldo();
+                    nueva = PrimeraVez.EsInstalacionNueva();
+                    if (nueva)
+                    {   // el asistente pregunta la carpeta; mientras, que ya haya respaldos
+                        if (!Config.Actual.CarpetaRespaldoRevisada) { var c = Config.Actual.Copia(); c.CarpetaRespaldo = Forms.Admin.FormAsistente.PorDefecto; c.Guardar(); }
+                    }
+                    else ElegirCarpetaRespaldo();
                 }
                 catch (Exception ex)
                 {
@@ -108,13 +114,50 @@ namespace VentaFacil
                 }
                 catch (Exception ex) { Log.Error(ex, "Respaldo automático"); }
 
-                using (var login = new FormLogin(false, null))
+                var vv = typeof(Program).Assembly.GetName().Version;
+                string version = vv.Major + "." + vv.Minor;
+                bool asistente = false;
+                if (nueva)
+                {   // instalación nueva: se configura todo antes de entrar, empezando por la cuenta del administrador
+                    Sesion.Usuario = UsuarioRepo.Validar("admin", "admin");
+                    asistente = true;
+                    try
+                    {
+                        using (var f = new Forms.Admin.FormAsistente(true) { StartPosition = FormStartPosition.CenterScreen, ShowInTaskbar = true })
+                        {
+                            f.ShowDialog();
+                            if (f.Restaurado) return;
+                            if (f.CuentaLista) PrimeraVez.MarcarVista(version);
+                            else Sesion.Usuario = null;      // no creó su cuenta: entra con la de fábrica
+                        }
+                    }
+                    catch (Exception ex) { Log.Error(ex, "Asistente"); Sesion.Usuario = null; }
+                }
+                if (Sesion.Usuario == null)
+                    using (var login = new FormLogin(false, null))
+                    {
+                        if (login.ShowDialog() != DialogResult.OK) return;
+                        Sesion.Usuario = login.UsuarioValido;
+                    }
+                // Después de actualizar: configurar o seguir igual. Solo a un administrador; si entra un cajero, se queda pendiente.
+                if (!asistente && PrimeraVez.HayQuePreguntar(version, Sesion.Usuario))
                 {
-                    if (login.ShowDialog() != DialogResult.OK) return;
-                    Sesion.Usuario = login.UsuarioValido;
+                    try
+                    {
+                        DialogResult r;
+                        using (var f = new Forms.Admin.FormActualizado(version)) r = f.ShowDialog();
+                        if (r == DialogResult.Yes)
+                        {
+                            asistente = true;
+                            using (var f = new Forms.Admin.FormAsistente(false) { StartPosition = FormStartPosition.CenterScreen, ShowInTaskbar = true }) { f.ShowDialog(); if (f.Restaurado) return; }
+                        }
+                        PrimeraVez.MarcarVista(version);
+                        Config.Cargar();
+                    }
+                    catch (Exception ex) { Log.Error(ex, "Asistente de actualización"); }
                 }
                 // Primer arranque: detectar la impresora y probarla
-                if (!Config.Actual.ImpresoraRevisada && Sesion.Usuario.EsAdmin)
+                if (!asistente && !Config.Actual.ImpresoraRevisada && Sesion.Usuario.EsAdmin && !Envios.EsOficina)
                 {
                     try
                     {

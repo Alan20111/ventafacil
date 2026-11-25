@@ -50,9 +50,23 @@ namespace VentaFacil.Forms.Admin
             barra.Controls.Add(AdminUtil.BotonBarra("Ticket prueba", (s, e) => Prueba(), 130));
             barra.Controls.Add(AdminUtil.BotonBarra("Probar cajón", (s, e) => ProbarCajon(), 115));
             barra.Controls.Add(AdminUtil.BotonBarra("Licencia", (s, e) => VentaFacil.Forms.Licenciamiento.FormLicencia.Mostrar(Licencia.Evaluar(), true), 95));
+            barra.Controls.Add(AdminUtil.BotonBarra("Asistente", (s, e) => Asistente(), 110));
             Controls.Add(barra);
             Controls.Add(AdminUtil.TituloSeccion("Configuración"));
             Llenar();
+        }
+
+        /// <summary>El mismo asistente de la instalación, para repasar todo.</summary>
+        void Asistente()
+        {
+            if (Ui.Autorizar(Permisos.SoloAdmin, "El asistente requiere un administrador") == null) return;
+            bool restaurado;
+            using (var f = new FormAsistente(false)) { f.ShowDialog(FindForm()); restaurado = f.Restaurado; }
+            if (restaurado) { Application.Exit(); return; }
+            Config.Cargar();
+            Control m = Parent;
+            while (m != null && !(m is ModuloVista)) m = m.Parent;
+            if (m != null) BeginInvoke((Action)(() => ((ModuloVista)m).Recargar()));   // muestra lo que cambió
         }
 
         // ---------------- construcción de pestañas ----------------

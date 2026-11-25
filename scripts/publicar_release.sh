@@ -57,8 +57,8 @@ $CAMBIOS
 ## Antes de abrirlo
 
 1. Windows 7: instalar **.NET Framework 4.8** (sin él no abre; Windows 8, 10 y 11 ya lo traen).
-2. Entrar con usuario \`admin\`, contraseña \`admin\` (cámbiela en **F6 Ajustes** → Usuarios).
-3. La primera vez se abre la ventana de impresora: **Detectar automáticamente** → **F3 Imprimir prueba** → **Guardar**.
+2. **Instalación nueva:** se abre el asistente (cuenta, negocio, usuarios, respaldos, impresora, productos y licencia).
+3. **Actualización:** abra este archivo con VentaFácil cerrado. Sus datos se conservan; al entrar un administrador pregunta si quiere configurar o no.
 4. Para cargar los productos de la semillera: **F3 Catálogo** → **Importar Excel**.
 
 > Compilado con el SDK de .NET desde macOS (commit $(git rev-parse --short HEAD)).

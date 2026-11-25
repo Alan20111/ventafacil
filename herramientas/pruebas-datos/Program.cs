@@ -86,9 +86,44 @@ Seccion("Permisos por usuario");
     Revisar("sin ninguna casilla no puede nada (no vuelve a lo de fábrica)", caj.Permisos == "=" && Permisos.Todos.All(i => !P(caj, i.Clave)));
     Revisar("marcar justo lo de fábrica se guarda como «de fábrica»", Permisos.Guardar(new[] { Permisos.Cajon, Permisos.Turno, Permisos.Movimientos, Permisos.Envios }, false) == "");
     Revisar("todas las casillas no dan lo exclusivo de administrador, ni escribiéndolo a mano", !P(new Usuario { Permisos = Permisos.Guardar(Permisos.Todos.Select(i => i.Clave).ToList(), false) }, Permisos.SoloAdmin) && !P(new Usuario { Permisos = "=solo_admin" }, Permisos.SoloAdmin));
+    var todas = Permisos.Todos.Select(i => i.Clave).ToList();
+    Func<Usuario, bool, string> Pf = (u, c) => Permisos.PerfilDe(u, c);
+    Revisar("perfil Encargado: todas las casillas; puede todo menos lo exclusivo de administrador", Permisos.Guardar(todas, false) == "*" && Pf(new Usuario { Permisos = "*" }, false) == "Encargado" && todas.All(k => P(new Usuario { Permisos = "*" }, k)) && !P(new Usuario { Permisos = "*" }, Permisos.SoloAdmin) && !P(new Usuario { Permisos = "*" }, "otra"));
+    Revisar("los perfiles se deducen: Cajero, Personalizado y Administrador", Pf(new Usuario(), false) == "Cajero" && Pf(new Usuario { Permisos = "=turno" }, false) == "Personalizado" && Pf(new Usuario { Permisos = "=" }, false) == "Personalizado" && Pf(new Usuario { Rol = "ADMIN" }, false) == "Administrador" && Pf(new Usuario { Activo = false }, false) == "Cajero");
+    Revisar("cada perfil vuelve a ser el mismo al guardarlo, con y sin el ajuste general", new[] { false, true }.All(c => new[] { "Cajero", "Encargado" }.All(n => Permisos.PerfilDe(Permisos.DePerfil(n, c), c) == n && Pf(new Usuario { Permisos = Permisos.Guardar(Permisos.DePerfil(n, c), c) }, c) == n)) && Permisos.DePerfil("Personalizado", false) == null);
+    Revisar("con el ajuste general, el Cajero sigue viéndose Cajero y conserva cancelar y descuentos", Pf(new Usuario(), true) == "Cajero" && Permisos.Tiene(new Usuario(), Permisos.Cancelar, true));
+    Revisar("lo guardado antes no cambia: lista completa = mismos permisos (se ve Encargado); lista de la v1.18 sin envíos sigue sin ellos", Pf(new Usuario { Permisos = "=" + string.Join(",", todas) }, false) == "Encargado" && !P(new Usuario { Permisos = "=turno,catalogo,almacen,resultados,ajustes,movimientos,cajon,descuentos,cancelar,corte_caja,corte_z" }, Permisos.Envios));
+    Revisar("todas las combinaciones de casillas se guardan y se leen igual (4096 × 2)", Enumerable.Range(0, 1 << todas.Count).All(n => new[] { false, true }.All(c => { var m = todas.Where((k, i) => (n >> i & 1) == 1).ToList(); var u = new Usuario { Permisos = Permisos.Guardar(m, c) }; return todas.All(k => Permisos.Tiene(u, k, c) == m.Contains(k)); })));
     Revisar("un nombre parecido no cuenta (corte_zz, turnos)", !P(new Usuario { Permisos = "=corte_zz,turnos" }, Permisos.CorteZ) && !P(new Usuario { Permisos = "=corte_zz,turnos" }, Permisos.Turno));
     Revisar("un usuario inactivo o nulo no puede nada", !P(new Usuario { Rol = "ADMIN", Activo = false }, Permisos.Turno) && !P(null, Permisos.Turno));
 }
+
+Seccion("Asistente: cuándo sale");
+{
+    Limpiar();
+    Revisar("base recién creada: es instalación nueva", PrimeraVez.EsInstalacionNueva() && PrimeraVez.ClaveDeFabrica());
+    Revisar("y volver a abrir sin terminar sigue siendo nueva", Con3(() => { Db.Inicializar(); Config.Cargar(); return PrimeraVez.EsInstalacionNueva(); }));
+    Revisar("la revisión dice lo que falta (contraseña, negocio, respaldos, cajera, impresora y productos)", PrimeraVez.Revision().Count == 6 && PrimeraVez.Revision().All(x => !x.Bien));
+    Revisar("como oficina no pide cajera, impresora ni productos, pero sí enlazarla", PrimeraVez.Revision(true).Count == 4 && PrimeraVez.Revision(true)[3].Texto.Contains("enlazar"));
+    var mal = new[] { new[] { "", "A", "1234", "1234" }, new[] { "a", " ", "1234", "1234" }, new[] { "a", "A", "123", "123" }, new[] { "x", "A", "Admin", "Admin" }, new[] { "dueno", "A", "DUENO", "DUENO" }, new[] { "a", "A", "1234", "12345" } };
+    Revisar("no acepta cuentas malas: vacías, clave corta, «admin», igual al usuario o que no coincide", mal.All(m => PrimeraVez.RevisarCuenta(m[0], m[1], m[2], m[3]) != null) && PrimeraVez.RevisarCuenta("alan", "Alan", "semilla9", "semilla9") == null);
+    var u0 = admin(); u0.Login = "alan"; u0.Nombre = "Alan"; UsuarioRepo.Guardar(u0, "semilla9");
+    Revisar("al crear la cuenta, admin/admin deja de servir, la nueva entra y sigue siendo administrador", admin() == null && !PrimeraVez.ClaveDeFabrica() && UsuarioRepo.Validar("alan", "semilla9").EsAdmin && UsuarioRepo.AdminsActivos() == 1);
+    Revisar("con la cuenta hecha ya no es instalación nueva", !PrimeraVez.EsInstalacionNueva());
+    var ad = UsuarioRepo.Validar("alan", "semilla9"); var cj = new Usuario { Rol = "CAJERO" };
+    PrimeraVez.MarcarVista("1.23"); Config.Cargar();
+    Revisar("misma versión: no pregunta; al actualizar pregunta al administrador y no al cajero ni a nadie sin sesión", !PrimeraVez.HayQuePreguntar("1.23", ad) && PrimeraVez.HayQuePreguntar("1.24", ad) && !PrimeraVez.HayQuePreguntar("1.24", cj) && !PrimeraVez.HayQuePreguntar("1.24", null));
+    PrimeraVez.MarcarVista("1.24"); Config.Cargar();
+    Revisar("«No configurar» queda guardado y no vuelve a preguntar", !PrimeraVez.HayQuePreguntar("1.24", ad));
+    // Tiendas que ya existían (sin el dato de versión): nunca se tratan como nuevas
+    Limpiar(); ProductoRepo.Guardar(new Producto { Codigo = "1", Descripcion = "X", Precio = 1m }, admin().Id);
+    Revisar("una base con productos y admin/admin NO es nueva, pero sí se pregunta al actualizar", !PrimeraVez.EsInstalacionNueva() && PrimeraVez.HayQuePreguntar("1.23", admin()));
+    Limpiar(); UsuarioRepo.Guardar(new Usuario { Login = "caja", Nombre = "Caja" }, "1234");
+    Revisar("una base con otro usuario NO es nueva", !PrimeraVez.EsInstalacionNueva());
+    Limpiar(); TurnoRepo.Abrir(1, admin().Id, 0); { var v = new Venta { TurnoId = 1, Caja = 1, Articulos = 1, Total = 1 }; v.Lineas.Add(new LineaVenta { Descripcion = "V", Cantidad = 1, Precio = 1 }); VentaRepo.Guardar(v, admin().Id); }
+    Revisar("una base con ventas NO es nueva", !PrimeraVez.EsInstalacionNueva());
+}
+bool Con3(Func<bool> f) => f();
 
 // ================================================================ 2. Productos y códigos de barras
 Seccion("Productos y códigos de barras");
