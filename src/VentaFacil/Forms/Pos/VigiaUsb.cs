@@ -68,7 +68,7 @@ namespace VentaFacil.Forms.Pos
             }
             if (Envios.EsOficina)
                 foreach (var f in EnvioUtil.BuscarEnUsb("*.vfacuse").Take(20))
-                    if (Envios.AcuseNuevo(f)) return new HallazgoUsb { Ruta = f, EsAcuse = true, Texto = "La USB trae un acuse nuevo de la tienda" };
+                    if (Envios.AcuseNuevo(f)) return new HallazgoUsb { Ruta = f, EsAcuse = true, Texto = "La USB trae un reporte nuevo de la tienda" };
             return null;
         }
     }

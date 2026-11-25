@@ -222,6 +222,7 @@ namespace VentaFacil.Forms.Pos
                     m.AgregarAccion("Abrir cajón", AbrirCajon);
                     m.AgregarAccion("Reimprimir ticket", ReimprimirUltimo);
                     if (!Envios.EsOficina) m.AgregarAccion("Recibir envío", Y(RecibirEnvio));
+                    if (Envios.EsTienda) m.AgregarAccion("Reporte a oficina", ReporteAOficina);
                     m.AgregarAccion("Cambiar usuario (F10)", CambiarUsuario);
                     break;
                 case 2:
@@ -243,6 +244,15 @@ namespace VentaFacil.Forms.Pos
                     break;
                 case 4:
                     m = new ModuloVista("Resultados", "ventas y reportes");
+                    if (Envios.EsOficina)
+                    {   // aquí no se vende: se ve lo que reportó la tienda
+                        m.AgregarVista("Ventas por día", () => new Admin.SeccionTiendaRango("Ventas de la tienda por día", "tienda_ventas", ReporteTienda.VentasPorDia, "Total", "Total", "Costo", "Ganancia", "Efectivo", "Descuentos"));
+                        m.AgregarVista("Lo más vendido", () => new Admin.SeccionTiendaRango("Productos vendidos en la tienda", "tienda_vendidos", ReporteTienda.ProductosVendidos, "Importe", "Importe", "Ganancia"));
+                        m.AgregarVista("Existencias", () => new Admin.SeccionTiendaExistencias());
+                        m.AgregarVista("Cortes", () => new Admin.SeccionTiendaRango("Cortes de la tienda", "tienda_cortes", ReporteTienda.Cortes, "Ventas", "Ventas", "Esperado", "Declarado", "Diferencia"));
+                        m.AgregarVista("Diferencias", () => new Admin.SeccionTiendaDiferencias());
+                        break;
+                    }
                     m.AgregarVista("Reportes", () => new Admin.SeccionReportes());
                     break;
                 default:
@@ -772,7 +782,7 @@ namespace VentaFacil.Forms.Pos
             if (!Envios.EsOficina) { Ui.Aviso("Los acuses se leen en la computadora de la oficina."); return; }
             if (Ui.Autorizar(Permisos.Almacen, "Leer el acuse requiere autorización") == null) return;
             try { Ui.Info(Envios.LeerAcuse(ruta), "Acuse"); } catch (Exception ex) { Ui.Error(ex, "Leer acuse"); }
-            if (_modActivo == 3 && _modulo != null) _modulo.Recargar();
+            if ((_modActivo == 3 || _modActivo == 4) && _modulo != null) _modulo.Recargar();
         }
 
         /// <summary>Llegó un archivo por doble clic. Con una venta a medias o una ventana abierta no se interrumpe: queda el aviso.</summary>
@@ -797,6 +807,14 @@ namespace VentaFacil.Forms.Pos
 
         /// <summary>Aplica un envío de la oficina desde la USB (cambios de precio, mercancía…).</summary>
         void RecibirEnvio() { RecibirEnvio(null); }
+
+        /// <summary>Guarda en la USB las ventas, existencias y cortes para la oficina (cifrado).</summary>
+        void ReporteAOficina()
+        {
+            if (Envios.Dato("oficina_id") == "") { Ui.Aviso("Primero hay que recibir un envío de la oficina."); return; }
+            if (Ui.Autorizar(Permisos.Envios, "El reporte a la oficina requiere autorización") == null) return;
+            Admin.SeccionEnviosTienda.GuardarReporte(this);
+        }
 
         void RecibirEnvio(string ruta)
         {

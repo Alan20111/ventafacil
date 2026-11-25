@@ -139,7 +139,15 @@ namespace System.Data.SQLite
     {
         readonly SQLiteCommand _c;
         public SQLiteDataAdapter(SQLiteCommand c) { _c = c; }
-        public int Fill(DataTable dt) { using (var rd = _c.ExecuteReader()) dt.Load(rd); return dt.Rows.Count; }
+        public int Fill(DataTable dt)
+        {
+            using (var rd = _c.ExecuteReader())
+            {
+                for (int i = 0; i < rd.FieldCount; i++) dt.Columns.Add(rd.GetName(i), typeof(object));
+                while (rd.Read()) { var v = new object[rd.FieldCount]; rd.GetValues(v); dt.Rows.Add(v); }
+            }
+            return dt.Rows.Count;
+        }
         public void Dispose() { }
     }
 }

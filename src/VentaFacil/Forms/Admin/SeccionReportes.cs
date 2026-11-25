@@ -53,7 +53,7 @@ namespace VentaFacil.Forms.Admin
             filtro.Controls.Add(Ui.Boton("Ayer", 80, 48, 65, 32, (s, e) => Rango(DateTime.Today.AddDays(-1), DateTime.Today.AddDays(-1))));
             filtro.Controls.Add(Ui.Boton("Semana", 150, 48, 75, 32, (s, e) => Rango(DateTime.Today.AddDays(-(((int)DateTime.Today.DayOfWeek + 6) % 7)), DateTime.Today)));
             filtro.Controls.Add(Ui.Boton("Mes", 230, 48, 65, 32, (s, e) => Rango(new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1), DateTime.Today)));
-            var consultar = Ui.Boton("Consultar (F5)", 310, 46, 130, 36, (s, e) => Consultar(), true);
+            var consultar = Ui.Boton("Consultar", 310, 46, 130, 36, (s, e) => Consultar(), true);
             filtro.Controls.Add(consultar);
             filtro.Controls.Add(Ui.Boton("Imprimir ticket", 446, 46, 130, 36, (s, e) => ImprimirTicket()));
             filtro.Controls.Add(Ui.Boton("Exportar Excel", 582, 46, 125, 36, (s, e) => ExcelSemillera.ExportarTabla(_dt, _rep != null ? _rep.Archivo : "reporte")));

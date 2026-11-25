@@ -132,5 +132,12 @@ Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y
 | 72 | Cobrar y pulsar «Ver envío»; luego sacar y volver a meter la USB ya aplicada | Abre el resumen; después de aplicar ya no avisa |
 | 73 | Doble clic en el `.vfenvio` con VentaFácil **cerrado** y luego **abierto** (también minimizado) | Cerrado: abre, pide usuario y muestra el resumen. Abierto: se pone al frente y lo muestra, sin abrir otra copia |
 | 74 | OFICINA: meter la USB con el acuse; doble clic en un `.vfenvio` | Franja con «Leer acuse»; el envío dice que se aplica en la caja |
+| 75 | CAJA: hacer 3 ventas (una con tarjeta), cancelar 1, cerrar turno; F2 → **Reporte a oficina** | Pregunta la carpeta y guarda el archivo en la USB |
+| 76 | OFICINA: meter la USB → «Leer acuse»; F5 Resultados | El título dice la fecha del reporte; **Ventas por día** coincide con el reporte de la caja |
+| 77 | OFICINA: F5 → Lo más vendido, Existencias y Cortes | Existencias iguales a las de la caja; el corte con el mismo esperado, declarado y diferencia |
+| 78 | Leer el mismo archivo otra vez | Los totales no se duplican |
+| 79 | CAJA: cambiar un precio y crear un producto; mandar reporte. OFICINA: F5 → **Diferencias** | Salen las dos cosas |
+| 80 | En Diferencias: traer el producto y mandar el precio de la oficina; crear envío y aplicarlo | El producto queda una sola vez; el precio de la tienda vuelve al de la oficina |
+| 81 | Revisar las pantallas de F5 en la oficina en 1366x768, y los 8 botones de Turno en la caja | Nada se corta; los textos de los botones se leen completos |
 
-Resultado: ______ de 74 pasos bien.   Fallas anotadas: ____________________________
+Resultado: ______ de 81 pasos bien.   Fallas anotadas: ____________________________

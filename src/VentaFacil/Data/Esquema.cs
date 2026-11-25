@@ -201,6 +201,18 @@ CREATE TABLE IF NOT EXISTS envio_detalle (
 CREATE INDEX IF NOT EXISTS ix_envdet ON envio_detalle(orden);");
                 Db.Exec(cn, null, "PRAGMA user_version = 5");
             }
+            if (v < 6)
+            {
+                // v6: en la OFICINA, lo que reporta la tienda (ver Data.ReporteTienda)
+                Db.Exec(cn, null, @"
+CREATE TABLE IF NOT EXISTS tienda_productos (uid TEXT PRIMARY KEY, codigo TEXT, descripcion TEXT, precio REAL, costo REAL, existencia REAL, minimo REAL, usa_inventario INTEGER, activo INTEGER, ficha TEXT);
+CREATE TABLE IF NOT EXISTS tienda_dias (dia TEXT PRIMARY KEY, tickets INTEGER, total REAL, efectivo REAL, descuento REAL, canceladas INTEGER);
+CREATE TABLE IF NOT EXISTS tienda_ventas (dia TEXT NOT NULL, uid TEXT, codigo TEXT, descripcion TEXT, cantidad REAL, importe REAL, costo REAL);
+CREATE INDEX IF NOT EXISTS ix_tienda_ventas ON tienda_ventas(dia);
+CREATE INDEX IF NOT EXISTS ix_cambios_producto ON cambios(producto_uid);
+CREATE TABLE IF NOT EXISTS tienda_cortes (id INTEGER PRIMARY KEY, caja INTEGER, apertura TEXT, cierre TEXT, abrio TEXT, cerro TEXT, declarado REAL, tickets INTEGER, ventas REAL, esperado REAL);");
+                Db.Exec(cn, null, "PRAGMA user_version = 6");
+            }
             Disparadores(cn);
         }
 

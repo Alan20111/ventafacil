@@ -92,7 +92,7 @@ namespace VentaFacil.Forms.Admin
             y += 34;
             Controls.Add(Ui.Etiqueta(_nuevo ? "Existencia inicial:" : "Existencia actual:", x1, y + 4));
             _existencia = Num(x2, y); Controls.Add(_existencia);
-            if (!_nuevo) { _existencia.ReadOnly = true; _existencia.BackColor = Tema.Gris; Controls.Add(Ui.Etiqueta(Envios.EsOficina ? "(la real está en la caja)" : "(se cambia en Inventario)", x2, y + 28, null, Tema.Humo)); }
+            if (!_nuevo) { _existencia.ReadOnly = true; _existencia.BackColor = Tema.Gris; Controls.Add(Ui.Etiqueta(Envios.EsOficina ? "(la real: F5 Resultados)" : "(se cambia en Inventario)", x2, y + 28, null, Tema.Humo)); }
             Controls.Add(Ui.Etiqueta("Stock mínimo:", 380, y + 4));
             _minimo = Num(490, y); Controls.Add(_minimo);
 

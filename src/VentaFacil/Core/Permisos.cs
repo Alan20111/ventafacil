@@ -32,7 +32,7 @@ namespace VentaFacil.Core
             new Info { Clave = Cancelar, Nombre = "Cancelar tickets" },
             new Info { Clave = CorteCaja, Nombre = "Corte X de caja y otros" },
             new Info { Clave = CorteZ, Nombre = "Corte Z (cierre)" },
-            new Info { Clave = Envios, Nombre = "Recibir envíos", Cajero = true }
+            new Info { Clave = Envios, Nombre = "Envíos y reporte", Cajero = true }
         };
 
         /// <summary>Los de un cajero sin casillas propias. El ajuste general «los cajeros pueden cancelar…» suma esos dos.</summary>

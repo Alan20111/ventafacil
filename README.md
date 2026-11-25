@@ -141,7 +141,8 @@ Para que los cambios de la oficina no se capturen a mano en la caja. En *F6 Ajus
 - **Oficina:** los cambios del Catálogo se anotan solos; la mercancía se captura en *F4 Almacén → Llegó mercancía* (o se carga un Excel con CÓDIGO y CANTIDAD) y en *Envíos* se presiona **Crear envío** (siempre pregunta la ruta).
 - **Caja:** *F2 Turno → Recibir envío*: muestra qué cambia, avisa de precios raros y aplica. La mercancía se **suma** a lo que haya; los precios quedan como en la oficina; lo eliminado se desactiva. Deja un **acuse** en la USB. *F4 Almacén → Envíos recibidos* tiene el historial y **Deshacer el último** (no toca ventas).
 - Al **conectar la USB** sale una franja amarilla (en la caja si trae un envío nuevo; en la oficina si trae un acuse) sin interrumpir la venta. También se puede abrir el archivo con **doble clic**.
-- No viajan ventas, cortes, usuarios ni conteos. Un envío repetido no hace nada; uno perdido lo recupera el siguiente; si falta uno, se niega. Todo se aplica o nada.
+- **Regreso a la oficina:** el acuse lleva además (cifrado) las existencias, las ventas por día y producto, los cortes y el catálogo de la tienda (3 meses). También se guarda cuando se quiera con *F2 Turno → Reporte a oficina*. La oficina lo ve en *F5 Resultados*: ventas, lo más vendido, existencias (y lo que va en camino), cortes y **Diferencias** de catálogo, donde se elige quedarse con lo de la tienda (incluye traer productos creados en la caja) o mandar lo de la oficina.
+- De la oficina a la tienda no viajan ventas, cortes, usuarios ni conteos. Un envío repetido no hace nada; uno perdido lo recupera el siguiente; si falta uno, se niega. Todo se aplica o nada.
 - El archivo (`.vfenvio`) va cifrado y **firmado por la oficina**: la llave que firma no sale de ahí. El primer envío lo confirma un administrador en la caja.
 - Si la oficina cambia de computadora o restaura un respaldo viejo, hay que volver a enlazar. Una caja por tienda: con dos cajas (dos bases) las existencias no se comparten.
 
@@ -156,8 +157,8 @@ Inventario → **Conteo con Excel**: se exporta la hoja (todo o por proveedor), 
 30 días de prueba; después una clave por computadora (permanente). Se genera con `herramientas/licencias` (ver [docs/LICENCIAS.md](docs/LICENCIAS.md)).
 
 ### Pruebas
-- [docs/PRUEBAS_WINDOWS.md](docs/PRUEBAS_WINDOWS.md): 74 pasos para la laptop.
-- `dotnet run` en `herramientas/licencias -- --probar`, `herramientas/pruebas-dinero`, `herramientas/pruebas-conteo` y `herramientas/pruebas-barras` (código de barras contra una librería independiente), `herramientas/pruebas-zafirah` (importador) y `herramientas/pruebas-datos` (**la capa de datos real contra un SQLite de verdad**: esquema, migración, cobros, cortes, dinero exacto, conteo, respaldos, base dañada, restauración, importador y **envíos** repetidos, perdidos, alterados e interrumpidos; usa un adaptador mínimo porque `System.Data.SQLite` solo corre en Windows): pruebas automáticas (se corren en Mac o Windows).
+- [docs/PRUEBAS_WINDOWS.md](docs/PRUEBAS_WINDOWS.md): 81 pasos para la laptop.
+- `dotnet run` en `herramientas/licencias -- --probar`, `herramientas/pruebas-dinero`, `herramientas/pruebas-conteo` y `herramientas/pruebas-barras` (código de barras contra una librería independiente), `herramientas/pruebas-zafirah` (importador) y `herramientas/pruebas-datos` (**la capa de datos real contra un SQLite de verdad**: esquema, migración, cobros, cortes, dinero exacto, conteo, respaldos, base dañada, restauración, importador y **envíos** repetidos, perdidos, alterados e interrumpidos, y el **regreso de ventas y existencias**; usa un adaptador mínimo porque `System.Data.SQLite` solo corre en Windows): pruebas automáticas (se corren en Mac o Windows).
 
 ## Desarrollo
 

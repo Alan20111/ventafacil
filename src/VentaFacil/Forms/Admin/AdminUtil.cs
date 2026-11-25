@@ -74,6 +74,8 @@ namespace VentaFacil.Forms.Admin
                 case "ValorCosto": return "Valor a costo";
                 case "ValorVenta": return "Valor a precio de venta";
                 case "AbrioPor": return "Abrió";
+                case "Cerro": return "Cerró";
+                case "PorEnviar": return "Por enviar";
                 default: return n;
             }
         }

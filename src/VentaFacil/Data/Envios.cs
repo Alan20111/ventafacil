@@ -68,12 +68,12 @@ namespace VentaFacil.Data
             C("costo_bulto", "Costo del bulto", 'N', "Costo"), C("cant_bulto", "Trae el bulto", 'N', "Costo"), C("granel", "A granel", 'B'), C("usa_inventario", "Controla existencia", 'B'),
             C("minimo", "Mínimo", 'N'), C("proveedor", "Proveedor", 'T'), C("orden", "Orden en la lista", 'N'), C("sin_barras", "Sin código de barras", 'B'), C("activo", "Activo", 'B', "Baja")
         };
-        static Campo BuscarCampo(string nombre) { return Campos.FirstOrDefault(c => c.Nombre == nombre); }
+        internal static Campo BuscarCampo(string nombre) { return Campos.FirstOrDefault(c => c.Nombre == nombre); }
 
         // ================================================================== enlace
         public static string Dato(string clave) { return Convert.ToString(Db.Scalar("SELECT valor FROM enlace WHERE clave=@p0", clave)) ?? ""; }
         static string Dato(SQLiteConnection cn, SQLiteTransaction tx, string clave) { return Convert.ToString(Db.Scalar(cn, tx, "SELECT valor FROM enlace WHERE clave=@p0", clave)) ?? ""; }
-        static void Poner(SQLiteConnection cn, SQLiteTransaction tx, string clave, string valor) { Db.Exec(cn, tx, "INSERT OR REPLACE INTO enlace(clave,valor) VALUES(@p0,@p1)", clave, valor); }
+        internal static void Poner(SQLiteConnection cn, SQLiteTransaction tx, string clave, string valor) { Db.Exec(cn, tx, "INSERT OR REPLACE INTO enlace(clave,valor) VALUES(@p0,@p1)", clave, valor); }
 
         public static bool EsOficina { get { return Dato("rol") == "OFICINA"; } }
         /// <summary>La tienda ya sacó su archivo de enlace (aunque todavía no llegue el primer envío).</summary>
@@ -128,7 +128,7 @@ namespace VentaFacil.Data
             using (var tx = cn.BeginTransaction())
             {
                 Db.Exec(cn, tx, "DELETE FROM enlace");   // primero: así la copia del catálogo no se anota como cambios
-                foreach (var t in new[] { "cambios", "envios", "envio_detalle", "envios_aplicados", "recibidos", "movimientos_inv", "suspendidas", "productos" }) Db.Exec(cn, tx, "DELETE FROM " + t);
+                foreach (var t in new[] { "cambios", "envios", "envio_detalle", "envios_aplicados", "recibidos", "movimientos_inv", "suspendidas", "productos", "tienda_productos", "tienda_dias", "tienda_ventas", "tienda_cortes" }) Db.Exec(cn, tx, "DELETE FROM " + t);
                 foreach (var o in (List<object>)doc["productos"])
                 {
                     var f = (IDictionary<string, object>)o;
@@ -189,7 +189,7 @@ namespace VentaFacil.Data
             }, desdeSeq);
         }
 
-        static long Confirmado(SQLiteConnection cn, SQLiteTransaction tx) { long n; return long.TryParse(Dato(cn, tx, "confirmado"), out n) ? n : 0; }
+        internal static long Confirmado(SQLiteConnection cn, SQLiteTransaction tx) { long n; return long.TryParse(Dato(cn, tx, "confirmado"), out n) ? n : 0; }
 
         /// <summary>OFICINA: lo que se mandaría en el próximo envío, ya resumido por producto.</summary>
         public static ResultadoEnvio VistaPendientes()
@@ -320,10 +320,13 @@ namespace VentaFacil.Data
                     if (T(e, "estado") == "APLICADO") problemas += lista.Length;
                     Db.Exec(cn, tx, "UPDATE envios SET estado=@p0, aplicado=@p1, problemas=@p2 WHERE id=@p3", T(e, "estado"), T(e, "fecha") + " · " + T(e, "usuario"), string.Join("\n", lista), T(e, "id"));
                 }
+                object rep;
+                bool conReporte = doc.TryGetValue("reporte", out rep) && rep is IDictionary<string, object>;
+                if (conReporte) ReporteTienda.Guardar(cn, tx, (IDictionary<string, object>)rep, T(doc, "fecha"));
                 long faltan = Convert.ToInt64(Db.Scalar(cn, tx, "SELECT COUNT(*) FROM cambios WHERE seq>@p0", ultimo));
                 tx.Commit();
                 Respaldo.Pedir();
-                return "Acuse leído. " + (faltan == 0 ? "La tienda está al día." : "Quedan " + faltan + " cambios por enviar.") + (problemas > 0 ? "\n\nLa tienda reportó " + problemas + " problema(s): véalos en el historial." : "");
+                return "Acuse leído. " + (faltan == 0 ? "La tienda está al día." : "Quedan " + faltan + " cambios por enviar.") + (conReporte ? "\nSe actualizaron las ventas y existencias de la tienda (F5 Resultados)." : "") + (problemas > 0 ? "\n\nLa tienda reportó " + problemas + " problema(s): véalos en el historial." : "");
             }
         }
 
@@ -619,6 +622,8 @@ namespace VentaFacil.Data
             }).ToList();
             var doc = new Dictionary<string, object> { { "version", "1" }, { "tiendaId", tienda }, { "oficinaId", Dato("oficina_id") }, { "fecha", Db.Ahora() }, { "ultimo", ultimo.ToString() },
                 { "ultimoUid", Convert.ToString(Db.Scalar("SELECT uid FROM recibidos WHERE seq=@p0", ultimo)) ?? "" }, { "envios", envios } };
+            // Ventas, existencias y cortes para la oficina. Si algo falla al armarlos, el acuse sale de todos modos
+            try { doc["reporte"] = ReporteTienda.Armar(); } catch (Exception ex) { Log.Error(ex, "Reporte para la oficina"); }
             string ruta = Path.Combine(carpeta, "ACUSE_" + tienda.Substring(0, 6).ToUpperInvariant() + ".vfacuse");
             EnvioArchivo.Guardar(ruta, EnvioArchivo.Cerrar(EnvioArchivo.Acuse, tienda, JsonMini.Escribir(doc), Clave(Dato("clave"))));
             return ruta;
@@ -643,9 +648,9 @@ namespace VentaFacil.Data
         static void AlertarBajas(ResultadoEnvio r) { int n = r.Lineas.Count(l => l.Tipo == "Baja"); if (n > 10) r.Alertas.Add("Se dan de baja " + n + " productos"); }
 
         // ================================================================== valores
-        const string Sel = "SELECT p.*, IFNULL(d.nombre,'') AS departamento FROM productos p LEFT JOIN departamentos d ON d.id=p.departamento_id ";
+        internal const string Sel = "SELECT p.*, IFNULL(d.nombre,'') AS departamento FROM productos p LEFT JOIN departamentos d ON d.id=p.departamento_id ";
 
-        static Dictionary<string, object> Ficha(System.Data.IDataRecord r)
+        internal static Dictionary<string, object> Ficha(System.Data.IDataRecord r)
         {
             var f = new Dictionary<string, object> { { "uid", Db.S(r, "uid") } };
             foreach (var c in Campos) f[c.Nombre] = Valor(c, r[c.Clase == 'D' ? "departamento" : c.Columna]);
@@ -654,9 +659,9 @@ namespace VentaFacil.Data
 
         static Dictionary<string, object> FichaDe(SQLiteConnection cn, SQLiteTransaction tx, string uid) { return Db.Lista(cn, tx, Sel + "WHERE p.uid=@p0", Ficha, uid).FirstOrDefault(); }
 
-        static string T(IDictionary<string, object> d, string clave) { object v; return d != null && d.TryGetValue(clave, out v) && v != null ? Convert.ToString(v, CultureInfo.InvariantCulture) : ""; }
-        static string Num(decimal v) { return v.ToString("0.######", CultureInfo.InvariantCulture); }
-        static decimal Leer(string s) { decimal d; return decimal.TryParse(s, NumberStyles.Number, CultureInfo.InvariantCulture, out d) ? d : 0m; }
+        internal static string T(IDictionary<string, object> d, string clave) { object v; return d != null && d.TryGetValue(clave, out v) && v != null ? Convert.ToString(v, CultureInfo.InvariantCulture) : ""; }
+        internal static string Num(decimal v) { return v.ToString("0.######", CultureInfo.InvariantCulture); }
+        internal static decimal Leer(string s) { decimal d; return decimal.TryParse(s, NumberStyles.Number, CultureInfo.InvariantCulture, out d) ? d : 0m; }
 
         /// <summary>Texto único de un valor, para comparar sin ruido de decimales (92, 92.0 y 92.00 son iguales).</summary>
         static string Valor(Campo c, object v)
@@ -682,7 +687,7 @@ namespace VentaFacil.Data
         static string TipoDe(Campo c, string nuevo) { return c.Nombre == "activo" ? (nuevo == "1" ? "Reactivado" : "Baja") : c.Tipo; }
         static string Refs(IEnumerable<Cambio> cs) { return string.Join(", ", cs.Where(c => c.CampoNombre == "existencia" && !string.IsNullOrEmpty(c.Ref)).Select(c => c.Ref).Distinct().Take(3).ToArray()); }
 
-        static void Escribir(SQLiteConnection cn, SQLiteTransaction tx, long id, Campo c, string valor)
+        internal static void Escribir(SQLiteConnection cn, SQLiteTransaction tx, long id, Campo c, string valor)
         {
             Db.Exec(cn, tx, "UPDATE productos SET " + c.Columna + "=@p0 WHERE id=@p1", ParaGuardar(cn, tx, c, valor), id);
         }
@@ -696,7 +701,7 @@ namespace VentaFacil.Data
         }
 
         /// <summary>Da de alta el producto con su identificador y existencia en cero (la mercancía llega aparte).</summary>
-        static void Insertar(SQLiteConnection cn, SQLiteTransaction tx, string uid, IDictionary<string, object> f)
+        internal static void Insertar(SQLiteConnection cn, SQLiteTransaction tx, string uid, IDictionary<string, object> f)
         {
             var columnas = new List<string> { "uid", "actualizado" };
             var valores = new List<object> { uid, Db.Ahora() };

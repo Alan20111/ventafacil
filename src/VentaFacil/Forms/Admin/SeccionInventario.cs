@@ -291,6 +291,8 @@ namespace VentaFacil.Forms.Admin
         readonly DataGridView _grid;
         readonly Label _resumen;
         DataTable _dt;
+        /// <summary>Si se indica, abajo solo se suma esa columna (un total de precios no dice nada).</summary>
+        public string SoloSumar;
 
         public PanelReporte(Func<DataTable> consulta, string nombre, params string[] dinero)
         {
@@ -315,6 +317,7 @@ namespace VentaFacil.Forms.Admin
                 string r = _dt.Rows.Count + " renglones";
                 foreach (var col in _dinero)
                 {
+                    if (SoloSumar != null && col != SoloSumar) continue;
                     decimal suma = 0;
                     foreach (DataRow row in _dt.Rows) suma += AdminUtil.ValorDec(row[col]);
                     r += "   ·   " + _grid.Columns[col].HeaderText + ": " + Fmt.Dinero(suma);

@@ -53,7 +53,7 @@ ResultadoZ Traducir(System.Data.DataTable t) { return ZafirahMapeo.Transformar(t
 // ================================================================ 1. Esquema y migración
 Seccion("Esquema y migración");
 Limpiar();
-Revisar("la base nueva se crea, es de la versión 5 y pasa la revisión de integridad", Cuenta("PRAGMA user_version") == 5 && Salud.Revisar(Db.Archivo) == "ok");
+Revisar("la base nueva se crea, es de la versión 6 y pasa la revisión de integridad", Cuenta("PRAGMA user_version") == 6 && Salud.Revisar(Db.Archivo) == "ok");
 Revisar("existen las 10 tablas del programa", Cuenta("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name IN ('config','usuarios','departamentos','productos','turnos','ventas','venta_detalle','movimientos_caja','movimientos_inv','suspendidas')") == 10);
 Revisar("el usuario admin/admin existe y entra; una clave mala no", admin() != null && UsuarioRepo.Validar("admin", "mala") == null);
 Revisar("la columna sin_barras (v3) existe", Cuenta("SELECT COUNT(*) FROM pragma_table_info('productos') WHERE name='sin_barras'") == 1);
@@ -61,13 +61,13 @@ Revisar("la columna sin_barras (v3) existe", Cuenta("SELECT COUNT(*) FROM pragma
 ProductoRepo.Guardar(new Producto { Codigo = "1", Descripcion = "VIEJO", Precio = 10m, Costo = 6m }, admin().Id);
 QuitarDisparadores(); Db.Exec("ALTER TABLE productos DROP COLUMN sin_barras"); Db.Exec("PRAGMA user_version = 2");
 Db.Inicializar();
-Revisar("migración v2 → v5: agrega la columna y no pierde el producto", Cuenta("PRAGMA user_version") == 5 && Cuenta("SELECT COUNT(*) FROM pragma_table_info('productos') WHERE name='sin_barras'") == 1 && ProductoRepo.PorCodigo("1") != null);
+Revisar("migración v2 → v6: agrega la columna y no pierde el producto", Cuenta("PRAGMA user_version") == 6 && Cuenta("SELECT COUNT(*) FROM pragma_table_info('productos') WHERE name='sin_barras'") == 1 && ProductoRepo.PorCodigo("1") != null);
 
 // Una base de la versión 3 (la de la v1.17, con usuarios ya creados) pasa a la 4 sin que nadie gane ni pierda acceso
 UsuarioRepo.Guardar(new Usuario { Login = "caja1", Nombre = "Cajera Uno", Rol = "CAJERO" }, "1234");
 Db.Exec("ALTER TABLE usuarios DROP COLUMN permisos"); Db.Exec("PRAGMA user_version = 3");
 Db.Inicializar(); Db.Inicializar();   // dos veces: no debe fallar al volver a abrir
-Revisar("migración v3 → v5: agrega permisos, conserva usuarios y claves", Cuenta("PRAGMA user_version") == 5 && admin() != null && UsuarioRepo.Validar("caja1", "1234") != null);
+Revisar("migración v3 → v6: agrega permisos, conserva usuarios y claves", Cuenta("PRAGMA user_version") == 6 && admin() != null && UsuarioRepo.Validar("caja1", "1234") != null);
 
 Seccion("Permisos por usuario");
 {
@@ -288,7 +288,7 @@ Revisar("cada producto nace con su identificador único", Cuenta("SELECT COUNT(*
 Precio("1", 2m);
 Revisar("una caja normal no anota cambios", Cuenta("SELECT COUNT(*) FROM cambios") == 0);
 Db.Exec("UPDATE productos SET uid=''"); Db.Exec("PRAGMA user_version = 4"); Db.Inicializar(); Db.Inicializar();
-Revisar("migración v4 → v5: pone identificador a los productos que ya había", Cuenta("SELECT COUNT(*) FROM productos WHERE length(uid)=32") == 1 && Cuenta("PRAGMA user_version") == 5);
+Revisar("migración v4 → v6: pone identificador a los productos que ya había", Cuenta("SELECT COUNT(*) FROM productos WHERE length(uid)=32") == 1 && Cuenta("PRAGMA user_version") == 6);
 Enlazar();
 Revisar("la oficina toma el catálogo de la tienda, con los mismos identificadores y existencia en cero", Cuenta("SELECT COUNT(*) FROM productos") == 3 && Hay("1") == 0m && ProductoRepo.PorCodigo("1").Precio == 92m && Envios.EsOficina);
 Revisar("copiar el catálogo no cuenta como cambios", Cuenta("SELECT COUNT(*) FROM cambios") == 0);
@@ -451,6 +451,57 @@ En("oficina"); Precio("1", 96m); Aplica(Enviar()); Precio("1", 97m);
 var pd2 = Envios.Deshacer(Envios.Recibidos()[0].Orden, admin().Id);
 Revisar("si el precio se cambió después del envío, deshacer no lo pisa y lo dice", ProductoRepo.PorCodigo("1").Precio == 97m && pd2.Count == 1 && pd2[0].Contains("se cambió después"));
 
+Seccion("Regreso de datos: la oficina ve la tienda");
+Enlazar();
+Revisar("sin reporte, la oficina no inventa datos", ReporteTienda.Fecha == "" && ReporteTienda.Existencias(false).Rows.Count == 0 && ReporteTienda.Diferencias().Count == 0);
+Precio("1", 100m); Aplica(Enviar());
+Vender("1", 3m); Vender("1", 2m); Vender("2", 1m);
+long aCancelar = VentaRepo.UltimoTicket(1); VentaRepo.Cancelar(aCancelar, TurnoRepo.Abierto(1).Id, admin().Id);
+{ var v = new Venta { TurnoId = TurnoRepo.Abierto(1).Id, Caja = 1, FormaPago = "TARJETA", Articulos = 1 }; v.Lineas.Add(new LineaVenta { Codigo = "VARIOS", Descripcion = "ARTICULO VARIOS", Cantidad = 1, Precio = 12.34m, PrecioLista = 12.34m }); v.Subtotal = v.Total = 12.34m; VentaRepo.Guardar(v, admin().Id); }
+Db.Exec("UPDATE ventas SET fecha='2020-01-01 10:00:00' WHERE id=1");   // una venta vieja, fuera de los 3 meses
+TurnoRepo.Movimiento(TurnoRepo.Abierto(1).Id, admin().Id, "SALIDA", 50m, "gasto");
+var tc = TurnoRepo.Abierto(1); var corteReal = TurnoRepo.Resumen(tc.Id); TurnoRepo.Cerrar(tc.Id, admin().Id, corteReal.EfectivoEsperado - 5m);
+string fotoT = Foto(); Acuse();
+var ex1 = ReporteTienda.Existencias(false);
+Func<System.Data.DataTable, string, System.Data.DataRow> FilaDe = (t, c) => t.Rows.Cast<System.Data.DataRow>().FirstOrDefault(r => Convert.ToString(r["Codigo"]) == c);
+Revisar("existencias reales de la tienda: 20 − 5 = 15 y la cancelada regresó a 20", Db.Dec(FilaDe(ex1, "1")["Existencia"]) == 15m && Db.Dec(FilaDe(ex1, "2")["Existencia"]) == 20m);
+Revisar("armar y leer el reporte no cambia nada en la tienda", Con("tienda", () => Foto() == fotoT));
+En("oficina");
+var vd = ReporteTienda.VentasPorDia(DateTime.Today, DateTime.Today);
+Revisar("ventas del día: 2 tickets pagados por $212.34 ($200.00 en efectivo) y 1 cancelado; sin la de 2020", vd.Rows.Count == 1 && Convert.ToInt64(vd.Rows[0]["Tickets"]) == 2 && Db.Dec(vd.Rows[0]["Total"]) == 212.34m && Db.Dec(vd.Rows[0]["Efectivo"]) == 200m && Convert.ToInt64(vd.Rows[0]["Canceladas"]) == 1, vd.Rows.Count == 0 ? "vacío" : string.Join(",", vd.Rows[0].ItemArray));
+var pv = ReporteTienda.ProductosVendidos(DateTime.Today, DateTime.Today);
+Revisar("por producto: 2 kg de GIRASOL por $200 y el artículo varios; el cancelado no sale", pv.Rows.Count == 2 && Db.Dec(FilaDe(pv, "1")["Importe"]) == 200m && Db.Dec(FilaDe(pv, "VARIOS")["Importe"]) == 12.34m && FilaDe(pv, "2") == null);
+var co = ReporteTienda.Cortes(DateTime.Today, DateTime.Today);
+Revisar("el corte llega con el mismo esperado que en la caja y la diferencia de −5", co.Rows.Count == 1 && Db.Dec(co.Rows[0]["Esperado"]) == corteReal.EfectivoEsperado && Db.Dec(co.Rows[0]["Ventas"]) == corteReal.VentasNetas && Db.Dec(co.Rows[0]["Diferencia"]) == -5m);
+Revisar("recién enlazadas y al día no hay diferencias de catálogo", ReporteTienda.Diferencias().Count == 0, string.Join(" / ", ReporteTienda.Diferencias().Select(d => d.Producto + " " + d.Campo)));
+Acuse();
+Revisar("leer otro reporte igual no duplica ventas ni cortes", Cuenta("SELECT COUNT(*) FROM tienda_ventas") == 2 && Cuenta("SELECT COUNT(*) FROM tienda_cortes") == 1 && Cuenta("SELECT COUNT(*) FROM tienda_productos") == 3);
+Db.Exec("INSERT INTO tienda_dias(dia,tickets,total) VALUES('2021-05-05',9,900)"); Acuse();
+Revisar("los días viejos que ya tenía la oficina se conservan", Cuenta("SELECT tickets FROM tienda_dias WHERE dia='2021-05-05'") == 9);
+Mercancia("1", 50m);
+Revisar("lo que va en camino se ve aparte (existencia 15, por enviar 50)", Db.Dec(FilaDe(ReporteTienda.Existencias(false), "1")["PorEnviar"]) == 50m && ReporteTienda.Existencia(ProductoRepo.PorCodigo("1").Id) == 15m);
+En("tienda");
+Precio("2", 199m); ProductoRepo.Guardar(new Producto { Codigo = "80", Descripcion = "NUEZ DE TIENDA", Precio = 250m, Costo = 180m, Existencia = 3m, Granel = true }, admin().Id);
+ProductoRepo.Guardar(new Producto { Codigo = "81", Descripcion = "PASA DE TIENDA", Precio = 90m }, admin().Id);
+Acuse();
+ProductoRepo.Guardar(new Producto { Codigo = "81", Descripcion = "OTRO 81", Precio = 1m }, admin().Id);
+var dif = ReporteTienda.Diferencias();
+Revisar("la oficina ve lo distinto: 1 precio cambiado en la tienda y 2 productos que solo existen allá (lo pendiente no cuenta)", dif.Count == 3 && dif.Count(d => d.Tipo == ReporteTienda.Distinto && d.Campo == "precio" && d.Oficina == "206" && d.Tienda == "199") == 1 && dif.Count(d => d.Tipo == ReporteTienda.SoloTienda) == 2, string.Join(" / ", dif.Select(d => d.Tipo + " " + d.Producto + " " + d.Campo)));
+Revisar("traer a la oficina un producto de la tienda", ReporteTienda.TomarDeTienda(dif.First(d => d.Codigo == "80")) == null && ProductoRepo.PorCodigo("80").Costo == 180m);
+Revisar("si el código ya está ocupado en la oficina, no lo trae y dice de quién es", (ReporteTienda.TomarDeTienda(dif.First(d => d.Codigo == "81")) ?? "").Contains("OTRO 81"));
+Revisar("mandar de nuevo el precio de la oficina", ReporteTienda.MandarDeOficina(dif.First(d => d.Codigo == "2")) == null && ReporteTienda.Diferencias().Count(d => d.Tipo == ReporteTienda.Distinto) == 0);
+var rreg = Aplica(Enviar());
+Revisar("el envío corrige el precio en la tienda y el producto traído no se duplica ni se toca", ProductoRepo.PorCodigo("2").Precio == 206m && Cuenta("SELECT COUNT(*) FROM productos WHERE codigo='80'") == 1 && Hay("80") == 3m && rreg.Lineas.All(l => l.Codigo != "80"), rreg.Resumen);
+Precio("2", 201m); Acuse();
+var dt2 = ReporteTienda.Diferencias().First(d => d.Campo == "precio" && d.Codigo == "2");
+ReporteTienda.TomarDeTienda(dt2);
+Revisar("o quedarse con el precio de la tienda (201)", ProductoRepo.PorCodigo("2").Precio == 201m);
+rreg = Aplica(Enviar());
+Revisar("y ese envío no cambia el precio de la tienda", ProductoRepo.PorCodigo("2").Precio == 201m && rreg.Lineas.All(l => l.Codigo != "2"));
+{ string ac = Envios.EscribirAcuse(usb); Revisar("el reporte va cifrado (no se leen nombres)", !System.Text.Encoding.UTF8.GetString(File.ReadAllBytes(ac)).Contains("GIRASOL")); }
+Db.Exec("ALTER TABLE turnos RENAME TO turnos_x");
+{ string ac = Envios.EscribirAcuse(usb); Db.Exec("ALTER TABLE turnos_x RENAME TO turnos"); En("oficina"); Envios.LeerAcuse(ac); long sc2, ya2; Envios.ContarPendientes(out sc2, out ya2); Revisar("si el reporte falla al armarse, el acuse sale de todos modos", sc2 == 0); }
+
 Seccion("Envíos: volumen");
 Enlazar();
 using (var cn = Db.Abrir()) using (var tx = cn.BeginTransaction())
@@ -458,6 +509,19 @@ using (var cn = Db.Abrir()) using (var tx = cn.BeginTransaction())
 var reloj = System.Diagnostics.Stopwatch.StartNew();
 string ev = Enviar(); Envios.Revisar(ev); Aplica(ev);
 Revisar("3000 productos nuevos: crear, revisar y aplicar (" + reloj.ElapsedMilliseconds + " ms, " + new FileInfo(ev).Length / 1024 + " KB)", Cuenta("SELECT COUNT(*) FROM productos") == 3003 && reloj.ElapsedMilliseconds < 20000);
+using (var cn = Db.Abrir()) using (var tx = cn.BeginTransaction())
+{
+    long tv = Db.InsertId(cn, tx, "INSERT INTO turnos(caja,apertura,abierto_por,estado) VALUES(1,@p0,1,'ABIERTO')", Db.Ahora());
+    for (int d = 0; d < 90; d++)
+    {
+        long vv = Db.InsertId(cn, tx, "INSERT INTO ventas(turno_id,usuario_id,fecha,total) VALUES(@p0,1,@p1,10)", tv, Db.Fecha(DateTime.Today.AddDays(-d)));
+        for (int i = 0; i < 250; i++) Db.Exec(cn, tx, "INSERT INTO venta_detalle(venta_id,producto_id,codigo,descripcion,cantidad,precio,importe) SELECT @p0,id,codigo,descripcion,1,1,1 FROM productos WHERE codigo=@p1", vv, "V" + (i * 7));
+    }
+    tx.Commit();
+}
+reloj.Restart(); string acv = Envios.EscribirAcuse(usb); long msArmar = reloj.ElapsedMilliseconds; En("oficina"); reloj.Restart(); Envios.LeerAcuse(acv);
+Revisar("reporte de 3 meses con 250 productos al día (armar " + msArmar + " ms, leer " + reloj.ElapsedMilliseconds + " ms, " + new FileInfo(acv).Length / 1024 + " KB)", Cuenta("SELECT COUNT(*) FROM tienda_ventas") == 22500 && msArmar < 15000 && reloj.ElapsedMilliseconds < 15000);
+reloj.Restart(); int nd = ReporteTienda.Diferencias().Count; Revisar("comparar 3000 productos (" + reloj.ElapsedMilliseconds + " ms)", nd == 0 && reloj.ElapsedMilliseconds < 8000, nd.ToString());
 Revisar("la base queda sana", Salud.Revisar(Db.Archivo) == "ok");
 foreach (var f in Directory.GetFiles(Db.Carpeta, "maq_*.db")) File.Delete(f);
 Directory.Delete(usb, true);

@@ -36,6 +36,8 @@ ENVIOS DE LA OFICINA POR USB (F6 Ajustes > Envios, solo administrador)
            caja F2 Turno > Recibir envio. La mercancia se SUMA.
   Al conectar la USB en la caja sale un aviso amarillo; tambien sirve
   el doble clic en el archivo del envio.
+  Al recibir un envio, la USB regresa con ventas, existencias y cortes;
+  la oficina los ve en F5 Resultados. Tambien: F2 Turno > Reporte a oficina.
   El primer envio lo confirma un administrador en la caja.
 
 USUARIOS Y PERMISOS (F6 Ajustes > Usuarios)

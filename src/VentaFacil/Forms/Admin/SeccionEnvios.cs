@@ -201,7 +201,7 @@ namespace VentaFacil.Forms.Admin
                 string acuse = DejarAcuse(_ruta);
                 Cursor = Cursors.Default;
                 Ui.Info(r.YaAplicado ? "Este envío ya se había aplicado." : "Envío " + r.Num + " aplicado:\n\n" + r.Resumen +
-                    (acuse != null ? "\n\nSe dejó el acuse en la USB. Regrésela a la oficina." : "\n\nNo se pudo dejar el acuse en la USB (¿está protegida o se sacó?). El envío SÍ quedó aplicado."), "Envío");
+                    (acuse != null ? "\n\nSe dejó el acuse en la USB, con las ventas y existencias. Regrésela a la oficina." : "\n\nNo se pudo dejar el acuse en la USB (¿está protegida o se sacó?). El envío SÍ quedó aplicado."), "Envío");
                 DialogResult = DialogResult.OK;
             }
             catch (Exception ex) { Cursor = Cursors.Default; Ui.Error(ex, "No se aplicó nada del envío"); Revisar(_ruta); }
@@ -233,7 +233,7 @@ namespace VentaFacil.Forms.Admin
             var des = AdminUtil.BotonBarra("Deshacer el último", (s, e) => Deshacer(), 165);
             Tema.BotonPeligro(des);
             barra.Controls.Add(des);
-            barra.Controls.Add(AdminUtil.BotonBarra("Guardar acuse…", (s, e) => Acuse(), 150));
+            barra.Controls.Add(AdminUtil.BotonBarra("Guardar reporte…", (s, e) => Acuse(), 150));
             Controls.Add(barra);
             Controls.Add(AdminUtil.TituloSeccion("Envíos recibidos de la oficina"));
             Load += (s, e) => Cargar();
@@ -270,7 +270,7 @@ namespace VentaFacil.Forms.Admin
                 var no = Envios.Deshacer(x.Orden, Sesion.Usuario.Id);
                 Cursor = Cursors.Default;
                 Ui.Info("Envío " + x.Num + " deshecho." + (no.Count == 0 ? "" : "\n\nNo se pudo revertir:\n" + string.Join("\n", no.Take(12).ToArray()) + (no.Count > 12 ? "\n… y " + (no.Count - 12) + " más" : "")) +
-                    "\n\nGuarde el acuse en la USB y llévelo a la oficina para que lo sepa.", "Envío");
+                    "\n\nGuarde el reporte en la USB y llévelo a la oficina para que lo sepa.", "Envío");
             }
             catch (Exception ex) { Ui.Error(ex, "No se deshizo nada"); }
             finally { Cursor = Cursors.Default; }
@@ -280,9 +280,22 @@ namespace VentaFacil.Forms.Admin
         void Acuse()
         {
             if (Envios.Dato("oficina_id") == "") { Ui.Aviso("Todavía no se ha aplicado ningún envío."); return; }
-            string c = EnvioUtil.PedirCarpeta(FindForm(), "¿En qué USB o carpeta guardo el acuse para la oficina?");
+            GuardarReporte(FindForm());
+        }
+
+        /// <summary>El acuse con las ventas, existencias y cortes, cifrado. Siempre pregunta la ruta.</summary>
+        public static void GuardarReporte(IWin32Window dueno)
+        {
+            string c = EnvioUtil.PedirCarpeta(dueno, "¿En qué USB o carpeta guardo el reporte para la oficina?");
             if (c == null) return;
-            try { Ui.Info("Acuse guardado:\n" + Envios.EscribirAcuse(c)); } catch (Exception ex) { Ui.Error(ex, "Guardar acuse"); }
+            try
+            {
+                Cursor.Current = Cursors.WaitCursor;
+                string f = Envios.EscribirAcuse(c);
+                Cursor.Current = Cursors.Default;
+                Ui.Info("Reporte guardado:\n" + f + "\n\nLleve la USB a la oficina.");
+            }
+            catch (Exception ex) { Cursor.Current = Cursors.Default; Ui.Error(ex, "Guardar reporte"); }
         }
     }
 
@@ -290,7 +303,7 @@ namespace VentaFacil.Forms.Admin
     /// <summary>Almacén → Llegó mercancía, en la OFICINA: captura lo que se sumará en la tienda.</summary>
     public class SeccionMercancia : UserControl
     {
-        class Renglon { public Producto P; public decimal Cantidad; public decimal? Costo; }
+        class Renglon { public Producto P; public decimal Cantidad; public decimal? Costo, Hay; }
         static readonly List<Renglon> _lista = new List<Renglon>();   // sobrevive al cambiar de módulo: no se pierde lo capturado
         public static int SinGuardar { get { return _lista.Count; } }
         public static void Olvidar() { _lista.Clear(); }
@@ -303,7 +316,8 @@ namespace VentaFacil.Forms.Admin
             BackColor = Tema.Crema;
             _grid = AdminUtil.Grid();
             _grid.Columns.Add(Ui.Columna("codigo", "Código", 18));
-            _grid.Columns.Add(Ui.Columna("descripcion", "Producto", 44));
+            _grid.Columns.Add(Ui.Columna("descripcion", "Producto", 40));
+            _grid.Columns.Add(Ui.Columna("hay", "Había en tienda", 14, true));
             _grid.Columns.Add(Ui.Columna("cantidad", "Cantidad", 14, true));
             _grid.Columns.Add(Ui.Columna("costo", "Costo nuevo", 14, true));
             _grid.KeyDown += (s, e) => { if (e.KeyCode == Keys.Delete) { Quitar(); e.Handled = true; } };
@@ -366,7 +380,7 @@ namespace VentaFacil.Forms.Admin
         {
             var ya = _lista.FirstOrDefault(r => r.P.Id == p.Id);
             if (ya != null) { ya.Cantidad += cant; if (costo.HasValue) ya.Costo = costo; }
-            else _lista.Add(new Renglon { P = p, Cantidad = cant, Costo = costo });
+            else _lista.Add(new Renglon { P = p, Cantidad = cant, Costo = costo, Hay = ReporteTienda.Existencia(p.Id) });
         }
 
         void Quitar()
@@ -381,7 +395,7 @@ namespace VentaFacil.Forms.Admin
             _grid.Rows.Clear();
             foreach (var r in _lista)
             {
-                int i = _grid.Rows.Add(r.P.Codigo, r.P.Descripcion, (r.Cantidad > 0 ? "+" : "") + Fmt.Cant(r.Cantidad, r.P.Granel), r.Costo.HasValue ? Fmt.Dinero(r.Costo.Value) : "");
+                int i = _grid.Rows.Add(r.P.Codigo, r.P.Descripcion, r.Hay.HasValue ? Fmt.Dec(r.Hay.Value) : "", (r.Cantidad > 0 ? "+" : "") + Fmt.Cant(r.Cantidad, r.P.Granel), r.Costo.HasValue ? Fmt.Dinero(r.Costo.Value) : "");
                 _grid.Rows[i].Tag = r;
                 if (r.Cantidad < 0) _grid.Rows[i].DefaultCellStyle.ForeColor = Tema.Rojo;
             }
@@ -595,7 +609,7 @@ namespace VentaFacil.Forms.Admin
             }
             if (oficina)
             {
-                p.Controls.Add(Ui.Etiqueta("Los cambios del Catálogo se anotan solos. La mercancía se captura en F4 Almacén → Llegó mercancía.\nEn la oficina no se cobra. Las existencias de aquí no son las de la tienda: las reales se ven en la caja.\nLas existencias que vengan en un Excel o CSV de productos YA dados de alta no viajan; use Llegó mercancía.", 16, y, null, Tema.Humo)); y += 84;
+                p.Controls.Add(Ui.Etiqueta("Los cambios del Catálogo se anotan solos. La mercancía se captura en F4 Almacén → Llegó mercancía.\nEn la oficina no se cobra. Las existencias y ventas de la tienda se ven en F5 Resultados, según su último reporte.\nLas existencias que vengan en un Excel o CSV de productos YA dados de alta no viajan; use Llegó mercancía.", 16, y, null, Tema.Humo)); y += 84;
                 p.Controls.Add(Ui.Etiqueta("Si cambia de computadora o restaura un respaldo viejo aquí, hay que volver a enlazar con la tienda.", 16, y, null, Tema.Humo)); y += 40;
             }
             if (oficina || tienda)
