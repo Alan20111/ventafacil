@@ -111,4 +111,22 @@ Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y
 | 55 | En Catálogo, Grupos y Usuarios: F1–F6 y Ctrl+N / Ctrl+M / Ctrl+E | F1–F6 cambian de módulo siempre (F5 ya **no** elimina); Ctrl+letra hace la acción |
 | 56 | Abrir con la base de la v1.17 | Siguen todos los usuarios con su clave |
 
-Resultado: ______ de 56 pasos bien.   Fallas anotadas: ____________________________
+## L. Envíos oficina → tienda (dos computadoras y una USB)
+| # | Qué hacer | Debe pasar |
+|---|-----------|-----------|
+| 57 | CAJA: F6 Ajustes → **Envíos** → Crear archivo de enlace, guardarlo en la USB | Pide contraseña dos veces, pregunta la carpeta y dice cuántos productos lleva |
+| 58 | OFICINA (instalación nueva, con licencia): Ajustes → Envíos → **Convertir…** | Pide la contraseña; el título dice OFICINA; el Catálogo es el de la tienda |
+| 59 | OFICINA: intentar cobrar | Avisa que ahí no se cobra |
+| 60 | OFICINA: cambiar 2 precios, crear 1 producto, eliminar 1; F4 → **Llegó mercancía**: 3 productos (uno con −2) | Se guardan; salir a otro módulo a medio capturar NO pierde lo capturado |
+| 61 | OFICINA: F4 → Envíos → **Crear envío** | El resumen coincide con lo hecho; pregunta la ruta; queda el `.vfenvio` en la USB |
+| 62 | CAJA: vender 1 pieza de un producto que viene en el envío; luego F2 Turno → **Recibir envío** | Encuentra el envío solo, muestra el resumen; como es el primero pide administrador |
+| 63 | Aplicar | Existencia = lo que había − venta + lo que llegó; precios nuevos al cobrar; queda el acuse en la USB |
+| 64 | Aplicar el mismo otra vez | Dice que ya se aplicó; nada cambia |
+| 65 | OFICINA: Leer acuse (o crear otro envío en esa USB) | «La tienda está al día»; el historial dice Aplicado |
+| 66 | Crear envío A, no llevarlo; más cambios, crear B; aplicar solo B como **cajero** | Entran los cambios de A y B; al cajero no le pide clave |
+| 67 | Poner un precio en 9.20 en vez de 92 y crear el envío | Avisa en la oficina y en la caja (cuadro amarillo) |
+| 68 | CAJA: F4 → Envíos recibidos → **Deshacer el último** | Regresan precios y existencias; la venta del paso 62 sigue |
+| 69 | Con una venta a medias, Recibir envío; y sacar la USB a la mitad de aplicar | Pide terminar la venta; si se saca la USB, o se aplicó todo o nada |
+| 70 | Revisar las pantallas de envíos en 1366x768 | Nada se corta ni se encima |
+
+Resultado: ______ de 70 pasos bien.   Fallas anotadas: ____________________________

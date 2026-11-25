@@ -14,7 +14,7 @@ namespace VentaFacil.Core
     public static class Permisos
     {
         public const string Turno = "turno", Movimientos = "movimientos", Cajon = "cajon", Descuentos = "descuentos", Cancelar = "cancelar",
-            CorteCaja = "corte_caja", CorteZ = "corte_z", Catalogo = "catalogo", Almacen = "almacen", Resultados = "resultados", Ajustes = "ajustes",
+            CorteCaja = "corte_caja", CorteZ = "corte_z", Envios = "envios", Catalogo = "catalogo", Almacen = "almacen", Resultados = "resultados", Ajustes = "ajustes",
             SoloAdmin = "solo_admin";   // usuarios y respaldos: no se puede dar con casillas (se daría permisos a sí mismo)
 
         public class Info { public string Clave, Nombre; public bool Cajero; }
@@ -31,7 +31,8 @@ namespace VentaFacil.Core
             new Info { Clave = Descuentos, Nombre = "Descuentos y precio" },
             new Info { Clave = Cancelar, Nombre = "Cancelar tickets" },
             new Info { Clave = CorteCaja, Nombre = "Corte X de caja y otros" },
-            new Info { Clave = CorteZ, Nombre = "Corte Z (cierre)" }
+            new Info { Clave = CorteZ, Nombre = "Corte Z (cierre)" },
+            new Info { Clave = Envios, Nombre = "Recibir envíos", Cajero = true }
         };
 
         /// <summary>Los de un cajero sin casillas propias. El ajuste general «los cajeros pueden cancelar…» suma esos dos.</summary>

@@ -26,6 +26,7 @@ namespace VentaFacil.Forms.Admin
             _grid.Columns.Add(Ui.Columna("descripcion", "Descripción", 50));
             _grid.Columns.Add(Ui.Columna("precio", "Precio", 14, true));
             _grid.Columns.Add(Ui.Columna("existencia", "Existencia", 14, true));
+            if (Envios.EsOficina) _grid.Columns["existencia"].Visible = false;
             Controls.Add(_grid);
 
             _buscar.KeyDown += (s, e) =>

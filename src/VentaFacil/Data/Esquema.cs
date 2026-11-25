@@ -163,6 +163,68 @@ CREATE TABLE IF NOT EXISTS suspendidas (
                     Db.Exec(cn, null, "ALTER TABLE usuarios ADD COLUMN permisos TEXT NOT NULL DEFAULT ''");
                 Db.Exec(cn, null, "PRAGMA user_version = 4");
             }
+            if (v < 5)
+            {
+                // v5: envíos de la oficina a la tienda (ver Data.Envios). Cada producto lleva un identificador que nunca cambia
+                if (System.Convert.ToInt64(Db.Scalar(cn, null, "SELECT COUNT(*) FROM pragma_table_info('productos') WHERE name='uid'")) == 0)
+                    Db.Exec(cn, null, "ALTER TABLE productos ADD COLUMN uid TEXT NOT NULL DEFAULT ''");
+                Db.Exec(cn, null, "UPDATE productos SET uid=lower(hex(randomblob(16))) WHERE uid=''");
+                Db.Exec(cn, null, @"
+CREATE UNIQUE INDEX IF NOT EXISTS ix_productos_uid ON productos(uid);
+CREATE TABLE IF NOT EXISTS enlace (clave TEXT PRIMARY KEY, valor TEXT);      -- rol OFICINA | TIENDA, llaves y con quién está enlazada
+-- En la OFICINA: cada cambio de producto, numerado. Se llena solo con los disparadores de abajo
+CREATE TABLE IF NOT EXISTS cambios (
+    seq INTEGER PRIMARY KEY AUTOINCREMENT,
+    uid TEXT NOT NULL DEFAULT (lower(hex(randomblob(16)))),
+    fecha TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+    producto_uid TEXT NOT NULL,
+    campo TEXT NOT NULL,                      -- alta | eliminado | existencia | el nombre de la columna
+    antes, despues,
+    cantidad REAL NOT NULL DEFAULT 0,         -- solo existencia: lo que se suma (o se resta)
+    referencia TEXT
+);
+CREATE TABLE IF NOT EXISTS envios (           -- en la OFICINA: envíos creados
+    id TEXT PRIMARY KEY, num INTEGER NOT NULL, fecha TEXT NOT NULL, usuario TEXT, desde INTEGER NOT NULL, hasta INTEGER NOT NULL,
+    archivo TEXT, resumen TEXT, estado TEXT NOT NULL DEFAULT 'CREADO',       -- CREADO | APLICADO | DESHECHO
+    aplicado TEXT, problemas TEXT
+);
+CREATE TABLE IF NOT EXISTS recibidos (seq INTEGER PRIMARY KEY, uid TEXT NOT NULL, envio_id TEXT NOT NULL);   -- en la TIENDA: cambios ya aplicados
+CREATE TABLE IF NOT EXISTS envios_aplicados ( -- en la TIENDA
+    orden INTEGER PRIMARY KEY AUTOINCREMENT,
+    id TEXT NOT NULL, num INTEGER NOT NULL, oficina_id TEXT NOT NULL, fecha_envio TEXT, fecha TEXT NOT NULL, usuario_id INTEGER, usuario TEXT,
+    resumen TEXT, estado TEXT NOT NULL DEFAULT 'APLICADO', respaldo TEXT     -- APLICADO | DESHECHO
+);
+CREATE TABLE IF NOT EXISTS envio_detalle (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, orden INTEGER NOT NULL REFERENCES envios_aplicados(orden), producto_id INTEGER,
+    tipo TEXT NOT NULL, codigo TEXT, producto TEXT, campo TEXT, antes TEXT, despues TEXT, cantidad REAL NOT NULL DEFAULT 0, nota TEXT
+);
+CREATE INDEX IF NOT EXISTS ix_envdet ON envio_detalle(orden);");
+                Db.Exec(cn, null, "PRAGMA user_version = 5");
+            }
+            Disparadores(cn);
+        }
+
+        /// <summary>
+        /// Disparadores que anotan en «cambios» lo que se modifica en el catálogo, sin importar desde qué pantalla
+        /// (solo si este equipo es la OFICINA). La existencia NO se anota aquí: viaja lo que se capture en «Llegó mercancía».
+        /// </summary>
+        static void Disparadores(SQLiteConnection cn)
+        {
+            const string Oficina = "(SELECT valor FROM enlace WHERE clave='rol')='OFICINA'";
+            Db.Exec(cn, null, "CREATE TRIGGER IF NOT EXISTS tr_prod_alta AFTER INSERT ON productos BEGIN " +
+                "UPDATE productos SET uid=lower(hex(randomblob(16))) WHERE id=NEW.id AND uid=''; " +
+                "INSERT INTO cambios(producto_uid,campo,despues) SELECT uid,'alta',NEW.descripcion FROM productos WHERE id=NEW.id AND " + Oficina + "; " +
+                "INSERT INTO cambios(producto_uid,campo,cantidad,referencia) SELECT uid,'existencia',NEW.existencia,'Alta de producto' FROM productos WHERE id=NEW.id AND NEW.existencia<>0 AND NEW.usa_inventario=1 AND " + Oficina + "; END");
+            Db.Exec(cn, null, "CREATE TRIGGER IF NOT EXISTS tr_prod_baja AFTER DELETE ON productos WHEN " + Oficina + " BEGIN " +
+                "INSERT INTO cambios(producto_uid,campo,antes,referencia) VALUES(OLD.uid,'eliminado',OLD.descripcion,OLD.codigo); END");
+            foreach (var c in Envios.Campos)
+            {
+                string valor = c.Nombre == "departamento" ? "(SELECT nombre FROM departamentos WHERE id={0}.departamento_id)" : "{0}." + c.Columna;
+                Db.Exec(cn, null, "CREATE TRIGGER IF NOT EXISTS tr_prod_" + c.Nombre + " AFTER UPDATE OF " + c.Columna + " ON productos WHEN OLD." + c.Columna + " IS NOT NEW." + c.Columna + " AND " + Oficina + " BEGIN " +
+                    "INSERT INTO cambios(producto_uid,campo,antes,despues) VALUES(NEW.uid,'" + c.Nombre + "'," + string.Format(valor, "OLD") + "," + string.Format(valor, "NEW") + "); END");
+            }
+            Db.Exec(cn, null, "CREATE TRIGGER IF NOT EXISTS tr_depto_nombre AFTER UPDATE OF nombre ON departamentos WHEN OLD.nombre IS NOT NEW.nombre AND " + Oficina + " BEGIN " +
+                "INSERT INTO cambios(producto_uid,campo,antes,despues) SELECT uid,'departamento',OLD.nombre,NEW.nombre FROM productos WHERE departamento_id=NEW.id; END");
         }
     }
 }

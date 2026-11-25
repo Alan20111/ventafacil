@@ -34,6 +34,7 @@ namespace VentaFacil.Forms.Admin
             _grid.Columns.Add(Ui.Columna("precio", "Menudeo", 10, true));
             _grid.Columns.Add(Ui.Columna("existencia", "Stock", 8, true));
             _grid.Columns.Add(Ui.Columna("minimo", "Mín.", 6, true));
+            if (Envios.EsOficina) _grid.Columns["existencia"].Visible = false;   // la existencia real está en la caja
             _grid.CellDoubleClick += (s, e) => { if (e.RowIndex >= 0) Modificar(); };
             _grid.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; Modificar(); } };
             Controls.Add(_grid);

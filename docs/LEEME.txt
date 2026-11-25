@@ -29,6 +29,13 @@ MODULOS (barra azul de arriba; tambien con el raton)
   Esc regresa a Caja.  F10 cambia de usuario.
   Dentro de cada modulo, Ctrl+F1, Ctrl+F2... son los botones que se ven arriba.
 
+ENVIOS DE LA OFICINA POR USB (F6 Ajustes > Envios, solo administrador)
+  Caja:    Crear archivo de enlace (una sola vez).
+  Oficina: en otra computadora nueva, Convertir este equipo en la oficina.
+  Despues: oficina F4 Almacen > Llego mercancia y Envios > Crear envio;
+           caja F2 Turno > Recibir envio. La mercancia se SUMA.
+  El primer envio lo confirma un administrador en la caja.
+
 USUARIOS Y PERMISOS (F6 Ajustes > Usuarios)
   Administrador: todo. Cajero: cobrar, Turno y su propio corte. Las casillas
   "Puede usar" le dan o quitan modulos y acciones. Los modulos con candado

@@ -4,13 +4,16 @@
     <TargetFramework>net11.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
-    <NoWarn>CS0618;CS8632</NoWarn>
+    <NoWarn>CS0618;CS8632;SYSLIB0021;SYSLIB0023;SYSLIB0041;SYSLIB0060</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" Version="8.*" />
     <!-- El código REAL de la capa de datos del programa, no una copia -->
     <Compile Include="..\..\src\VentaFacil\Core\Basicos.cs" Link="Real\Basicos.cs" />
     <Compile Include="..\..\src\VentaFacil\Core\Permisos.cs" Link="Real\Permisos.cs" />
+    <Compile Include="..\..\src\VentaFacil\Core\EnvioArchivo.cs" Link="Real\EnvioArchivo.cs" />
+    <Compile Include="..\..\src\VentaFacil\Core\JsonMini.cs" Link="Real\JsonMini.cs" />
+    <Compile Include="..\..\src\VentaFacil\Data\Envios.cs" Link="Real\Envios.cs" />
     <Compile Include="..\..\src\VentaFacil\Core\Fmt.cs" Link="Real\Fmt.cs" />
     <Compile Include="..\..\src\VentaFacil\Core\Dinero.cs" Link="Real\Dinero.cs" />
     <Compile Include="..\..\src\VentaFacil\Core\ZafirahMapeo.cs" Link="Real\ZafirahMapeo.cs" />

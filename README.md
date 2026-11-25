@@ -135,6 +135,15 @@ Cada módulo declara arriba sus botones con su atajo. Los módulos F3–F6 piden
 ### Usuarios y permisos
 En *F6 Ajustes → Usuarios*. El **administrador** puede todo. El **cajero**, de fábrica, solo cobra, ve *Turno*, registra entradas y salidas, abre el cajón y saca **su propio corte X**. Con las casillas *Puede usar* se le da o quita cada módulo (Turno, Catálogo, Almacén, Resultados, Ajustes) y cada acción (descuentos, cancelar, corte X de caja, corte Z…). Cobrar y el corte propio no se pueden quitar; *Usuarios* y *Respaldos* son solo del administrador. Los módulos sin permiso salen con candado y se abren únicamente con la clave de alguien que sí lo tenga; esa autorización se olvida al volver a Caja o al cambiar de usuario (F10), que siempre regresa a Caja. Al actualizar nadie pierde su cuenta: el corte X de caja, que antes veía cualquiera, ahora pide permiso.
 
+### Envíos de la oficina a la tienda (USB)
+Para que los cambios de la oficina no se capturen a mano en la caja. En *F6 Ajustes → Envíos* (solo administrador) la **caja** crea un *archivo de enlace* (protegido con contraseña) y la **computadora de la oficina** —instalación nueva, con su propia licencia— lo abre y queda como OFICINA: ahí no se cobra.
+
+- **Oficina:** los cambios del Catálogo se anotan solos; la mercancía se captura en *F4 Almacén → Llegó mercancía* (o se carga un Excel con CÓDIGO y CANTIDAD) y en *Envíos* se presiona **Crear envío** (siempre pregunta la ruta).
+- **Caja:** *F2 Turno → Recibir envío*: muestra qué cambia, avisa de precios raros y aplica. La mercancía se **suma** a lo que haya; los precios quedan como en la oficina; lo eliminado se desactiva. Deja un **acuse** en la USB. *F4 Almacén → Envíos recibidos* tiene el historial y **Deshacer el último** (no toca ventas).
+- No viajan ventas, cortes, usuarios ni conteos. Un envío repetido no hace nada; uno perdido lo recupera el siguiente; si falta uno, se niega. Todo se aplica o nada.
+- El archivo (`.vfenvio`) va cifrado y **firmado por la oficina**: la llave que firma no sale de ahí. El primer envío lo confirma un administrador en la caja.
+- Si la oficina cambia de computadora o restaura un respaldo viejo, hay que volver a enlazar. Una caja por tienda: con dos cajas (dos bases) las existencias no se comparten.
+
 ### Códigos de barras y etiquetas
 La lista de la semillera no trae códigos de barras, así que lo importado se cobra con su **código corto** (1, 2, 3…). Para escanear: Administración → Productos → **Códigos de barras…**. Se toma el producto, se pasa el lector por su empaque y el código se guarda solo (en el *código alterno*; el código corto no se toca) y salta al siguiente. `F2` saltar · `F3` «sin código de barras» · `F4` quitar · `F5` etiqueta. Un código no puede ser de dos productos: si ya existe, avisa de quién es y ofrece pasarlo.
 Lo que no trae código (granel, verdura): **Etiqueta** imprime una tira con nombre, precio y el código corto en Code 128 por la impresora de tickets (por controlador de Windows o como imagen en modo ESC/POS, sin depender del comando de barras de la impresora).
@@ -146,8 +155,8 @@ Inventario → **Conteo con Excel**: se exporta la hoja (todo o por proveedor), 
 30 días de prueba; después una clave por computadora (permanente). Se genera con `herramientas/licencias` (ver [docs/LICENCIAS.md](docs/LICENCIAS.md)).
 
 ### Pruebas
-- [docs/PRUEBAS_WINDOWS.md](docs/PRUEBAS_WINDOWS.md): 44 pasos para la laptop.
-- `dotnet run` en `herramientas/licencias -- --probar`, `herramientas/pruebas-dinero`, `herramientas/pruebas-conteo` y `herramientas/pruebas-barras` (código de barras contra una librería independiente), `herramientas/pruebas-zafirah` (importador) y `herramientas/pruebas-datos` (**la capa de datos real contra un SQLite de verdad**: esquema, migración, cobros, cortes, dinero exacto, conteo, respaldos, base dañada, restauración e importador; usa un adaptador mínimo porque `System.Data.SQLite` solo corre en Windows): pruebas automáticas (se corren en Mac o Windows).
+- [docs/PRUEBAS_WINDOWS.md](docs/PRUEBAS_WINDOWS.md): 70 pasos para la laptop.
+- `dotnet run` en `herramientas/licencias -- --probar`, `herramientas/pruebas-dinero`, `herramientas/pruebas-conteo` y `herramientas/pruebas-barras` (código de barras contra una librería independiente), `herramientas/pruebas-zafirah` (importador) y `herramientas/pruebas-datos` (**la capa de datos real contra un SQLite de verdad**: esquema, migración, cobros, cortes, dinero exacto, conteo, respaldos, base dañada, restauración, importador y **envíos** repetidos, perdidos, alterados e interrumpidos; usa un adaptador mínimo porque `System.Data.SQLite` solo corre en Windows): pruebas automáticas (se corren en Mac o Windows).
 
 ## Desarrollo
 

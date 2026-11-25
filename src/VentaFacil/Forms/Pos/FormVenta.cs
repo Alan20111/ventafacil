@@ -213,6 +213,7 @@ namespace VentaFacil.Forms.Pos
                     m.AgregarAccion("Cortes X / Z", Y(Cortes));
                     m.AgregarAccion("Abrir cajón", AbrirCajon);
                     m.AgregarAccion("Reimprimir ticket", ReimprimirUltimo);
+                    if (!Envios.EsOficina) m.AgregarAccion("Recibir envío", Y(RecibirEnvio));
                     m.AgregarAccion("Cambiar usuario (F10)", CambiarUsuario);
                     break;
                 case 2:
@@ -223,7 +224,14 @@ namespace VentaFacil.Forms.Pos
                     break;
                 case 3:
                     m = new ModuloVista("Almacén", "existencias, entradas y conteo");
+                    if (Envios.EsOficina)
+                    {   // en la oficina no hay existencias reales: se captura lo que llegó y se manda a la tienda
+                        m.AgregarVista("Llegó mercancía", () => new Admin.SeccionMercancia());
+                        m.AgregarVista("Envíos", () => new Admin.SeccionEnviosOficina());
+                        break;
+                    }
                     m.AgregarVista("Inventario", () => new Admin.SeccionInventario());
+                    if (Envios.EsTienda) m.AgregarVista("Envíos recibidos", () => new Admin.SeccionEnviosTienda());
                     break;
                 case 4:
                     m = new ModuloVista("Resultados", "ventas y reportes");
@@ -236,6 +244,7 @@ namespace VentaFacil.Forms.Pos
                     {
                         m.AgregarVista("Usuarios", () => new Admin.SeccionUsuarios());
                         m.AgregarVista("Respaldos", () => new Admin.SeccionRespaldos());
+                        m.AgregarVista("Envíos", () => new Admin.SeccionEnlace());
                     }
                     m.AgregarAccion("Impresora", ConfigurarImpresora);
                     m.AgregarAccion("Licencia", () => Licenciamiento.FormLicencia.Mostrar(Licencia.Evaluar(), true));
@@ -310,7 +319,7 @@ namespace VentaFacil.Forms.Pos
         {
             var c = Config.Actual;
             _titulo.Titulo = c.NegocioNombre;
-            _titulo.Subtitulo = "Caja " + c.Caja + (Sesion.Turno != null ? "  ·  Turno " + Sesion.Turno.Id : "");
+            _titulo.Subtitulo = Envios.EsOficina ? "OFICINA" : "Caja " + c.Caja + (Sesion.Turno != null ? "  ·  Turno " + Sesion.Turno.Id : "");
             _titulo.Invalidate();
             _lblUsuario.Text = "Cajero: " + Sesion.Usuario.Nombre + (Sesion.Usuario.EsAdmin ? " (Admin)" : "");
             _lblBanner.Text = c.Banner;
@@ -713,6 +722,15 @@ namespace VentaFacil.Forms.Pos
             _captura.Focus();
         }
 
+        /// <summary>Aplica un envío de la oficina desde la USB (cambios de precio, mercancía…).</summary>
+        void RecibirEnvio()
+        {
+            if (_lineas.Count > 0) { Ui.Aviso("Termine o ponga en espera la venta actual antes de recibir un envío."); return; }
+            if (!Envios.EsTienda) { Ui.Aviso("Esta caja todavía no está enlazada con una oficina.\n\nUn administrador la enlaza en F6 Ajustes → Envíos."); return; }
+            if (Ui.Autorizar(Permisos.Envios, "Recibir envíos requiere autorización") == null) return;
+            using (var f = new Admin.FormRecibirEnvio()) f.ShowDialog(this);
+        }
+
         void Cortes()
         {
             if (_lineas.Count > 0) { Ui.Aviso("Termine la venta actual antes de hacer un corte."); return; }
@@ -816,6 +834,7 @@ namespace VentaFacil.Forms.Pos
         // =====================================================================
         void Cobrar()
         {
+            if (Envios.EsOficina) { Ui.Aviso("Este equipo es la oficina: aquí no se cobra.\n\nLas ventas se hacen en la caja de la tienda."); _captura.Focus(); return; }
             if (_lineas.Count == 0) { Mensaje("No hay artículos para cobrar."); _captura.Focus(); return; }
             decimal total = Total;
             using (var f = new FormCobro(total))
@@ -886,7 +905,7 @@ namespace VentaFacil.Forms.Pos
                 if (t == null)
                 {
                     decimal fondo = 0;
-                    if (Config.Actual.PedirFondoAlAbrir)
+                    if (Config.Actual.PedirFondoAlAbrir && !Envios.EsOficina)
                     {
                         var f = Ui.PedirNumero("Abrir caja", "Inicio de turno. ¿Con cuánto efectivo (fondo) inicia la caja?", 0);
                         if (!f.HasValue) return false;
@@ -907,6 +926,8 @@ namespace VentaFacil.Forms.Pos
         void AlCerrar(object sender, FormClosingEventArgs e)
         {
             if (_forzarSalida) { _reloj.Stop(); return; }
+            if (Admin.SeccionMercancia.SinGuardar > 0 && e.CloseReason == CloseReason.UserClosing &&
+                !Ui.Confirmar("Hay " + Admin.SeccionMercancia.SinGuardar + " renglones de mercancía sin guardar (F4 Almacén). Si sale se pierden.\n¿Salir de todas formas?")) { e.Cancel = true; return; }
             if (_lineas.Count > 0 && e.CloseReason == CloseReason.UserClosing)
             {
                 if (!Ui.Confirmar("Hay una venta sin cobrar. Si sale se perderá.\n¿Salir de todas formas?")) { e.Cancel = true; return; }
