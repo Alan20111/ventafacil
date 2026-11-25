@@ -10,7 +10,7 @@ using VentaFacil.UI;
 namespace VentaFacil.Forms.Pos
 {
     // =========================================================================
-    //  F2 / F4  Búsqueda de artículos y consulta de precios
+    //  Búsqueda de artículos y consulta de precios
     // =========================================================================
     public class FormBuscar : Dialogo
     {
@@ -29,7 +29,7 @@ namespace VentaFacil.Forms.Pos
                 return f.ShowDialog(dueno) == DialogResult.OK ? f.Elegido : null;
         }
 
-        FormBuscar(string texto, bool consulta) : base(consulta ? "F4 - Consultar precio" : "F2 - Buscar artículo", 820, 540)
+        FormBuscar(string texto, bool consulta) : base(consulta ? "Consultar precio" : "Buscar artículo", 820, 540)
         {
             _consulta = consulta;
             Controls.Add(Ui.Etiqueta(consulta ? "Escanee el artículo o escriba parte del nombre:" : "Escriba parte del nombre o código (varias palabras sirven):", 12, 10, Tema.Negrita, Tema.Azul));
@@ -170,7 +170,7 @@ namespace VentaFacil.Forms.Pos
 
         void LeerBascula()
         {
-            if (!Config.Actual.BasculaActiva) { Ui.Aviso("La báscula no está activada en Configuración."); return; }
+            if (!Config.Actual.BasculaActiva) { Ui.Aviso("La báscula no está activada. Se activa en F6 Ajustes > Negocio, pestaña Báscula."); return; }
             try
             {
                 var peso = Bascula.LeerPeso(Config.Actual);
@@ -297,7 +297,7 @@ namespace VentaFacil.Forms.Pos
     }
 
     // =========================================================================
-    //  F6 Descuentos y ajustes de precio
+    //  Descuentos y ajustes de precio
     // =========================================================================
     public class FormDescuento : Dialogo
     {
@@ -308,7 +308,7 @@ namespace VentaFacil.Forms.Pos
         public decimal Importe { get; private set; }
         public decimal? NuevoPrecio { get; private set; }
 
-        public FormDescuento(LineaVenta l, decimal total) : base("F6 - Descuento / ajuste de precio", 480, 330)
+        public FormDescuento(LineaVenta l, decimal total) : base("Descuento / ajuste de precio", 480, 330)
         {
             Controls.Add(Ui.Etiqueta(l == null ? "(sin artículo seleccionado)" : l.Descripcion, 16, 12, Tema.Mediana, Tema.Azul));
             if (l != null) Controls.Add(Ui.Etiqueta("Cantidad " + Fmt.Cant(l.Cantidad, l.Granel) + "  ×  " + Fmt.Dinero(l.Precio), 16, 40));
@@ -352,7 +352,7 @@ namespace VentaFacil.Forms.Pos
     }
 
     // =========================================================================
-    //  F8 Artículo varios (sin código / venta por departamento)
+    //  Artículo varios (sin código / venta por departamento)
     // =========================================================================
     public class FormArticuloComun : Dialogo
     {
@@ -361,7 +361,7 @@ namespace VentaFacil.Forms.Pos
         public decimal Precio { get; private set; }
         public decimal Cantidad { get; private set; }
 
-        public FormArticuloComun(decimal cantidad) : base("F8 - Artículo varios", 460, 250)
+        public FormArticuloComun(decimal cantidad) : base("Artículo varios", 460, 250)
         {
             Controls.Add(Ui.Etiqueta("Descripción:", 16, 20, Tema.Negrita));
             _desc = Ui.Caja(140, 16, 300); _desc.Text = "VARIOS"; Controls.Add(_desc);
@@ -387,7 +387,7 @@ namespace VentaFacil.Forms.Pos
     }
 
     // =========================================================================
-    //  F5 Ventas en espera
+    //  Ventas en espera
     // =========================================================================
     public class FormEspera : Dialogo
     {
@@ -398,7 +398,7 @@ namespace VentaFacil.Forms.Pos
         public string Nota { get { return _nota.Text.Trim(); } }
 
         /// <summary>DialogResult.Yes = poner en espera la actual; OK = recuperar Elegida.</summary>
-        public FormEspera(bool hayVenta) : base("F5 - Ventas en espera", 640, 420)
+        public FormEspera(bool hayVenta) : base("Ventas en espera", 640, 420)
         {
             Controls.Add(Ui.Etiqueta("Nota (nombre del cliente, opcional):", 16, 14, Tema.Negrita));
             _nota = Ui.Caja(16, 38, 400); _nota.Enabled = hayVenta; Controls.Add(_nota);

@@ -3,7 +3,7 @@
 Licencia **permanente por computadora**. 30 días de prueba sin clave; después se pide la clave de activación (16 letras y números, `XXXX-XXXX-XXXX-XXXX`).
 
 ## Para el cliente
-1. Abre VentaFácil. Cuando le queden 7 días de prueba (o ya haya terminado) aparece la pantalla **Licencia**. También está en Administración → Configuración → **Licencia…**
+1. Abre VentaFácil. Cuando le queden 7 días de prueba (o ya haya terminado) aparece la pantalla **Licencia**. También está en *F6 Ajustes → Licencia*
 2. Te manda el **código del equipo** (`XXXX-XXXX-XXXX`) con "Copiar código".
 3. Tú le generas la clave (abajo) y se la mandas por WhatsApp.
 4. La escribe en la pantalla y pulsa **Activar**. Una sola vez. Si reinstala el programa, escribe la misma clave (siempre es la misma para esa computadora).

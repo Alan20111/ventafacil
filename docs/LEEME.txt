@@ -18,16 +18,11 @@ LICENCIA
   clave que le de (16 letras y numeros). Se activa una sola vez; si reinstala,
   escribe la misma clave. Tambien esta en F6 Ajustes > Licencia.
 
-MENU DE ARRIBA
-  Arriba de la pantalla de venta hay un menu (Venta, Caja, Productos,
-  Inventario, Reportes, Sistema, Ayuda) y una barra de botones con lo que mas
-  se usa. Todo se puede hacer con el raton o con las teclas; las teclas son
-  solo para ir mas rapido. F6 Ajustes > Teclas rapidas muestra la lista.
-
 MODULOS (barra azul de arriba; tambien con el raton)
   F1 Caja    F2 Turno    F3 Catalogo    F4 Almacen    F5 Resultados    F6 Ajustes
   Esc regresa a Caja.  F10 cambia de usuario.
   Dentro de cada modulo, Ctrl+F1, Ctrl+F2... son los botones que se ven arriba.
+  F6 Ajustes > Teclas rapidas muestra la lista.
 
 ENVIOS DE LA OFICINA POR USB (F6 Ajustes > Envios, solo administrador)
   Caja:    Crear archivo de enlace (una sola vez).
@@ -63,8 +58,8 @@ CODIGOS DE BARRAS (para escanear y cobrar)
   y sale el precio.
 
 IMPORTAR LOS PRODUCTOS DE ZAFIRAH
-  F3 Catalogo > "Importar Zafirah / .BK" (Ctrl+F4).
-  Dos formas de traer los datos:
+  F3 Catalogo > icono pequeño al final de la barra de botones.
+  Tres formas de traer los datos:
     - "Base de Zafirah": se conecta a su SQL Server (solo LEE, no cambia nada en
       Zafirah), elige la tabla de articulos y la lee.
     - "Respaldo .BK": elige un respaldo de SQL Server (.BK, .1BK, .2BK, .3BK).
@@ -79,7 +74,7 @@ IMPORTAR LOS PRODUCTOS DE ZAFIRAH
   (el que se teclea en caja) y su codigo de barras.
 
 INVENTARIO
-  F4 Almacen > "Conteo con Excel": exporta la hoja, cuente y escriba lo
+  F4 Almacen > pestaña "Conteo con Excel": exporta la hoja, cuente y escriba lo
   contado en la columna CONTADO, importela y vera los faltantes y sobrantes
   (con su valor en pesos) ANTES de aplicar nada.
 

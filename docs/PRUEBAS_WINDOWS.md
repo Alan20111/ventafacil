@@ -5,7 +5,7 @@ Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y
 
 > Lo que se probó fuera de Windows (en una Mac): claves de licencia, lectura/escritura de Excel del conteo,
 > redondeo de dinero, detección de base dañada, y el código de barras Code 128 (contra una librería independiente) y la trama ESC/POS de las etiquetas.
-> **El dibujo de la etiqueta, su impresión real y la lectura con el lector NO se han probado: son el paso 36. Tampoco se ha visto en pantalla el menú superior (pasos 37 a 40) ni el asistente de importación (41 a 44), ni su conexión a un SQL Server real.**
+> **El dibujo de la etiqueta, su impresión real y la lectura con el lector NO se han probado: son el paso 36. Tampoco se han visto en pantalla los módulos (37 a 40b), el asistente de importación (41 a 48) ni su conexión a un SQL Server real, los permisos (49 a 56) ni los envíos y el reporte (57 a 81).**
 >
 > **Sí se probó con un SQLite de verdad** (herramientas/pruebas-datos, con un adaptador porque `System.Data.SQLite` solo existe para Windows): el código real de esquema, migración, productos, códigos de barras, cobros, cancelaciones, cortes, dinero exacto, conteo, respaldos, base dañada, restauración y la **aplicación** del importador. **Nada de lo que sigue se había probado en Windows.**
 
@@ -15,7 +15,7 @@ Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y
 | 1 | Copiar `VentaFacil.exe` a la laptop y abrirlo | Se copia a `C:\VentaFacil`, aparecen **VentaFácil** y **VentaFácil - Reparar** en el escritorio y se abre el programa |
 | 2 | Primer arranque | Pregunta dónde guardar los respaldos (por defecto escritorio\VentaFacil_Respaldos) |
 | 3 | Entrar con `admin` / `admin` | Entra y avisa de la impresora la primera vez |
-| 4 | Configuración → Usuarios | Cambiar la contraseña de `admin` y crear un cajero |
+| 4 | F6 Ajustes → Usuarios | Cambiar la contraseña de `admin` y crear un cajero |
 
 ## B. Impresora y cajón
 | # | Qué hacer | Debe pasar |
@@ -33,20 +33,20 @@ Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y
 | 11 | Producto a granel (kg) con importe y con báscula (si hay) | Peso y total correctos |
 | 12 | Cobrar en efectivo con cambio | Ticket, cajón y cambio correctos |
 | 13 | Cobrar con tarjeta y con transferencia | Queda registrada la forma de pago |
-| 14 | F5 poner en espera y recuperar | La venta vuelve completa |
-| 15 | F12 cancelar un ticket (con admin) | El producto vuelve al inventario |
-| 16 | F7 entrada y salida de efectivo | Salen en el corte |
-| 17 | F9 → corte X | Totales iguales a lo vendido |
-| 18 | F9 → corte Z contando efectivo | Dice sobrante/faltante correcto y abre un turno nuevo |
+| 14 | Ctrl+F5: poner en espera y recuperar | La venta vuelve completa |
+| 15 | Ctrl+F8: cancelar un ticket (con admin) | El producto vuelve al inventario |
+| 16 | F2 Turno → Entradas / salidas: una entrada y una salida de efectivo | Salen en el corte |
+| 17 | F2 Turno → Cortes X / Z → corte X | Totales iguales a lo vendido |
+| 18 | F2 Turno → Cortes X / Z → corte Z contando efectivo | Dice sobrante/faltante correcto y abre un turno nuevo |
 
 ## D. Productos e inventario
 | # | Qué hacer | Debe pasar |
 |---|-----------|-----------|
-| 19 | Productos → importar Excel de la semillera | Vista previa, importa ~490 productos sin errores |
-| 20 | Exportar lista de costos a Excel y abrirla | Mismo formato que el original |
-| 21 | Inventario → entrada de mercancía | Sube la existencia |
-| 22 | Inventario → **Conteo con Excel**: exportar hoja, llenar CONTADO en 5 productos, importar | Muestra diferencias con valor, se aplican y salen en el kardex |
-| 23 | Reportes con filtros y exportar a Excel | Totales correctos |
+| 19 | F3 Catálogo → Importar Excel | Vista previa, importa ~490 productos sin errores |
+| 20 | F3 Catálogo → Lista costos; abrir el Excel | Mismo formato que el original |
+| 21 | F4 Almacén → entrada de mercancía | Sube la existencia |
+| 22 | F4 Almacén → **Conteo con Excel**: exportar hoja, llenar CONTADO en 5 productos, importar | Muestra diferencias con valor, se aplican y salen en el kardex |
+| 23 | F5 Resultados: reportes con filtros y exportar a Excel | Totales correctos |
 
 ## E. Fallas (lo que más le importa al dueño)
 | # | Qué hacer | Debe pasar |
@@ -61,7 +61,7 @@ Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y
 ## F. Licencia
 | # | Qué hacer | Debe pasar |
 |---|-----------|-----------|
-| 30 | Configuración → **Licencia…** | Muestra el código del equipo y "le quedan 30 días" |
+| 30 | F6 Ajustes → **Licencia** | Muestra el código del equipo y "le quedan 30 días" |
 | 31 | En tu Mac: `cd herramientas/licencias && dotnet run`, pegar el código, generar la clave. Escribirla en la laptop (el `.exe` debe haberse compilado en tu Mac con `publicar_release.sh`) | "VentaFácil quedó activado". Reabrir el programa: no vuelve a pedirla |
 | 32 | Cambiar la fecha de Windows 40 días adelante **antes** de activar (en otra PC de prueba) | Pide la clave y no deja entrar sin ella. Devolver la fecha |
 
@@ -72,7 +72,7 @@ Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y
 ## H. Códigos de barras y etiquetas
 | # | Qué hacer | Debe pasar |
 |---|-----------|-----------|
-| 33 | Productos → **Códigos de barras…**; tomar 3 productos con empaque y pasar el lector | Cada código se guarda y salta al siguiente; la columna «Cód. barras» de Productos lo muestra |
+| 33 | F3 Catálogo → **Códigos de barras**; tomar 3 productos con empaque y pasar el lector | Cada código se guarda y salta al siguiente; la columna «Cód. barras» de Productos lo muestra |
 | 34 | Pasar el MISMO código en otro producto | Avisa de quién es y ofrece pasarlo; no deja duplicar |
 | 35 | En la pantalla de cobro, escanear un empaque ya asignado | Entra el producto con su precio |
 | 36 | Un producto de granel → **Etiqueta** (F5) → ver la vista previa → Imprimir; luego escanear la etiqueta impresa **con el lector** | La etiqueta sale legible (nombre, precio, barras) y el lector la lee y entra el producto |
@@ -89,7 +89,7 @@ Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y
 ## J. Importar de Zafirah (pasos 41–48)
 | # | Qué hacer | Debe pasar |
 |---|-----------|-----------|
-| 41 | Productos → **Importar de Zafirah…** (botón con icono, y menú Productos) | Se abre el asistente completo (cabe en 1366x768, sin cortes). Pestaña «Archivo»: elegir un Excel o CSV de prueba | Aparecen las columnas propuestas con su ejemplo y la vista previa con avisos |
+| 41 | F3 Catálogo → icono pequeño al final de la barra (importar de Zafirah). Pestaña «Archivo»: elegir un Excel o CSV de prueba | Se abre el asistente completo (cabe en 1366x768, sin cortes). Aparecen las columnas propuestas con su ejemplo y la vista previa con avisos |
 | 42 | Si Zafirah está en esa PC: pestaña «Base de Zafirah» → servidor `(local)` (o `.\SQLEXPRESS`), **Conectar** (Windows o usuario SQL) → base `smartdatabase` → tabla `ZFRADMARTICULOS` → **Leer tabla** | Conecta sin escribir nada en Zafirah; propone Código, Nombre, Precio, Costo, Existencia… **Comprobar a ojo** que Menudeo, Costo y Existencia sean las columnas correctas; elegir «a partir de» para medio mayoreo/mayoreo si hace falta. Si falla, el mensaje debe ser claro (usuario, permiso, servidor) |
 | 43 | **Importar** | Pide confirmar, hace respaldo, muestra el resumen; los productos salen en Productos y se cobran por su código corto y por su código de barras |
 | 44 | Repetir la importación | No duplica nada; actualiza; si un código era de otro producto lo lista y no lo pisa |

@@ -17,6 +17,8 @@ El ticket encontrado (`tickets/Caja1Ticket42730.txt`) es de **"SEMILLAS Y BOTANA
 
 ## Punto de venta de Zafirah: funciones y teclas
 
+> Desde la v1.15 las teclas de VentaFácil cambiaron: F1–F6 son los módulos y estas funciones se hacen con Ctrl+F# (ver README). La tabla compara las funciones, no la tecla actual.
+
 | Tecla | Zafirah | VentaFácil |
 |---|---|---|
 | F2 | Búsqueda de artículos (código, alterno, descripción) | ✅ igual; busca por varias palabras mientras se escribe |

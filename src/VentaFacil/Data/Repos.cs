@@ -449,7 +449,7 @@ namespace VentaFacil.Data
         }
     }
 
-    /// <summary>Ventas en espera (F5 cuenta pendiente).</summary>
+    /// <summary>Ventas en espera.</summary>
     public static class SuspendidaRepo
     {
         public class Item { public long Id; public DateTime Fecha; public string Nota = ""; public decimal Total; public string Usuario = ""; }
