@@ -45,7 +45,14 @@ namespace VentaFacil.Forms.Pos
             KeyPreview = true;
             ConstruirPantalla();
             Load += (s, e) => { if (!AsegurarTurno()) { _forzarSalida = true; Close(); return; } ActualizarEncabezado(); };
-            Shown += (s, e) => _captura.Focus();
+            Shown += (s, e) =>
+            {
+                if (_forzarSalida) return;
+                _captura.Focus();
+                string espera = AbrirArchivo.Listo(f => { try { BeginInvoke((Action)(() => AbrirDeFuera(f))); } catch (InvalidOperationException) { /* cerrando */ } });
+                if (espera != null) BeginInvoke((Action)(() => AbrirDeFuera(espera)));
+                else VigiaUsb.Buscar(this, 800, AvisarUsb);   // por si la USB ya estaba puesta
+            };
             FormClosing += AlCerrar;
         }
 
@@ -148,6 +155,7 @@ namespace VentaFacil.Forms.Pos
 
             Controls.Add(_host);
             Controls.Add(pie);
+            Controls.Add(ConstruirAvisoUsb());
             Controls.Add(_barraMod);
             Controls.Add(_titulo);
 
@@ -722,13 +730,83 @@ namespace VentaFacil.Forms.Pos
             _captura.Focus();
         }
 
+        // =====================================================================
+        //  Envíos por USB: aviso al conectarla y doble clic en el archivo
+        // =====================================================================
+        Panel _avisoUsb;
+        Label _avisoTexto;
+        HallazgoUsb _hallazgo;
+
+        /// <summary>Franja amarilla bajo los módulos. No quita el cursor de la captura ni interrumpe la venta.</summary>
+        Panel ConstruirAvisoUsb()
+        {
+            _avisoUsb = new Panel { Dock = DockStyle.Top, Height = 44, BackColor = Color.FromArgb(255, 236, 160), Visible = false };
+            _avisoTexto = Ui.Etiqueta("", 16, 11, Tema.Negrita, Tema.Texto);
+            var ver = Ui.Boton("Ver envío", 0, 5, 130, 34, (s, e) =>
+            {
+                var h = _hallazgo;
+                if (h != null && !h.EsAcuse && _lineas.Count > 0) { _captura.Focus(); Ui.Aviso("Termine o ponga en espera la venta actual; el aviso del envío se queda aquí."); return; }
+                OcultarAviso(); _captura.Focus(); if (h != null) AbrirHallazgo(h);
+            }, true);
+            var no = Ui.Boton("Ahora no", 0, 5, 110, 34, (s, e) => { OcultarAviso(); if (_modActivo == 0) _captura.Focus(); });
+            ver.TabStop = no.TabStop = false;
+            _avisoUsb.Controls.Add(_avisoTexto); _avisoUsb.Controls.Add(ver); _avisoUsb.Controls.Add(no);
+            _avisoUsb.Resize += (s, e) => { no.Left = _avisoUsb.ClientSize.Width - no.Width - 12; ver.Left = no.Left - ver.Width - 8; };
+            return _avisoUsb;
+        }
+
+        void OcultarAviso() { _hallazgo = null; _avisoUsb.Visible = false; }
+
+        void AvisarUsb(HallazgoUsb h)
+        {
+            _hallazgo = h;
+            _avisoTexto.Text = h.Texto;
+            _avisoUsb.Controls[1].Text = h.EsAcuse ? "Leer acuse" : "Ver envío";
+            _avisoUsb.Visible = true;
+        }
+
+        void AbrirHallazgo(HallazgoUsb h) { if (h.EsAcuse) LeerAcuse(h.Ruta); else RecibirEnvio(h.Ruta); }
+
+        void LeerAcuse(string ruta)
+        {
+            if (!Envios.EsOficina) { Ui.Aviso("Los acuses se leen en la computadora de la oficina."); return; }
+            if (Ui.Autorizar(Permisos.Almacen, "Leer el acuse requiere autorización") == null) return;
+            try { Ui.Info(Envios.LeerAcuse(ruta), "Acuse"); } catch (Exception ex) { Ui.Error(ex, "Leer acuse"); }
+            if (_modActivo == 3 && _modulo != null) _modulo.Recargar();
+        }
+
+        /// <summary>Llegó un archivo por doble clic. Con una venta a medias o una ventana abierta no se interrumpe: queda el aviso.</summary>
+        void AbrirDeFuera(string ruta)
+        {
+            if (IsDisposed || _forzarSalida) return;
+            if (WindowState == FormWindowState.Minimized) WindowState = FormWindowState.Maximized;
+            Activate();
+            var h = new HallazgoUsb { Ruta = ruta, EsAcuse = ruta.EndsWith(".vfacuse", StringComparison.OrdinalIgnoreCase), Texto = "Archivo por abrir: " + System.IO.Path.GetFileName(ruta) };
+            if (!CanFocus || _lineas.Count > 0) { AvisarUsb(h); return; }
+            if (!h.EsAcuse && Envios.EsOficina) { Ui.Aviso("Este equipo es la oficina: los envíos se aplican en la caja de la tienda."); return; }
+            AbrirHallazgo(h);
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            base.WndProc(ref m);
+            if (_avisoUsb == null) return;
+            if (VigiaUsb.Conectaron(ref m)) VigiaUsb.Buscar(this, 1500, AvisarUsb);
+            else if (VigiaUsb.Quitaron(ref m) && _hallazgo != null && !System.IO.File.Exists(_hallazgo.Ruta)) OcultarAviso();
+        }
+
         /// <summary>Aplica un envío de la oficina desde la USB (cambios de precio, mercancía…).</summary>
-        void RecibirEnvio()
+        void RecibirEnvio() { RecibirEnvio(null); }
+
+        void RecibirEnvio(string ruta)
         {
             if (_lineas.Count > 0) { Ui.Aviso("Termine o ponga en espera la venta actual antes de recibir un envío."); return; }
             if (!Envios.EsTienda) { Ui.Aviso("Esta caja todavía no está enlazada con una oficina.\n\nUn administrador la enlaza en F6 Ajustes → Envíos."); return; }
             if (Ui.Autorizar(Permisos.Envios, "Recibir envíos requiere autorización") == null) return;
-            using (var f = new Admin.FormRecibirEnvio()) f.ShowDialog(this);
+            using (var f = new Admin.FormRecibirEnvio(ruta)) f.ShowDialog(this);
+            OcultarAviso();
+            if (_modActivo == 0) _captura.Focus();
+            else if ((_modActivo == 2 || _modActivo == 3) && _modulo != null) _modulo.Recargar();   // precios y existencias nuevos
         }
 
         void Cortes()

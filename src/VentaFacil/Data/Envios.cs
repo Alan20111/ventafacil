@@ -46,6 +46,7 @@ namespace VentaFacil.Data
 
     public class EnvioHecho { public string Id, Fecha, Usuario, Resumen, Estado, Archivo, Aplicado, Problemas; public long Num, Desde, Hasta; }
     public class EnvioRecibido { public string Id, FechaEnvio, Fecha, Usuario, Resumen, Estado, OficinaId; public long Orden, Num; }
+    public class NovedadEnvio { public long Num, Hasta; public int Cambios; }
     public class RenglonMercancia { public long ProductoId; public decimal Cantidad; public decimal? Costo; }
 
     /// <summary>
@@ -324,6 +325,39 @@ namespace VentaFacil.Data
                 Respaldo.Pedir();
                 return "Acuse leído. " + (faltan == 0 ? "La tienda está al día." : "Quedan " + faltan + " cambios por enviar.") + (problemas > 0 ? "\n\nLa tienda reportó " + problemas + " problema(s): véalos en el historial." : "");
             }
+        }
+
+        // ================================================================== ¿hay algo nuevo en la USB? (solo lee)
+        /// <summary>TIENDA: si el archivo es un envío de esta tienda con algo que todavía no tiene, qué trae. null si no (o si no es válido).</summary>
+        public static NovedadEnvio Novedad(string ruta)
+        {
+            try
+            {
+                string tienda = Dato("tienda_id"), clave = Dato("clave"), pub = Dato("oficina_pub");
+                if (!EsTienda || clave == "") return null;
+                var datos = EnvioArchivo.Cargar(ruta);
+                if (EnvioArchivo.TiendaDe(datos, EnvioArchivo.Envio) != tienda) return null;
+                var doc = JsonMini.Leer(EnvioArchivo.Abrir(datos, EnvioArchivo.Envio, Clave(clave), pub == "" ? null : pub)) as IDictionary<string, object>;
+                if (doc == null) return null;
+                long ultimo = Convert.ToInt64(Db.Scalar("SELECT IFNULL(MAX(seq),0) FROM recibidos"));
+                int n = ((List<object>)doc["cambios"]).Count(o => long.Parse((string)((List<object>)o)[0], CultureInfo.InvariantCulture) > ultimo);
+                return n == 0 ? null : new NovedadEnvio { Num = long.Parse(T(doc, "num"), CultureInfo.InvariantCulture), Hasta = long.Parse(T(doc, "hasta"), CultureInfo.InvariantCulture), Cambios = n };
+            }
+            catch (Exception) { return null; }   // dañado, de otra oficina o se sacó la USB: no se avisa (al abrirlo a mano sí dice por qué)
+        }
+
+        /// <summary>OFICINA: el acuse es de esta tienda y más nuevo que el último leído.</summary>
+        public static bool AcuseNuevo(string ruta)
+        {
+            try
+            {
+                if (!EsOficina) return false;
+                var datos = EnvioArchivo.Cargar(ruta);
+                if (EnvioArchivo.TiendaDe(datos, EnvioArchivo.Acuse) != Dato("tienda_id")) return false;
+                var doc = JsonMini.Leer(EnvioArchivo.Abrir(datos, EnvioArchivo.Acuse, Clave(Dato("clave")))) as IDictionary<string, object>;
+                return doc != null && T(doc, "oficinaId") == Dato("oficina_id") && string.CompareOrdinal(T(doc, "fecha"), Dato("acuse_fecha")) > 0;
+            }
+            catch (Exception) { return false; }
         }
 
         // ================================================================== TIENDA

@@ -21,8 +21,9 @@ namespace VentaFacil
             // Acceso "Reparar VentaFácil": no abre el punto de venta
             if (args.Length > 0 && args[0] == "--reparar") { FormReparar.Ejecutar(); return; }
             // Antes del mutex: si se abre la copia instalada, esta termina y no choca con ella
-            if (!Instalacion.Asegurar()) return;
-            Arrancar();
+            string archivo = AbrirArchivo.De(args);   // doble clic en un envío o un acuse
+            if (!Instalacion.Asegurar(archivo)) return;
+            Arrancar(archivo);
         }
 
         /// <summary>
@@ -48,16 +49,19 @@ namespace VentaFacil
         }
 
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
-        static void Arrancar()
+        static void Arrancar(string porAbrir)
         {
             bool unica;
             using (var mutex = new Mutex(true, "VentaFacil_PDV_Unico", out unica))
             {
                 if (!unica)
                 {
+                    if (porAbrir != null && AbrirArchivo.Mandar(porAbrir)) return;
                     MessageBox.Show("VentaFácil ya está abierto.", "VentaFácil", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
+                AbrirArchivo.Llego(porAbrir);
+                AbrirArchivo.Escuchar();
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
                 Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);

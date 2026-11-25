@@ -128,5 +128,9 @@ Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y
 | 68 | CAJA: F4 → Envíos recibidos → **Deshacer el último** | Regresan precios y existencias; la venta del paso 62 sigue |
 | 69 | Con una venta a medias, Recibir envío; y sacar la USB a la mitad de aplicar | Pide terminar la venta; si se saca la USB, o se aplicó todo o nada |
 | 70 | Revisar las pantallas de envíos en 1366x768 | Nada se corta ni se encima |
+| 71 | CAJA, con una venta a medias: conectar la USB con un envío nuevo | En 2 o 3 segundos sale la franja amarilla; el cursor **sigue** en la captura y se puede seguir escaneando; «Ver envío» pide terminar la venta |
+| 72 | Cobrar y pulsar «Ver envío»; luego sacar y volver a meter la USB ya aplicada | Abre el resumen; después de aplicar ya no avisa |
+| 73 | Doble clic en el `.vfenvio` con VentaFácil **cerrado** y luego **abierto** (también minimizado) | Cerrado: abre, pide usuario y muestra el resumen. Abierto: se pone al frente y lo muestra, sin abrir otra copia |
+| 74 | OFICINA: meter la USB con el acuse; doble clic en un `.vfenvio` | Franja con «Leer acuse»; el envío dice que se aplica en la caja |
 
-Resultado: ______ de 70 pasos bien.   Fallas anotadas: ____________________________
+Resultado: ______ de 74 pasos bien.   Fallas anotadas: ____________________________

@@ -313,6 +313,8 @@ string e1 = Enviar();
 Revisar("el archivo va cifrado (no se leen nombres ni costos)", !System.Text.Encoding.UTF8.GetString(File.ReadAllBytes(e1)).Contains("AMARANTO") && Path.GetFileName(e1).StartsWith("ENVIO_SEMILLAS-Y-BOTANAS_0001_"), Path.GetFileName(e1));
 Vender("1", 8m);     // la tienda vendió mientras tanto: 20 → 12
 string foto = Foto();
+var nov = Envios.Novedad(e1);
+Revisar("aviso de USB: dice el número de envío y cuántos cambios nuevos trae, sin cambiar nada", nov != null && nov.Num == 1 && nov.Cambios > 5 && Foto() == foto);
 var rv = Envios.Revisar(e1);
 Revisar("revisar el envío muestra lo mismo que la oficina y NO cambia nada", rv.Resumen == vp.Resumen && Foto() == foto && rv.PrimerEnvio && Envios.Dato("oficina_pub") == "", rv.Resumen);
 var ra = Aplica(e1);
@@ -326,6 +328,7 @@ Revisar("las ventas de la tienda no se tocan y hay respaldo previo sano", Cuenta
 Revisar("la tienda no anota cambios propios al aplicar", Cuenta("SELECT COUNT(*) FROM cambios") == 0);
 
 Seccion("Envíos: repetido, perdido y en desorden");
+Revisar("aviso de USB: un envío ya aplicado no avisa", Envios.Novedad(e1) == null);
 foto = Foto();
 Revisar("el mismo envío otra vez no hace nada", Aplica(e1).YaAplicado && Foto() == foto);
 En("oficina"); Mercancia("1", 5m); string perdido = Enviar();   // esta USB se pierde
@@ -339,6 +342,7 @@ long sc, ya; Envios.ContarPendientes(out sc, out ya);
 Revisar("con el acuse la oficina sabe que la tienda está al día y que se aplicaron el 1 y el 3", sc == 0 && Envios.Hechos().Where(h => h.Estado == "APLICADO").Select(h => h.Num).OrderBy(n => n).SequenceEqual(new long[] { 1, 3 }));
 Precio("2", 211m); string e4 = Enviar();
 En("oficina"); Precio("2", 212m); string e5 = Enviar();
+En("tienda"); Revisar("aviso de USB: con dos envíos, el que llega más lejos es el último", Envios.Novedad(e5).Hasta > Envios.Novedad(e4).Hasta);
 Aplica(e5); foto = Foto();
 Revisar("aplicar el 5 y luego el 4 (viejo) no regresa el precio", Aplica(e4).YaAplicado && ProductoRepo.PorCodigo("2").Precio == 212m && Foto() == foto);
 En("tienda"); string respTienda = Aparte(Db.Respaldar());
@@ -372,6 +376,8 @@ Revisar("un envío fabricado con la clave de la caja pero otra firma se rechaza"
 byte[] deOtra = (byte[])bytes.Clone(); for (int i = 4; i < 36; i++) deOtra[i] = (byte)'a'; File.WriteAllBytes(falso, deOtra);
 Revisar("un envío de otra tienda se rechaza y lo dice", Falla(() => Aplica(falso)).Contains("otra tienda") && Foto() == foto);
 File.WriteAllText(falso, "hola"); Revisar("un archivo cualquiera se rechaza con un mensaje claro", Falla(() => Aplica(falso)).Contains("no es un envío"));
+Revisar("aviso de USB: ni archivos raros, ni de otra tienda, ni alterados avisan (y no truenan)", Envios.Novedad(falso) == null && Envios.Novedad(Path.Combine(usb, "mal.vfenvio")) == null && Envios.Novedad(Path.Combine(usb, "no-esta.vfenvio")) == null);
+{ string ac = Envios.EscribirAcuse(usb); En("oficina"); bool antesA = Envios.AcuseNuevo(ac); Envios.LeerAcuse(ac); Revisar("aviso de USB en la oficina: un acuse avisa una sola vez", antesA && !Envios.AcuseNuevo(ac) && !Envios.AcuseNuevo(falso) && Envios.Novedad(ok1) == null); }
 En("oficina"); Revisar("la oficina no puede aplicarse envíos", Falla(() => Envios.Revisar(ok1)).Contains("oficina"));
 string respOfi = Aparte(Db.Respaldar()); Precio("1", 100m); string e2b = Enviar(); Aplica(e2b);
 En("oficina"); System.Data.SQLite.SQLiteConnection.ClearAllPools(); Salud.Restaurar(respOfi); Db.Inicializar(); Precio("2", 1m); string torcido = Enviar(); foto = Foto();

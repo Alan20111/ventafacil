@@ -101,7 +101,7 @@ namespace VentaFacil.Forms.Admin
 
         class Archivo { public string Ruta; public override string ToString() { return Path.GetFileName(Ruta) + "    (" + Path.GetPathRoot(Ruta) + ")"; } }
 
-        public FormRecibirEnvio() : base("Recibir envío de la oficina", 1000, 640)
+        public FormRecibirEnvio(string ruta = null) : base("Recibir envío de la oficina", 1000, 640)
         {
             Controls.Add(Ui.Etiqueta("Envío:", 16, 18, Tema.Negrita));
             _archivos = new ComboBox { Left = 80, Top = 14, Width = 560, DropDownStyle = ComboBoxStyle.DropDownList, Font = Tema.Normal };
@@ -123,7 +123,13 @@ namespace VentaFacil.Forms.Admin
             var no = Ui.Boton("Cerrar (Esc)", 868, 582, 116, 44, (s, e) => { DialogResult = DialogResult.Cancel; });
             Controls.Add(no);
             CancelButton = no;
-            Shown += (s, e) => BuscarUsb();
+            Shown += (s, e) => { if (ruta == null) BuscarUsb(); else Abrir(ruta); };
+        }
+
+        void Abrir(string f)
+        {
+            _archivos.Items.Insert(0, new Archivo { Ruta = f });
+            _archivos.SelectedIndex = 0;
         }
 
         void BuscarUsb()
@@ -138,9 +144,7 @@ namespace VentaFacil.Forms.Admin
         void Otro()
         {
             string f = EnvioUtil.PedirArchivo(this, "Elija el envío de la oficina", "Envío de VentaFácil (*.vfenvio)|*.vfenvio");
-            if (f == null) return;
-            _archivos.Items.Insert(0, new Archivo { Ruta = f });
-            _archivos.SelectedIndex = 0;
+            if (f != null) Abrir(f);
         }
 
         void Vacio(string texto, bool error = false)

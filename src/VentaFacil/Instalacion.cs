@@ -1,8 +1,10 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Windows.Forms;
+using Microsoft.Win32;
 
 namespace VentaFacil
 {
@@ -20,7 +22,7 @@ namespace VentaFacil
         /// Devuelve false si ya se abrió la copia instalada (este proceso termina).
         /// La copia se compara por contenido (no solo por tamaño), así se repone si quedó dañada.
         /// </summary>
-        public static bool Asegurar()
+        public static bool Asegurar(string archivo = null)
         {
             try
             {
@@ -30,6 +32,7 @@ namespace VentaFacil
                 if (string.Equals(actual, destino, StringComparison.OrdinalIgnoreCase))
                 {
                     CrearAccesos();
+                    Asociar(destino);
                     return true;
                 }
 
@@ -42,7 +45,7 @@ namespace VentaFacil
                 if (!File.Exists(destino)) return true; // no se pudo instalar: se queda corriendo aquí
 
                 CrearAccesos();
-                Process.Start(destino);
+                if (archivo == null) Process.Start(destino); else Process.Start(destino, "\"" + archivo + "\"");
                 return false;
             }
             catch (Exception ex)
@@ -78,6 +81,37 @@ namespace VentaFacil
             {
                 Log.Error(ex, "Reinstalar");
                 return "[ERROR] No se pudo reinstalar: " + ex.Message + ". Cierre VentaFácil e intente de nuevo.";
+            }
+        }
+
+        [DllImport("shell32.dll")] static extern void SHChangeNotify(int evento, int banderas, IntPtr a, IntPtr b);
+
+        /// <summary>Doble clic en un envío (.vfenvio) o acuse (.vfacuse) abre VentaFácil. Solo para este usuario de Windows; no pide permisos.</summary>
+        static void Asociar(string exe)
+        {
+            try
+            {
+                string comando = "\"" + exe + "\" \"%1\"";
+                bool cambio = false;
+                using (var clases = Registry.CurrentUser.CreateSubKey(@"Software\Classes"))
+                {
+                    cambio |= Poner(clases, "VentaFacil.Archivo", "Archivo de VentaFácil");
+                    cambio |= Poner(clases, @"VentaFacil.Archivo\DefaultIcon", exe + ",0");
+                    cambio |= Poner(clases, @"VentaFacil.Archivo\shell\open\command", comando);
+                    foreach (var ext in new[] { ".vfenvio", ".vfacuse" }) cambio |= Poner(clases, ext, "VentaFacil.Archivo");
+                }
+                if (cambio) SHChangeNotify(0x08000000, 0, IntPtr.Zero, IntPtr.Zero);   // que el Explorador se entere
+            }
+            catch (Exception ex) { Log.Error(ex, "Asociar archivos de envío"); }
+        }
+
+        static bool Poner(RegistryKey clases, string clave, string valor)
+        {
+            using (var k = clases.CreateSubKey(clave))
+            {
+                if (Convert.ToString(k.GetValue("")) == valor) return false;
+                k.SetValue("", valor);
+                return true;
             }
         }
 

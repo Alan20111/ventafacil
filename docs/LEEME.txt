@@ -34,6 +34,8 @@ ENVIOS DE LA OFICINA POR USB (F6 Ajustes > Envios, solo administrador)
   Oficina: en otra computadora nueva, Convertir este equipo en la oficina.
   Despues: oficina F4 Almacen > Llego mercancia y Envios > Crear envio;
            caja F2 Turno > Recibir envio. La mercancia se SUMA.
+  Al conectar la USB en la caja sale un aviso amarillo; tambien sirve
+  el doble clic en el archivo del envio.
   El primer envio lo confirma un administrador en la caja.
 
 USUARIOS Y PERMISOS (F6 Ajustes > Usuarios)
