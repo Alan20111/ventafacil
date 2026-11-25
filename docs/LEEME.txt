@@ -84,7 +84,8 @@ SI SE VA LA LUZ O ALGO SE DANA
   - Una venta ya cobrada no se pierde por un corte de luz.
   - Despues de cada venta o cambio se guarda una copia en datos\respaldos
     (ultimo.db) y otra en la carpeta de respaldos que eligio. Ademas hay un
-    respaldo cada dia (los ultimos 30) y uno en cada corte Z.
+    respaldo cada dia, uno en cada corte Z y SIEMPRE uno al cerrar el
+    programa (sale el billete girando: no apague la computadora).
   - Si la base se daña, al abrir el programa ofrece restaurar el ultimo
     respaldo bueno (la dañada se guarda aparte, no se borra).
   - Si algo raro pasa, abra "VentaFacil - Reparar" del escritorio: revisa el

@@ -7,6 +7,41 @@ namespace VentaFacil.UI
     /// <summary>Iconos dibujados por código (sin archivos de imagen): así van dentro del único .exe.</summary>
     public static class Iconos
     {
+        static Image _billete;
+        static Icon _ventana;
+
+        /// <summary>El billete en grande (256 px), incrustado en el programa.</summary>
+        public static Image Billete
+        {
+            get
+            {
+                if (_billete != null) return _billete;
+                try
+                {
+                    using (var st = typeof(Iconos).Assembly.GetManifestResourceStream("billete.png"))
+                        if (st != null) using (var i = Image.FromStream(st)) _billete = new Bitmap(i);
+                }
+                catch (Exception ex) { Log.Error(ex, "Imagen del billete"); }
+                return _billete;
+            }
+        }
+
+        /// <summary>El icono de las ventanas (barra de título y barra de tareas).</summary>
+        public static Icon Ventana
+        {
+            get
+            {
+                if (_ventana != null) return _ventana;
+                try
+                {
+                    using (var st = typeof(Iconos).Assembly.GetManifestResourceStream("VentaFacil.ico"))
+                        if (st != null) _ventana = new Icon(st);
+                }
+                catch (Exception ex) { Log.Error(ex, "Icono de ventana"); }
+                return _ventana;
+            }
+        }
+
         /// <summary>Una base de datos (cilindro) con una flecha hacia abajo: «traer datos de otro programa».</summary>
         public static Bitmap Importar(int tam, Color color)
         {

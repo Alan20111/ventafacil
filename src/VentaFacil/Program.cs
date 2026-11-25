@@ -100,7 +100,19 @@ namespace VentaFacil
                 // Copia continua después de cada cambio (venta, cobro, movimiento, producto)
                 Respaldo.Iniciar();
 
-                // Respaldo diario (se conservan los últimos 30)
+                // Desde aquí, salga por donde salga, SIEMPRE se respalda al cerrar
+                try
+                {
+                    Trabajar(nueva);
+                }
+                finally { FormCerrando.Ejecutar(); }
+            }
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        static void Trabajar(bool nueva)
+        {
+                // Respaldo diario (se conservan los últimos 30 y uno por día)
                 try
                 {
                     string marca = Path.Combine(Db.Carpeta, "respaldos", "ultimo_diario.txt");
@@ -108,7 +120,7 @@ namespace VentaFacil
                     if (!File.Exists(marca) || File.ReadAllText(marca) != hoy)
                     {
                         string archivo = Db.Respaldar();
-                        Respaldo.Exportar(archivo, Path.GetFileName(archivo));
+                        Respaldo.Exportar(archivo, Respaldo.NombreDelDia);
                         File.WriteAllText(marca, hoy);
                     }
                 }
@@ -167,9 +179,7 @@ namespace VentaFacil
                     }
                     catch (Exception ex) { Log.Error(ex, "Detección de impresora"); }
                 }
-                try { Application.Run(new FormVenta()); }
-                finally { Respaldo.Final(); }
-            }
+                Application.Run(new FormVenta());
         }
     }
 

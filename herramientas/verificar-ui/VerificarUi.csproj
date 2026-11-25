@@ -13,6 +13,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="VerificarUi.cs" />
+    <EmbeddedResource Include="..\..\src\VentaFacil\billete.png" LogicalName="billete.png" />
+    <EmbeddedResource Include="..\..\src\VentaFacil\VentaFacil.ico" LogicalName="VentaFacil.ico" />
     <Compile Include="..\..\src\VentaFacil\**\*.cs" Exclude="..\..\src\VentaFacil\obj\**;..\..\src\VentaFacil\bin\**" LinkBase="Real" />
     <Reference Include="System.Windows.Forms" /><Reference Include="System.Drawing" /><Reference Include="System.Data" /><Reference Include="System.Management" /><Reference Include="WindowsBase" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />

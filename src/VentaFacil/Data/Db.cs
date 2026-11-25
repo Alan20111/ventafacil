@@ -166,7 +166,7 @@ namespace VentaFacil.Data
         }
         public static string Ahora() { return Fecha(DateTime.Now); }
 
-        /// <summary>Copia de seguridad del archivo de datos. Conserva las últimas 30.</summary>
+        /// <summary>Copia de seguridad del archivo de datos. Conserva las últimas 30 y, además, la última de cada uno de los 30 días más recientes.</summary>
         public static string Respaldar(string destino = null)
         {
             string carpeta = destino ?? Path.Combine(Carpeta, "respaldos");
@@ -181,10 +181,29 @@ namespace VentaFacil.Data
             if (destino == null)
             {
                 var archivos = new List<string>(Directory.GetFiles(carpeta, "ventafacil_*.db"));
-                archivos.Sort();
-                while (archivos.Count > 30) { try { File.Delete(archivos[0]); } catch { } archivos.RemoveAt(0); }
+                foreach (var viejo in Sobrantes(archivos)) try { File.Delete(viejo); } catch { }
             }
             return archivo;
+        }
+
+        /// <summary>
+        /// Cuáles respaldos ya se pueden borrar. Como hay uno en cada cierre, quedarse solo con «los últimos 30» podría
+        /// cubrir unos pocos días: por eso también se guarda el último de cada día.
+        /// </summary>
+        public static List<string> Sobrantes(IEnumerable<string> archivos)
+        {
+            var l = new List<string>(archivos);
+            l.Sort((a, b) => string.CompareOrdinal(Path.GetFileName(b), Path.GetFileName(a)));   // del más nuevo al más viejo
+            var borrar = new List<string>();
+            var dias = new HashSet<string>();
+            for (int i = 0; i < l.Count; i++)
+            {
+                string n = Path.GetFileName(l[i]);
+                string dia = n.Length >= 19 ? n.Substring(0, 19) : n;      // ventafacil_AAAAMMDD
+                bool ultimoDelDia = dias.Count < 30 && dias.Add(dia);
+                if (i >= 30 && !ultimoDelDia) borrar.Add(l[i]);
+            }
+            return borrar;
         }
     }
 }

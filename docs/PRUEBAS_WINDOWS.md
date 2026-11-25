@@ -142,5 +142,8 @@ Tiempo estimado: 1.5 a 2 horas. Marque cada paso. Si algo falla, anote el paso y
 | 79 | CAJA: cambiar un precio y crear un producto; mandar reporte. OFICINA: F5 → **Diferencias** | Salen las dos cosas |
 | 80 | En Diferencias: traer el producto y mandar el precio de la oficina; crear envío y aplicarlo | El producto queda una sola vez; el precio de la tienda vuelve al de la oficina |
 | 81 | Revisar las pantallas de F5 en la oficina en 1366x768, y los 8 botones de Turno en la caja | Nada se corta; los textos de los botones se leen completos |
+| 82 | Salir con la X, con Alt+F4 y con F6 → Salir | Pregunta con la ventana de VentaFácil; Esc sigue trabajando; al salir gira el billete con «Haciendo respaldo…» y cierra. Con una venta a medias lo avisa en rojo |
+| 83 | Ver `datos\respaldos` y la carpeta elegida después de salir | Hay un respaldo nuevo con esa hora, `VentaFacil_ultimo.db` y el del día |
+| 84 | Quitar la USB de respaldos y salir; y apagar Windows con el programa abierto | Dice que faltó una copia y deja reintentar o salir; al apagar también queda un respaldo |
 
-Resultado: ______ de 81 pasos bien.   Fallas anotadas: ____________________________
+Resultado: ______ de 84 pasos bien.   Fallas anotadas: ____________________________

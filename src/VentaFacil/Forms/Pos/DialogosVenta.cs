@@ -469,6 +469,7 @@ namespace VentaFacil.Forms.Pos
         {
             decimal m;
             if (!Fmt.TryDec(_monto.Text, out m) || m <= 0) { Ui.Aviso("Escriba el importe."); _monto.Focus(); return; }
+            if (Concepto == "" && _monto.Focused) { _concepto.Focus(); return; }   // Enter en el importe pasa al concepto
             if (Concepto == "") { Ui.Aviso("Escriba el concepto (para qué es el dinero)."); _concepto.Focus(); return; }
             Monto = m;
             DialogResult = DialogResult.OK;

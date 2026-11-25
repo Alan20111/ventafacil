@@ -26,6 +26,8 @@
     <SqliteStub>$([MSBuild]::EnsureTrailingSlash('$(NuGetPackageRoot)'))stub.system.data.sqlite.core.netframework/1.0.118/</SqliteStub>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="billete.png" LogicalName="billete.png" />
+    <EmbeddedResource Include="VentaFacil.ico" LogicalName="VentaFacil.ico" />
     <EmbeddedResource Include="$(SqliteStub)lib/net40/System.Data.SQLite.dll" LogicalName="lib.System.Data.SQLite.dll" Visible="false" />
     <EmbeddedResource Include="$(SqliteStub)build/net40/x86/SQLite.Interop.dll" LogicalName="lib.x86.SQLite.Interop.dll" Visible="false" />
   </ItemGroup>

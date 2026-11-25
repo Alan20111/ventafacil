@@ -15,6 +15,7 @@ namespace VentaFacil.UI
             AutoScaleDimensions = new SizeF(96F, 96F);
             AutoScaleMode = AutoScaleMode.Dpi;
             Text = autorizacion ? "Autorización" : "VentaFácil - Entrar";
+            if (Iconos.Ventana != null) Icon = Iconos.Ventana;
             FormBorderStyle = FormBorderStyle.FixedDialog;
             StartPosition = autorizacion ? FormStartPosition.CenterParent : FormStartPosition.CenterScreen;
             MaximizeBox = false; MinimizeBox = !autorizacion;
@@ -50,7 +51,6 @@ namespace VentaFacil.UI
             Controls.Add(ok); Controls.Add(no);
             AcceptButton = ok; CancelButton = no;
 
-            _usuario.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; _clave.Focus(); } };
             if (!autorizacion)
             {
                 if (UsuarioRepo.Validar("admin", "admin") != null)
@@ -68,6 +68,7 @@ namespace VentaFacil.UI
         void Entrar()
         {
             if (_usuario.Text.Trim() == "") { _usuario.Focus(); return; }
+            if (_clave.Text == "") { _clave.Focus(); return; }   // Enter en el usuario pasa a la contraseña
             var u = UsuarioRepo.Validar(_usuario.Text, _clave.Text);
             if (u == null)
             {

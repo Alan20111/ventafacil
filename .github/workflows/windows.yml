@@ -28,6 +28,8 @@ jobs:
         shell: pwsh
         run: |
           try { Set-DisplayResolution -Width 1600 -Height 900 -Force } catch { Write-Host $_ }
+          (New-Object -ComObject Shell.Application).MinimizeAll()
+          Start-Sleep 2
           ./salida-ui/VerificarUi.exe capturas 2>&1 | Out-File ui.txt
           Get-Content ui.txt -TotalCount 400
       - name: Abrir el programa de verdad (instalacion nueva)
@@ -51,6 +53,24 @@ jobs:
           [System.Drawing.Graphics]::FromImage($b).CopyFromScreen(0, 0, 0, 0, $b.Size)
           New-Item -ItemType Directory -Force capturas | Out-Null
           $b.Save("$pwd\capturas\00 arranque real.png")
+          # Como una persona: dejar el asistente, entrar, abrir turno y salir con Alt+F4
+          function Foto($n) { $x = New-Object System.Drawing.Bitmap $r.Width, $r.Height; [System.Drawing.Graphics]::FromImage($x).CopyFromScreen(0, 0, 0, 0, $x.Size); $x.Save("$pwd\capturas\00 $n.png") }
+          $w = New-Object -ComObject WScript.Shell
+          function Teclas($t, $s) { $w.SendKeys($t); Start-Sleep $s }
+          $w.AppActivate((Get-Process VentaFacil).Id) | Out-Null; Start-Sleep 1
+          Teclas '{ESC}' 2; Foto 'a confirma'; Teclas 'y' 3; Foto 'b login'
+          Teclas 'admin{ENTER}' 2; Foto 'b login 2'; Teclas 'admin{ENTER}' 4; Foto 'c fondo'
+          Teclas '{ENTER}' 5; Foto 'd caja'
+          $antes = (Get-ChildItem C:\VentaFacil\datos\respaldos\ventafacil_*.db).Count
+          Teclas '%{F4}' 2; Foto 'e salir'
+          Teclas '{TAB}{ENTER}' 0; Start-Sleep -Milliseconds 700; Foto 'f respaldando'
+          Start-Sleep 6
+          $vivo = Get-Process VentaFacil -ErrorAction SilentlyContinue
+          $ahora = (Get-ChildItem C:\VentaFacil\datos\respaldos\ventafacil_*.db).Count
+          "Cierre: respaldos $antes -> $ahora   sigue abierto: $([bool]$vivo)" | Tee-Object -Append arranque.txt
+          "Copias: " + ((Get-ChildItem "$([Environment]::GetFolderPath('Desktop'))\VentaFacil_Respaldos" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name) -join '; ') | Tee-Object -Append arranque.txt
+          "Errores al final: " + (Get-Content C:\VentaFacil\datos\errores.log -Raw -ErrorAction SilentlyContinue) | Tee-Object -Append arranque.txt
+          Foto 'g final'
           Stop-Process -Name VentaFacil -Force -ErrorAction SilentlyContinue
       - uses: actions/upload-artifact@v4
         if: always()

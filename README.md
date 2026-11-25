@@ -98,7 +98,7 @@ En *F3 Catálogo*:
 
 ### Si se va la luz o algo se daña
 - La base usa escritura completa: una venta ya cobrada no se pierde por un corte de energía.
-- Después de cada venta o cambio se guarda una copia en `respaldos\ultimo.db` y otra en la carpeta que se eligió en el primer arranque (por defecto el escritorio). Además hay un respaldo diario (los últimos 30).
+- Después de cada venta o cambio se guarda una copia en `respaldos\ultimo.db` y otra en la carpeta que se eligió en el primer arranque (por defecto el escritorio). Además hay un respaldo diario y **uno obligatorio en cada cierre**: al salir gira el billete con «Haciendo respaldo…», se hace la copia, se vuelve a leer para comprobarla y se copia a la carpeta elegida (una por día, 60 días). Si la USB no está, avisa y deja reintentar o salir. En la computadora se guardan los últimos 30 y el último de cada uno de 30 días.
 - Si la base se daña, el programa lo detecta al abrir y ofrece restaurar el último respaldo bueno. La base dañada se guarda aparte, no se borra.
 - El acceso **VentaFácil - Reparar** del escritorio revisa el programa, la base, los respaldos y los accesos sin borrar datos.
 
@@ -150,7 +150,7 @@ Lo que no trae código (granel, verdura): **Etiqueta** imprime una tira con nomb
 30 días de prueba; después una clave por computadora (permanente). Se genera con `herramientas/licencias` (ver [docs/LICENCIAS.md](docs/LICENCIAS.md)).
 
 ### Pruebas
-- [docs/PRUEBAS_WINDOWS.md](docs/PRUEBAS_WINDOWS.md): 81 pasos para la laptop.
+- [docs/PRUEBAS_WINDOWS.md](docs/PRUEBAS_WINDOWS.md): 84 pasos para la laptop.
 - **Windows real (GitHub Actions, `.github/workflows/windows.yml`)**: corre las pruebas de datos con .NET Framework y `System.Data.SQLite` de verdad, abre **todas** las pantallas (`herramientas/verificar-ui`), revisa encimados, textos cortados, alineación y botones, guarda capturas y arranca el `.exe`. Se lanza a mano (*Actions → Verificar en Windows*) o al subir a una rama `verificar/…`.
 - `dotnet run` en `herramientas/licencias -- --probar`, `herramientas/pruebas-dinero`, `herramientas/pruebas-conteo` y `herramientas/pruebas-barras` (código de barras contra una librería independiente), `herramientas/pruebas-zafirah` (importador) y `herramientas/pruebas-datos` (**la capa de datos real contra un SQLite de verdad**: esquema, migración, cobros, cortes, dinero exacto, conteo, respaldos, base dañada, restauración, importador y **envíos** repetidos, perdidos, alterados e interrumpidos, y el **regreso de ventas y existencias**; usa un adaptador mínimo porque `System.Data.SQLite` solo corre en Windows): pruebas automáticas (se corren en Mac o Windows).
 

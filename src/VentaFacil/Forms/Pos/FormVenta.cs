@@ -17,7 +17,7 @@ namespace VentaFacil.Forms.Pos
     {
         readonly List<LineaVenta> _lineas = new List<LineaVenta>();
         decimal _multiplicador = 1;
-        bool _forzarSalida;
+        bool _forzarSalida, _cerrando;
 
         static readonly Font LetraTotalChica = new Font("Segoe UI", 28f, FontStyle.Bold);
         PanelTitulo _titulo;
@@ -38,6 +38,7 @@ namespace VentaFacil.Forms.Pos
             AutoScaleDimensions = new SizeF(96F, 96F);
             AutoScaleMode = AutoScaleMode.Dpi;
             Text = "VentaFácil - Punto de Venta";
+            if (Iconos.Ventana != null) Icon = Iconos.Ventana;
             WindowState = FormWindowState.Maximized;
             MinimumSize = new Size(1000, 680);
             StartPosition = FormStartPosition.CenterScreen;
@@ -362,6 +363,8 @@ namespace VentaFacil.Forms.Pos
         {
             // Los atajos solo aplican cuando esta ventana está activa (no dentro de diálogos)
             if (Form.ActiveForm != this) return base.ProcessCmdKey(ref msg, keyData);
+            // Con Alt apretado (Alt+F4 = cerrar) nunca es un atajo nuestro. Se mira en el propio mensaje, que es lo seguro.
+            if (msg.Msg == 0x0104 && (msg.LParam.ToInt64() & 0x20000000) != 0) return base.ProcessCmdKey(ref msg, keyData);
             switch (keyData)
             {
                 // F1..F6: cambiar de módulo
@@ -1030,17 +1033,22 @@ namespace VentaFacil.Forms.Pos
 
         void AlCerrar(object sender, FormClosingEventArgs e)
         {
+            if (_cerrando && e.CloseReason == CloseReason.UserClosing) { e.Cancel = true; return; }   // ya se está respaldando
             if (_forzarSalida) { _reloj.Stop(); return; }
-            if (Admin.SeccionMercancia.SinGuardar > 0 && e.CloseReason == CloseReason.UserClosing &&
-                !Ui.Confirmar("Hay " + Admin.SeccionMercancia.SinGuardar + " renglones de mercancía sin guardar (F4 Almacén). Si sale se pierden.\n¿Salir de todas formas?")) { e.Cancel = true; return; }
-            if (_lineas.Count > 0 && e.CloseReason == CloseReason.UserClosing)
+            if (e.CloseReason == CloseReason.UserClosing)
             {
-                if (!Ui.Confirmar("Hay una venta sin cobrar. Si sale se perderá.\n¿Salir de todas formas?")) { e.Cancel = true; return; }
+                var avisos = new List<string>();
+                if (_lineas.Count > 0) avisos.Add("Hay una venta sin cobrar: se perdería.");
+                if (Admin.SeccionMercancia.SinGuardar > 0) avisos.Add("Hay " + Admin.SeccionMercancia.SinGuardar + " renglones de mercancía sin guardar.");
+                using (var f = new FormSalir(avisos)) if (f.ShowDialog(this) != DialogResult.OK) { e.Cancel = true; return; }
+                // Se respalda AQUÍ, con la ventana todavía al frente: si se cerrara antes, Windows pondría otra encima
+                _cerrando = true;
+                Enabled = false;
+                try { FormCerrando.Ejecutar(); } catch (Exception ex) { Log.Error(ex, "Cierre"); }
             }
-            else if (e.CloseReason == CloseReason.UserClosing && !Ui.Confirmar("¿Salir de VentaFácil?"))
-            {
-                e.Cancel = true;
-                return;
+            else if (e.CloseReason == CloseReason.WindowsShutDown)
+            {   // Windows da pocos segundos: se respalda aquí mismo, sin pantalla
+                try { Respaldo.AlCerrar(null); } catch (Exception ex) { Log.Error(ex, "Respaldo al apagar Windows"); }
             }
             _reloj.Stop();
         }

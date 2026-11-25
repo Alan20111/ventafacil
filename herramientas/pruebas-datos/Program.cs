@@ -261,6 +261,31 @@ Respaldo.Pedir(); Respaldo.Final();
 Revisar("la copia continua también llega a la carpeta externa elegida (escritorio/USB)", File.Exists(Path.Combine(externa, "VentaFacil_ultimo.db")));
 Directory.Delete(externa, true);
 
+// --- respaldo obligatorio al cerrar
+{
+    var pasos = new List<string>();
+    string ext = Path.Combine(Path.GetTempPath(), "vf_cierre_" + Guid.NewGuid().ToString("N"));
+    var cc = Config.Actual.Copia(); cc.CarpetaRespaldo = ext; cc.Guardar(); Config.Cargar();
+    var ci = Respaldo.AlCerrar(t => pasos.Add(t));
+    Revisar("al cerrar: respaldo nuevo, comprobado, con los mismos datos, y los pasos se avisan", File.Exists(ci.Archivo) && Salud.Revisar(ci.Archivo) == "ok" && Salud.Revisar(ultimo) == "ok" && pasos.Count == 3 && pasos[0].StartsWith("Haciendo respaldo") && Respaldo.CierreHecho);
+    Revisar("y se copia a la carpeta elegida (última y la del día)", ci.CopiaBien && File.Exists(Path.Combine(ext, "VentaFacil_ultimo.db")) && Salud.Revisar(Path.Combine(ext, Respaldo.NombreDelDia)) == "ok");
+    for (int i = 0; i < 70; i++) File.WriteAllText(Path.Combine(ext, "VentaFacil_" + new DateTime(2025, 1, 1).AddDays(i).ToString("yyyy-MM-dd") + ".db"), "x");
+    File.WriteAllText(Path.Combine(ext, "otra_cosa.db"), "no tocar");
+    Respaldo.AlCerrar(null);
+    Revisar("en la carpeta elegida se conservan 60 días y no se toca nada más", Directory.GetFiles(ext, "VentaFacil_????-??-??.db").Length == 60 && File.Exists(Path.Combine(ext, Respaldo.NombreDelDia)) && File.Exists(Path.Combine(ext, "otra_cosa.db")));
+    Directory.Delete(ext, true);
+    File.WriteAllText(ext, "un archivo donde debería ir la carpeta");   // como una USB desconectada
+    ci = Respaldo.AlCerrar(null);
+    Revisar("si la carpeta elegida no está (USB fuera), el respaldo de la computadora SÍ queda y se avisa", !ci.CopiaBien && Salud.Revisar(ci.Archivo) == "ok");
+    File.Delete(ext); cc = Config.Actual.Copia(); cc.CarpetaRespaldo = ""; cc.Guardar(); Config.Cargar();
+    Revisar("sin carpeta elegida también respalda", Respaldo.AlCerrar(null).CopiaBien);
+    var nombres = new List<string>();
+    for (int d = 0; d < 50; d++) for (int h = 8; h < 18; h++) nombres.Add("ventafacil_" + new DateTime(2026, 1, 1).AddDays(d).ToString("yyyyMMdd") + "_" + h.ToString("00") + "0000.db");
+    var quedan = nombres.Except(Db.Sobrantes(nombres)).ToList();
+    Revisar("con 10 cierres al día se guardan los últimos 30 y el último de cada uno de 30 días (no solo 3 días)", quedan.Select(n => n.Substring(0, 19)).Distinct().Count() == 30 && quedan.Count == 57 && quedan.Contains("ventafacil_20260219_170000.db") && quedan.Contains("ventafacil_20260121_170000.db") && !quedan.Contains("ventafacil_20260121_080000.db"), quedan.Count + "");
+    Revisar("con pocos respaldos no se borra ninguno", Db.Sobrantes(nombres.Take(30)).Count == 0);
+}
+
 // Se daña la base viva (bytes al azar en medio del archivo)
 System.Data.SQLite.SQLiteConnection.ClearAllPools();
 using (var fs = new FileStream(Db.Archivo, FileMode.Open, FileAccess.ReadWrite)) { var azar = new byte[3000]; new Random(5).NextBytes(azar); fs.Seek(4096, SeekOrigin.Begin); fs.Write(azar, 0, azar.Length); }

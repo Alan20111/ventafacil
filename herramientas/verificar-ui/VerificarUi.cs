@@ -36,6 +36,7 @@ namespace VentaFacil
         [DllImport("user32.dll")] static extern bool PostMessage(IntPtr h, int m, IntPtr w, IntPtr l);
         [DllImport("user32.dll")] static extern bool EnumChildWindows(IntPtr h, EnumWin f, IntPtr p);
         [DllImport("kernel32.dll")] static extern uint GetCurrentThreadId();
+        [DllImport("user32.dll")] static extern int GetWindowLong(IntPtr h, int n);
         delegate bool EnumWin(IntPtr h, IntPtr p);
 
         [STAThread]
@@ -153,6 +154,62 @@ namespace VentaFacil
             Envios.RegistrarMercancia(new List<RenglonMercancia> { new RenglonMercancia { ProductoId = pr.Id, Cantidad = 50 } }, "Factura 123");
             Principal("50 oficina");
             File.Delete(enl);
+
+            // ---- salir y cierre
+            Form1("80 salir", () => new FormSalir(new List<string>()), null);
+            Form1("80 salir con avisos", () => new FormSalir(new List<string> { "Hay una venta sin cobrar: se perdería.", "Hay 12 renglones de mercancía sin guardar." }), null);
+            Cierre("81 cerrando", false);
+            Cierre("82 cerrando sin usb", true);
+        }
+
+        /// <summary>El cierre de verdad, después de Application.Exit (como cuando se sale del programa).</summary>
+        static void Cierre(string n, bool sinCarpeta)
+        {
+            string carpeta = Path.Combine(Db.Carpeta, "respaldos");
+            var c = Config.Actual.Copia();
+            string malo = Path.Combine(_salida, "x.tmp");
+            if (sinCarpeta) { File.WriteAllText(malo, "x"); c.CarpetaRespaldo = malo; }
+            c.Guardar();
+            Thread.Sleep(1100);
+            int antes = Directory.Exists(carpeta) ? Directory.GetFiles(carpeta, "ventafacil_*.db").Length : 0;
+            Form fondo = null;
+            if (sinCarpeta)
+            {   // el caso difícil: después de Application.Exit, el hilo principal ya tiene pedido terminar
+                var tonta = new Form { ShowInTaskbar = false, Opacity = 0 };
+                tonta.Shown += (s, e) => Application.Exit();
+                Application.Run(tonta);
+            }
+            else { fondo = new Form { Text = "fondo", StartPosition = FormStartPosition.Manual, Location = new Point(0, 0), Size = new Size(1366, 728) }; fondo.Show(); fondo.Activate(); Esperar(300); }
+
+            int tomas = 0; bool rechazo = true;
+            typeof(Respaldo).GetProperty("CierreHecho").GetSetMethod(true).Invoke(null, new object[] { false });
+            FormCerrando.Ejecutar(f =>
+            {
+                var t = new System.Windows.Forms.Timer { Interval = 350 };
+                t.Tick += (s, e) =>
+                {
+                    t.Stop();      // la foto atiende eventos: sin esto el reloj se encimaría
+                    tomas++;
+                    if (tomas <= 3 && f.Visible) Foto(f, n + " " + tomas);
+                    if (tomas == 1 && !sinCarpeta && (GetWindowLong(f.Handle, -20) & 8) == 0) Falla(n, "no quedó encima de las demás ventanas");
+                    if (tomas == 1) { f.Close(); rechazo = f.Visible; }        // a medio respaldo no se deja cerrar
+                    if (sinCarpeta && tomas == 8)
+                    {
+                        Foto(f, n + " falla");
+                        if (!((Button)Campo(f, "_salir")).Visible) Falla(n, "no ofreció salir cuando falló la copia");
+                        ((Button)Campo(f, "_salir")).PerformClick();
+                    }
+                    if (tomas > 60) { Falla(n, "no terminó"); PonerCampo(f, "_puedeCerrar", true); f.Close(); }
+                    if (!f.IsDisposed && f.Visible) t.Start(); else t.Dispose();
+                };
+                f.Shown += (s, e) => t.Start();
+            });
+            if (fondo != null) { fondo.Close(); fondo.Dispose(); }
+            if (!rechazo) Falla(n, "se dejó cerrar a medio respaldo");
+            int ahora = Directory.GetFiles(carpeta, "ventafacil_*.db").Length;
+            if (ahora <= antes) Falla(n, "no hizo respaldo (" + antes + " → " + ahora + ")");
+            if (!Respaldo.CierreHecho) Falla(n, "no marcó el cierre");
+            if (sinCarpeta) File.Delete(malo);
         }
 
         static void Asistente(FormAsistente f, string n)
@@ -290,7 +347,7 @@ namespace VentaFacil
             Esperar(150);
             f.Refresh();
             foreach (var ch in Path.GetInvalidFileNameChars()) n = n.Replace(ch, '-');
-            try { using (var b = new Bitmap(f.Width, f.Height)) { f.Activate(); Esperar(120); using (var g = Graphics.FromImage(b)) g.CopyFromScreen(f.Location, Point.Empty, f.Size); b.Save(Path.Combine(_salida, n + ".png"), ImageFormat.Png); } }
+            try { using (var b = new Bitmap(f.Width, f.Height)) { if (!(f is FormCerrando)) f.Activate(); Esperar(120); using (var g = Graphics.FromImage(b)) g.CopyFromScreen(f.Location, Point.Empty, f.Size); b.Save(Path.Combine(_salida, n + ".png"), ImageFormat.Png); } }
             catch (Exception ex) { Falla(n, "captura: " + ex.Message); }
             Revisar(f, n);
         }

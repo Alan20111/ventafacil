@@ -379,6 +379,7 @@ namespace VentaFacil.UI
             AutoScaleDimensions = new SizeF(96F, 96F);
             AutoScaleMode = AutoScaleMode.Dpi;
             Text = titulo;
+            if (Iconos.Ventana != null) Icon = Iconos.Ventana;
             FormBorderStyle = FormBorderStyle.FixedDialog;
             StartPosition = FormStartPosition.CenterParent;
             MaximizeBox = false;
